@@ -15,6 +15,20 @@ from starlette.exceptions import HTTPException
 
 from smartflow import __version__
 from smartflow.config import Settings
+from smartflow.contracts import (
+    DatabaseResponse,
+    DiagnosticResponse,
+    ErrorInfo,
+    EventResponse,
+    EventRow,
+    HealthResponse,
+    JobResponse,
+    JobRow,
+    LogResponse,
+    OpenAPIDocument,
+    ReceiptRow,
+    error_responses,
+)
 from smartflow.db import Database
 from smartflow.diagnostics import database_overview, job_diagnostic, overview, support_bundle, table_rows
 from smartflow.engine import Engine
@@ -62,9 +76,9 @@ def create_app(settings: Settings | None = None):
     jobs = Jobs(db)
     engine = Engine(db, Simulator(db), settings.data_dir)
 
-    def failure(code, trace_id, status=None):
+    def failure(code, trace_id, stage=None):
         return JSONResponse(
-            {"error": error_payload(code, trace_id)}, status_code=status or ERRORS[code].http_status
+            {"error": error_payload(code, trace_id, stage)}, status_code=ERRORS[code].http_status
         )
 
     @app.middleware("http")
@@ -76,11 +90,13 @@ def create_app(settings: Settings | None = None):
             allowed.update({"http://localhost:5173", "http://127.0.0.1:5173"})
         origin = request.headers.get("origin")
         if request.url.path.startswith("/api") and origin and origin not in allowed:
+            request.state.error_code = "ORIGIN_REJECTED"
             response = failure("ORIGIN_REJECTED", request.state.trace_id)
         else:
             try:
                 response = await call_next(request)
             except Exception as exc:
+                request.state.error_code = "INTERNAL_ERROR"
                 emit(logger, "api.exception", trace_id=request.state.trace_id, **safe_exception(exc))
                 response = failure("INTERNAL_ERROR", request.state.trace_id)
         response.headers["X-Trace-ID"] = request.state.trace_id
@@ -96,32 +112,65 @@ def create_app(settings: Settings | None = None):
             route=route,
             status=response.status_code,
             duration_ms=round((time.perf_counter() - start) * 1000, 2),
+            job_id=getattr(request.state, "job_id", None),
+            command_trace_id=getattr(request.state, "command_trace_id", None),
+            code=getattr(request.state, "error_code", None),
         )
         return response
 
     @app.exception_handler(AppError)
     async def domain_error(request, exc):
-        return failure(exc.code, request.state.trace_id)
+        request.state.error_code = exc.code
+        return failure(exc.code, request.state.trace_id, getattr(request.state, "job_stage", None))
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, exc):
         # Pydantic errors may contain user input. Only field location and type are safe.
-        response = failure("INPUT_INVALID", request.state.trace_id)
-        fields = [{"field": ".".join(str(p) for p in e["loc"]), "type": e["type"]} for e in exc.errors()]
+        request.state.error_code = "INPUT_INVALID"
+        # Extra-field keys are user input too. Do not echo arbitrary keys in locations.
+        allowed_fields = {
+            "body",
+            "query",
+            "path",
+            "header",
+            "title",
+            "scenario",
+            "job_id",
+            "action",
+            "table",
+            "limit",
+            "offset",
+            "after",
+            "idempotency-key",
+        }
+        fields = [
+            {
+                "field": ".".join(str(p) if p in allowed_fields else "unknown" for p in e["loc"]),
+                "type": e["type"],
+            }
+            for e in exc.errors()
+        ]
         return JSONResponse(
             {"error": error_payload("INPUT_INVALID", request.state.trace_id), "fields": fields},
-            status_code=response.status_code,
+            status_code=422,
         )
 
     @app.exception_handler(HTTPException)
     async def http_error(request, exc):
-        return failure("INPUT_INVALID", request.state.trace_id, exc.status_code)
+        code = {404: "ROUTE_NOT_FOUND", 405: "METHOD_NOT_ALLOWED"}.get(exc.status_code, "INTERNAL_ERROR")
+        request.state.error_code = code
+        response = failure(code, request.state.trace_id)
+        if exc.status_code == 405 and exc.headers and "Allow" in exc.headers:
+            response.headers["Allow"] = exc.headers["Allow"]
+        return response
 
     from fastapi import APIRouter
 
-    router = APIRouter(prefix="/api", dependencies=[Depends(authorized)])
+    router = APIRouter(
+        prefix="/api", dependencies=[Depends(authorized)], responses=error_responses(401, 403, 405, 422, 500)
+    )
 
-    @router.get("/health")
+    @router.get("/health", response_model=HealthResponse)
     def health():
         return {
             **overview(db),
@@ -129,48 +178,91 @@ def create_app(settings: Settings | None = None):
             "worker_alive": getattr(app.state, "worker_alive", lambda: False)(),
         }
 
-    @router.get("/openapi.json")
+    @router.get("/openapi.json", response_model=OpenAPIDocument)
     def openapi():
         return app.openapi()
 
-    @router.get("/errors")
+    @router.get("/errors", response_model=dict[str, ErrorInfo])
     def errors():
         return {code: error_payload(code, "") for code in ERRORS}
 
-    @router.post("/jobs", status_code=201)
+    @router.post("/jobs", status_code=201, response_model=JobResponse, responses=error_responses(409))
     def create(
         data: CreateJob,
         request: Request,
         idempotency_key: Annotated[str, Header(min_length=8, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")],
     ):
-        return jobs.create(data, idempotency_key, request.state.trace_id)
+        job = jobs.create(data, idempotency_key, request.state.trace_id)
+        request.state.job_id = job["id"]
+        emit(
+            logger,
+            "job.create",
+            job_id=job["id"],
+            trace_id=job["trace_id"],
+            command_trace_id=request.state.trace_id,
+        )
+        return job
 
-    @router.get("/jobs")
-    def list_jobs(limit: Annotated[int, Query(ge=1, le=200)] = 100):
-        return jobs.list(limit)
+    @router.get("/jobs", response_model=list[JobResponse])
+    def list_jobs(limit: Annotated[int, Query(ge=1, le=200)] = 100, offset: Annotated[int, Query(ge=0)] = 0):
+        return jobs.list(limit, offset)
 
-    @router.get("/jobs/{job_id}")
+    @router.get("/jobs/{job_id}", response_model=JobResponse, responses=error_responses(404))
     def get_job(job_id: str):
         return jobs.get(job_id)
 
-    @router.get("/jobs/{job_id}/events")
+    @router.get(
+        "/jobs/{job_id}/events",
+        response_model=list[EventResponse],
+        response_model_exclude_unset=True,
+        responses=error_responses(404),
+    )
     def events(
         job_id: str, after: Annotated[int, Query(ge=0)] = 0, limit: Annotated[int, Query(ge=1, le=500)] = 200
     ):
         return jobs.events(job_id, after, limit)
 
-    @router.post("/jobs/{job_id}/commands/{action}")
-    def command(job_id: str, action: Literal["resume", "cancel", "reconcile"]):
+    @router.post(
+        "/jobs/{job_id}/commands/{action}", response_model=JobResponse, responses=error_responses(404, 409)
+    )
+    def command(job_id: str, action: Literal["resume", "cancel", "reconcile"], request: Request):
+        job = jobs.get(job_id)
+        request.state.job_id = job["id"]
+        request.state.job_stage = job["stage"]
+        request.state.command_trace_id = request.state.trace_id
+        emit(
+            logger,
+            "job.command",
+            job_id=job["id"],
+            trace_id=job["trace_id"],
+            command_trace_id=request.state.trace_id,
+            stage=job["stage"],
+        )
         if action == "reconcile":
-            engine.reconcile(job_id)
+            engine.reconcile(job_id, command_trace_id=request.state.trace_id)
             return jobs.get(job_id)
-        return jobs.command(job_id, action)
+        return jobs.command(job_id, action, command_trace_id=request.state.trace_id)
 
-    @router.get("/jobs/{job_id}/diagnostics")
+    @router.get(
+        "/jobs/{job_id}/diagnostics",
+        response_model=DiagnosticResponse,
+        response_model_exclude_unset=True,
+        responses=error_responses(404),
+    )
     def diagnostic(job_id: str):
         return job_diagnostic(db, job_id)
 
-    @router.get("/jobs/{job_id}/support-bundle")
+    @router.get(
+        "/jobs/{job_id}/support-bundle",
+        response_class=Response,
+        responses={
+            **error_responses(404),
+            200: {
+                "description": "Allowlisted diagnostic ZIP",
+                "content": {"application/zip": {"schema": {"type": "string", "format": "binary"}}},
+            },
+        },
+    )
     def bundle(job_id: str):
         return Response(
             support_bundle(db, job_id),
@@ -178,11 +270,11 @@ def create_app(settings: Settings | None = None):
             headers={"Content-Disposition": 'attachment; filename="smartflow-support.zip"'},
         )
 
-    @router.get("/diagnostics/database")
+    @router.get("/diagnostics/database", response_model=DatabaseResponse)
     def database():
         return database_overview(db)
 
-    @router.get("/diagnostics/logs")
+    @router.get("/diagnostics/logs", response_model=list[LogResponse], response_model_exclude_unset=True)
     def logs(limit: Annotated[int, Query(ge=1, le=200)] = 50):
         import json
         from collections import deque
@@ -201,9 +293,13 @@ def create_app(settings: Settings | None = None):
                     continue  # A concurrent final line is retried on the next read.
         return sorted(result, key=lambda row: row["at"])[-limit:]
 
-    @router.get("/diagnostics/database/{table}")
-    def rows(table: Literal["jobs", "receipts", "events"], limit: Annotated[int, Query(ge=1, le=200)] = 50):
-        return table_rows(db, table, limit)
+    @router.get("/diagnostics/database/{table}", response_model=list[JobRow | ReceiptRow | EventRow])
+    def rows(
+        table: Literal["jobs", "receipts", "events"],
+        limit: Annotated[int, Query(ge=1, le=200)] = 50,
+        offset: Annotated[int, Query(ge=0)] = 0,
+    ):
+        return table_rows(db, table, limit, offset)
 
     app.include_router(router)
     root = web_root()

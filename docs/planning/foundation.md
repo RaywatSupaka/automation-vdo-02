@@ -1,7 +1,7 @@
 # Foundation work plan
 
 **เริ่มจากโครงสร้างพื้นฐานก่อนต่อ provider จริง**
-รายการด้านล่างคือแผนที่ยังไม่ implement ยกเว้นงานเอกสารที่ระบุว่าทำแล้ว
+รายการที่ไม่ได้ระบุว่าทำแล้วเป็นแผนที่ยังไม่ implement
 ความสามารถปัจจุบันดู [Status](../delivery/status.md); ผลเทสเก่าไม่ใช่หลักฐานว่าแผนนี้เสร็จ
 
 ## ลำดับงาน
@@ -9,8 +9,8 @@
 | ลำดับ | งาน | เกณฑ์เสร็จ |
 |---|---|---|
 | F0 — ทำแล้ว | แยกเอกสารและ index | อ่านเฉพาะหัวข้อได้ ลิงก์ไม่เสีย ไม่รวม history ไว้ไฟล์กลาง |
-| F1 — ถัดไป | API, error และ trace contracts | AI อ่าน schema ของ input/output/error ได้ครบ และตามเหตุของคำสั่งถึงงานได้ |
-| F2 | Worker readiness และการตรวจงานค้าง | แยก process alive/ready/progress; timeout และ recovery มี budget และไม่ replay send |
+| F1 — ทำแล้ว | API, error และ trace contracts | Typed responses, OpenAPI, pagination และ command trace; ตรวจด้วย API/workflow/E2E |
+| F2 — ถัดไป | Worker readiness และการตรวจงานค้าง | แยก process alive/ready/progress; timeout และ recovery มี budget และไม่ replay send |
 | F3 | ฐานข้อมูลและการอัปเกรด | สำรองก่อน migration, ตรวจ integrity, กู้ได้เมื่อ upgrade ล้มเหลวโดยข้อมูลไม่หาย |
 | F4 | Diagnostics สำหรับเครื่องลูกค้า | เก็บหลักฐานครบเมื่อเริ่มโปรแกรมไม่ได้ export ได้และพิสูจน์การกรองข้อมูลส่วนตัว |
 | F5 | Packaging และ clean Windows | ติดตั้ง เปิด ทำงานต่อ อัปเกรด และถอนติดตั้งตามนโยบายข้อมูลที่ระบุไว้ได้ |
@@ -19,21 +19,20 @@
 ลำดับ F1–F5 ทำให้ฐานพร้อมสำหรับ provider pilot; ไม่ต้องเพิ่มหลาย provider หรือหลาย workflow พร้อมกัน
 แต่ละ F เป็นงานแยกที่ส่งตรวจได้ ไม่ใช่คำสั่งให้แก้ทุกระบบในครั้งเดียว
 
-## งานถัดไปที่เสนอ: F1
+## F1 ที่ทำแล้ว
 
 Source ที่ต้องแตะ: [API](../../backend/smartflow/api.py),
 [Errors](../../backend/smartflow/errors.py), [Jobs](../../backend/smartflow/jobs.py),
 [Frontend API client](../../frontend/src/api.ts)
 
-- ประกาศ Pydantic response models ให้ครบ job, health, events, diagnostics และ error envelope
-- ให้ OpenAPI ระบุผลสำเร็จและผลผิดพลาดตาม route; regenerate schema จาก source
-- รักษา job trace และเชื่อม trace ของคำสั่ง resume/cancel/reconcile กับเหตุการณ์ในงาน
-- ระบุ pagination/order และความหมายของ retry ใน API contract ให้ชัด
-- แยก validation, not-found, conflict และ internal error ให้ตรงกับหลักฐาน
-- เพิ่ม contract tests สำหรับรูปแบบผลลัพธ์ ความเข้ากันได้ของ client และไม่มีข้อมูลลับใน error
+- Typed models ครบ job, health, events, diagnostics, log, database projection และ error envelope
+- OpenAPI ระบุผลสำเร็จ/error และ ZIP binary; contract test ตรวจ schema ตรงกับ source
+- Job trace คงเดิม; command trace เชื่อม resume/cancel/reconcile รวมคำสั่งซ้ำที่ไม่เปลี่ยนสถานะ
+- Pagination/order/retry ระบุในเอกสาร API; 404/405 ไม่รายงานเป็น validation อีกต่อไป
+- ทดสอบ error, ข้อมูลส่วนตัว, pagination, duplicate commands และ UI เดิมกับ API ใหม่แล้ว
 
-การตรวจ F1: scope `api`, `unit`; เพิ่ม `workflow` เฉพาะเมื่อเปลี่ยนพฤติกรรมคำสั่ง
-ตรวจ TypeScript เมื่อ client เปลี่ยน; ใช้ E2E เฉพาะเส้นทาง UI ที่ได้รับผล
+หลักฐาน: [Verification F1](../delivery/verification-f1.md)
+งานถัดไป F2 ให้เพิ่ม readiness/heartbeat และตรวจงานค้าง โดยแยกจากการที่ process ยังอยู่
 ไม่รัน full suite หรือสร้าง EXE ทุกครั้งที่แก้ชื่อ field หรือเอกสาร
 
 ## เงื่อนไขปิดงานแต่ละ F

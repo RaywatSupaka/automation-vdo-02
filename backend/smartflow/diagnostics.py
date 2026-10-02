@@ -74,12 +74,20 @@ def support_bundle(db, job_id):
     return output.getvalue()
 
 
-def table_rows(db, table, limit):
+def table_rows(db, table, limit, offset=0):
     # Fixed projections only. Never accept arbitrary SQL from the HTTP boundary.
     columns = {
         "jobs": (Job.id, Job.status, Job.stage, Job.error_code, Job.trace_id, Job.updated_at),
         "receipts": (Receipt.job_id, Receipt.request_id, Receipt.state, Receipt.updated_at),
         "events": (Event.id, Event.job_id, Event.trace_id, Event.at, Event.name, Event.stage, Event.code),
     }[table]
+    order = {
+        "jobs": (Job.created_at.desc(), Job.id.desc()),
+        "receipts": (Receipt.updated_at.desc(), Receipt.job_id.desc()),
+        "events": (Event.id.desc(),),
+    }[table]
     with db.transaction() as session:
-        return [dict(row._mapping) for row in session.execute(select(*columns).limit(limit))]
+        return [
+            dict(row._mapping)
+            for row in session.execute(select(*columns).order_by(*order).offset(offset).limit(limit))
+        ]

@@ -46,6 +46,7 @@ def record(session, job, name, now, code=None, **details):
             "code": code,
             "status": job.status,
             "event_id": event.id,
+            "command_trace_id": details.get("command_trace_id"),
         }
     )
 
@@ -112,11 +113,13 @@ class Jobs:
             record(session, job, "job.created", now)
             return job_view(job)
 
-    def list(self, limit=100):
+    def list(self, limit=100, offset=0):
         with self.db.transaction() as session:
             return [
                 job_view(j, session.get(Receipt, j.id))
-                for j in session.scalars(select(Job).order_by(Job.created_at.desc()).limit(limit))
+                for j in session.scalars(
+                    select(Job).order_by(Job.created_at.desc(), Job.id.desc()).offset(offset).limit(limit)
+                )
             ]
 
     def get(self, job_id, private=True):
@@ -147,23 +150,44 @@ class Jobs:
                 )
             ]
 
-    def command(self, job_id, action):
+    def command(self, job_id, action, command_trace_id=None):
+        if action not in {"resume", "cancel"}:
+            raise AppError("INVALID_TRANSITION")
         with self.db.transaction(write=True) as session:
             job = session.get(Job, job_id)
             if not job:
                 raise AppError("JOB_NOT_FOUND")
             receipt = session.get(Receipt, job_id)
+            details = {"command_trace_id": command_trace_id} if command_trace_id else {}
             if action == "cancel":
                 if job.status in {"completed", "cancelled"}:
+                    record(
+                        session,
+                        job,
+                        "job.command_noop",
+                        self.clock(),
+                        action=action,
+                        outcome="noop",
+                        **details,
+                    )
                     return job_view(job, receipt)
                 job.status = "cancelled"
             else:
                 if job.status in {"queued", "running", "waiting", "completed"}:
+                    record(
+                        session,
+                        job,
+                        "job.command_noop",
+                        self.clock(),
+                        action=action,
+                        outcome="noop",
+                        **details,
+                    )
                     return job_view(job, receipt)
                 if receipt and receipt.state in {"dispatching", "unknown"}:
                     raise AppError("SEND_ACCEPTANCE_UNKNOWN")
                 job.status, job.error_code, job.next_run_at = "queued", None, self.clock()
                 job.observations = 0
             job.updated_at = self.clock()
-            record(session, job, f"job.{action}", self.clock())
+            record(session, job, f"job.{action}", self.clock(), action=action, outcome="applied", **details)
             return job_view(job, receipt)

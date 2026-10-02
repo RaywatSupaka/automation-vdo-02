@@ -188,7 +188,8 @@ class Engine:
             job.updated_at = self.clock()
             record(session, job, "artifact.saved", self.clock())
 
-    def reconcile(self, job_id):
+    def reconcile(self, job_id, command_trace_id=None):
+        details = {"command_trace_id": command_trace_id} if command_trace_id else {}
         with self.db.transaction() as session:
             job, receipt = session.get(Job, job_id), session.get(Receipt, job_id)
             if not job:
@@ -200,6 +201,15 @@ class Engine:
         with self.db.transaction(write=True) as session:
             job, receipt = session.get(Job, job_id), session.get(Receipt, job_id)
             if job.status not in {"needs_review", "cancelled"}:
+                record(
+                    session,
+                    job,
+                    "job.command_noop",
+                    self.clock(),
+                    action="reconcile",
+                    outcome="noop",
+                    **details,
+                )
                 return
             record(
                 session,
@@ -208,6 +218,9 @@ class Engine:
                 self.clock(),
                 None if result is not None else "RESULT_PENDING",
                 result_found=result is not None,
+                action="reconcile",
+                outcome="applied",
+                **details,
             )
             if result is not None:
                 receipt.state, receipt.result, receipt.updated_at = "completed", result, self.clock()

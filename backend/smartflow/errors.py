@@ -13,6 +13,8 @@ ERRORS = {
     "UNAUTHORIZED": ErrorSpec("ต้องเชื่อมต่อด้วยสิทธิ์ของโปรแกรมนี้", "authenticate", 401),
     "ORIGIN_REJECTED": ErrorSpec("ไม่อนุญาตคำขอจากหน้าต่างนี้", "check_client", 403),
     "JOB_NOT_FOUND": ErrorSpec("ไม่พบงาน", "check_job_id", 404),
+    "ROUTE_NOT_FOUND": ErrorSpec("ไม่พบ API ที่เรียก", "check_route", 404),
+    "METHOD_NOT_ALLOWED": ErrorSpec("API นี้ไม่รองรับวิธีเรียกที่ใช้", "check_method", 405),
     "INVALID_TRANSITION": ErrorSpec("สถานะงานยังไม่รองรับคำสั่งนี้", "inspect_job"),
     "IDEMPOTENCY_CONFLICT": ErrorSpec("รหัสคำสั่งนี้เคยใช้กับข้อมูลอื่น", "use_new_command"),
     "PROVIDER_AUTH_REQUIRED": ErrorSpec("ผู้ให้บริการต้องการการเข้าสู่ระบบ", "user_action"),

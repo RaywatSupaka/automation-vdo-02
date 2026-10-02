@@ -43,10 +43,29 @@ POST /api/jobs ต้องมี Idempotency-Key; การ retry ต้อง�
 แต่ละ HTTP response มี X-Trace-ID สำหรับตาม request
 Error envelope และการกู้คืนอยู่ใน [Errors](errors.md)
 
-## ข้อจำกัดปัจจุบัน
+## Response, trace และ pagination
 
-Input ใช้ Pydantic แต่ response models ยังไม่ได้ประกาศครบทุก route
-Pagination/order/error contracts ที่เข้มขึ้นเป็นงาน F1 ใน [Foundation plan](../planning/foundation.md)
+Input/output ใช้ Pydantic; ดู [contracts.py](../../backend/smartflow/contracts.py) และ OpenAPI
+ทุก JSON route มี success schema และ error envelope; support-bundle สำเร็จเป็น ZIP binary
+`GET /api/errors` เป็น catalog ของ error code/recovery ที่ใช้จริง
+Job `trace_id` คงเดิมตลอดอายุงาน; X-Trace-ID เปลี่ยนทุก HTTP request รวม retry
+คำสั่ง resume/cancel/reconcile บันทึก `details.command_trace_id` ใน event แม้เป็น no-op
+คำสั่งที่ถูกปฏิเสธไม่แก้ DB; ตาม `job.command` และ `api.request` ใน log ด้วย command trace
+Create ที่ใช้ key ซ้ำได้ job trace เดิม; `job.create` log เชื่อมกับ request trace ใหม่
+
+| รายการ | Pagination / order |
+|---|---|
+| jobs | limit 1–200 (default 100), offset >= 0; created_at DESC, id DESC |
+| job events | limit 1–500 (default 200), after >= 0; id ASC, ไม่รวม after |
+| DB projections | limit 1–200 (default 50), offset >= 0; jobs ตามข้างบน, receipts updated_at DESC/job_id DESC, events id DESC |
+| logs | limit 1–200 (default 50); ล่าสุดจากไฟล์ปัจจุบันของ API/worker เรียง at ASC |
+
+Array ว่างหมายถึงไม่มีข้อมูลในหน้านั้น; offset pagination ไม่ใช่ snapshot เมื่อมีการเพิ่ม/เปลี่ยนงาน
+ใช้ event ID สุดท้ายเป็น after เพื่ออ่าน event ต่อเนื่องโดยไม่ซ้ำ
+HTTP ไม่ retry คำสั่งให้เอง; create retry ใช้ key+input เดิมเสมอ
+Resume/cancel ซ้ำอาจเป็น no-op ตามสถานะ; reconcile อ่านผลเดิมเท่านั้นและอาจคืน 409 เมื่อสถานะเปลี่ยนแล้ว
+การ resume ไม่อนุญาตส่งใหม่เมื่อ receipt ยัง dispatching/unknown; ดู [Automation](../architecture/automation.md)
+
 เปลี่ยน API แล้ว regenerate ด้วย `python tools/export_contract.py` และตรวจ diff เฉพาะ route ที่แก้
 
 เทส: [test_api.py](../../tests/test_api.py) / scope `api`

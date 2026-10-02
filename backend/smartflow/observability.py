@@ -8,6 +8,7 @@ from pathlib import Path
 SAFE_FIELDS = {
     "job_id",
     "trace_id",
+    "command_trace_id",
     "request_id",
     "stage",
     "code",

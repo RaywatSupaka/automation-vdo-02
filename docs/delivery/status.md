@@ -8,6 +8,9 @@ React desktop UI, authenticated FastAPI, SQLite migration, supervised worker,
 durable simulator workflow, guarded resume/reconciliation, error catalog,
 structured logs, read-only DB inspection, support ZIP และ offline doctor
 มีเครื่องมือทดสอบและ build portable Windows
+F1 ใน source: typed API/error contracts, command trace, pagination และ privacy validation
+ตรวจการทำงานร่วมกับ frontend เดิมแล้ว ดู [Verification F1](verification-f1.md)
+EXE 0.1.0 ที่ build ก่อนหน้านี้ยังไม่รวม F1; source Dev กับ packaged build เป็นคนละหลักฐาน
 
 ## ยังไม่ทำ
 
