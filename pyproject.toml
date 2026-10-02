@@ -24,7 +24,7 @@ smartflow = "smartflow.cli:main"
 where = ["backend"]
 
 [tool.setuptools.package-data]
-smartflow = ["migrations/*.py", "migrations/versions/*.py"]
+smartflow = ["migrations/*.py", "migrations/versions/*.py", "*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -9,6 +9,10 @@ class ErrorSpec:
 
 
 ERRORS = {
+    "DRAFT_NOT_FOUND": ErrorSpec("ไม่พบแบบร่างในพื้นที่ทำงานนี้", "check_draft_id", 404),
+    "DRAFT_REVISION_CONFLICT": ErrorSpec("แบบร่างมีการแก้ไขจากอีกหน้าต่าง", "read_latest_before_save"),
+    "DRAFT_ASSET_UNAVAILABLE": ErrorSpec("ยังไม่เปิดนำเข้าไฟล์แบบร่าง", "keep_local_files"),
+    "DATABASE_UPGRADE_FAILED": ErrorSpec("อัปเกรดฐานข้อมูลไม่สำเร็จ เก็บข้อมูลเดิมไว้แล้ว", "inspect_trace", 500),
     "INPUT_INVALID": ErrorSpec("ข้อมูลไม่ถูกต้อง", "correct_input", 422),
     "UNAUTHORIZED": ErrorSpec("ต้องเชื่อมต่อด้วยสิทธิ์ของโปรแกรมนี้", "authenticate", 401),
     "PERMISSION_DENIED": ErrorSpec("session นี้ไม่มีสิทธิ์ทำรายการนี้", "request_permission", 403),

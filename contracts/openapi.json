@@ -1872,6 +1872,925 @@
         },
         "x-required-permission": "diagnostics:read"
       }
+    },
+    "/api/story-drafts": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_api_story_drafts_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 80,
+              "pattern": "^[a-zA-Z0-9_-]+$",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:write"
+      },
+      "get": {
+        "summary": "List Drafts",
+        "operationId": "list_drafts_api_story_drafts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DraftSummary"
+                  },
+                  "title": "Response List Drafts Api Story Drafts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:read"
+      }
+    },
+    "/api/story-drafts/{draft_id}": {
+      "get": {
+        "summary": "Get",
+        "operationId": "get_api_story_drafts__draft_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:read"
+      },
+      "patch": {
+        "summary": "Update",
+        "operationId": "update_api_story_drafts__draft_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 80,
+              "pattern": "^[a-zA-Z0-9_-]+$",
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:write"
+      }
+    },
+    "/api/diagnostics/drafts": {
+      "get": {
+        "summary": "Audit",
+        "operationId": "audit_api_diagnostics_drafts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DraftAudit"
+                  },
+                  "title": "Response Audit Api Diagnostics Drafts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "diagnostics:read"
+      }
+    },
+    "/api/diagnostics/drafts/{draft_id}/events": {
+      "get": {
+        "summary": "Events",
+        "operationId": "events_api_diagnostics_drafts__draft_id__events_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "After"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DraftEventResponse"
+                  },
+                  "title": "Response Events Api Diagnostics Drafts  Draft Id  Events Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "diagnostics:read"
+      }
     }
   },
   "components": {
@@ -1996,6 +2915,827 @@
           "conclusion"
         ],
         "title": "DiagnosticResponse"
+      },
+      "DraftAudit": {
+        "properties": {
+          "draft_id": {
+            "type": "string",
+            "title": "Draft Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "active_step": {
+            "type": "integer",
+            "title": "Active Step"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "draft_id",
+          "revision",
+          "active_step",
+          "updated_at"
+        ],
+        "title": "DraftAudit"
+      },
+      "DraftConfig": {
+        "properties": {
+          "creationMode": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Creationmode",
+            "default": "single"
+          },
+          "topic": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Topic",
+            "default": ""
+          },
+          "batchTopics": {
+            "type": "string",
+            "maxLength": 20000,
+            "title": "Batchtopics",
+            "default": ""
+          },
+          "storyText": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Storytext",
+            "default": ""
+          },
+          "audience": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Audience",
+            "default": "ผู้ชมทั่วไป"
+          },
+          "mainImage": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "title": "Mainimage"
+          },
+          "speaker": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Speaker",
+            "default": "narrator"
+          },
+          "structure": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Structure",
+            "default": "legacy"
+          },
+          "tone": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Tone",
+            "default": "ให้ AI เลือกตามเรื่อง"
+          },
+          "hook": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Hook",
+            "default": "ตามเนื้อเรื่อง"
+          },
+          "ending": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Ending",
+            "default": "ตามลำดับตอน"
+          },
+          "cta": {
+            "type": "boolean",
+            "title": "Cta",
+            "default": false
+          },
+          "visualStyle": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Visualstyle",
+            "default": "auto"
+          },
+          "visualCustom": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Visualcustom",
+            "default": ""
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Notes",
+            "default": ""
+          },
+          "imageProvider": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Imageprovider",
+            "default": "chatgpt"
+          },
+          "chatgptModel": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Chatgptmodel",
+            "default": "auto"
+          },
+          "geminiModel": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Geminimodel",
+            "default": "long_thinking"
+          },
+          "videoMode": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Videomode",
+            "default": "image_motion"
+          },
+          "scenes": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Scenes",
+            "default": "10"
+          },
+          "seconds": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Seconds",
+            "default": "45"
+          },
+          "fictionalCharacters": {
+            "type": "boolean",
+            "title": "Fictionalcharacters",
+            "default": false
+          },
+          "flowModel": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Flowmodel",
+            "default": ""
+          },
+          "flowReference": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Flowreference",
+            "default": ""
+          },
+          "flowResolution": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Flowresolution",
+            "default": ""
+          },
+          "flowDuration": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Flowduration",
+            "default": ""
+          },
+          "motion": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Motion",
+            "default": "100"
+          },
+          "transition": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Transition",
+            "default": "220"
+          },
+          "aiCover": {
+            "type": "boolean",
+            "title": "Aicover",
+            "default": true
+          },
+          "coverScene": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Coverscene",
+            "default": "auto"
+          },
+          "coverHeadline": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Coverheadline",
+            "default": ""
+          },
+          "coverEmphasis": {
+            "type": "string",
+            "maxLength": 40,
+            "title": "Coveremphasis",
+            "default": ""
+          },
+          "coverTheme": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Covertheme",
+            "default": "ตัวใหญ่ชัด"
+          },
+          "coverPosition": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Coverposition",
+            "default": "ตรงกลาง"
+          },
+          "introEnabled": {
+            "type": "boolean",
+            "title": "Introenabled",
+            "default": false
+          },
+          "introFile": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "title": "Introfile"
+          },
+          "greenEnabled": {
+            "type": "boolean",
+            "title": "Greenenabled",
+            "default": false
+          },
+          "greenFiles": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Greenfiles"
+          },
+          "greenOpacity": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Greenopacity",
+            "default": "50"
+          },
+          "greenFit": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Greenfit",
+            "default": "แสดงครบภาพ ไม่ยืด"
+          },
+          "logoEnabled": {
+            "type": "boolean",
+            "title": "Logoenabled",
+            "default": false
+          },
+          "logoFile": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "title": "Logofile"
+          },
+          "logoOpacity": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logoopacity",
+            "default": "100"
+          },
+          "logoSize": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logosize",
+            "default": "15"
+          },
+          "logoPosition": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logoposition",
+            "default": "บนขวา"
+          },
+          "logoMargin": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logomargin",
+            "default": "24"
+          },
+          "logoX": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logox",
+            "default": "50"
+          },
+          "logoY": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Logoy",
+            "default": "50"
+          },
+          "audioMode": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Audiomode",
+            "default": "api"
+          },
+          "voice": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voice",
+            "default": ""
+          },
+          "voiceReference": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "title": "Voicereference"
+          },
+          "voiceReferenceId": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Voicereferenceid",
+            "default": ""
+          },
+          "voiceLanguage": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voicelanguage",
+            "default": "th"
+          },
+          "voiceEmotion": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voiceemotion",
+            "default": "Normal (มาตรฐาน)"
+          },
+          "voiceSpeed": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voicespeed",
+            "default": "1"
+          },
+          "voiceSilence": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voicesilence",
+            "default": "0"
+          },
+          "voiceFormat": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Voiceformat",
+            "default": "mp3"
+          },
+          "voiceScript": {
+            "type": "string",
+            "maxLength": 10000,
+            "title": "Voicescript",
+            "default": ""
+          },
+          "keepVideoAudio": {
+            "type": "boolean",
+            "title": "Keepvideoaudio",
+            "default": false
+          },
+          "videoAudioVolume": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Videoaudiovolume",
+            "default": "35"
+          },
+          "allowSilent": {
+            "type": "boolean",
+            "title": "Allowsilent",
+            "default": false
+          },
+          "subtitles": {
+            "type": "boolean",
+            "title": "Subtitles",
+            "default": true
+          },
+          "subtitleLanguage": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlelanguage",
+            "default": "th"
+          },
+          "subtitleSyllables": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlesyllables",
+            "default": "3"
+          },
+          "subtitleTheme": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitletheme",
+            "default": "standard"
+          },
+          "subtitleAnimation": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitleanimation",
+            "default": "none"
+          },
+          "subtitleFont": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Subtitlefont",
+            "default": "Kanit-Bold"
+          },
+          "subtitleFontFile": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 1,
+            "title": "Subtitlefontfile"
+          },
+          "subtitleSize": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlesize",
+            "default": "28"
+          },
+          "subtitleMarkGap": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlemarkgap",
+            "default": "14"
+          },
+          "subtitleOutline": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitleoutline",
+            "default": "2"
+          },
+          "subtitleY": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitley",
+            "default": "80"
+          },
+          "subtitleTextColor": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitletextcolor",
+            "default": "#ffffff"
+          },
+          "subtitleHighlight": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlehighlight",
+            "default": "#facc15"
+          },
+          "subtitleOutlineColor": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitleoutlinecolor",
+            "default": "#000000"
+          },
+          "subtitleBackgroundColor": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlebackgroundcolor",
+            "default": "#000000"
+          },
+          "subtitleBackground": {
+            "type": "boolean",
+            "title": "Subtitlebackground",
+            "default": true
+          },
+          "subtitleBackgroundOpacity": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Subtitlebackgroundopacity",
+            "default": "100"
+          },
+          "musicEnabled": {
+            "type": "boolean",
+            "title": "Musicenabled",
+            "default": false
+          },
+          "musicFiles": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Musicfiles"
+          },
+          "musicCount": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Musiccount",
+            "default": "1"
+          },
+          "musicVolume": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Musicvolume",
+            "default": "15"
+          },
+          "musicSegment": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Musicsegment",
+            "default": "10"
+          },
+          "musicDuck": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Musicduck",
+            "default": "35"
+          },
+          "sfxEnabled": {
+            "type": "boolean",
+            "title": "Sfxenabled",
+            "default": false
+          },
+          "sfxMode": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Sfxmode",
+            "default": "อัตโนมัติ • เว้นจังหวะ"
+          },
+          "sfxFiles": {
+            "items": {
+              "type": "string",
+              "pattern": "^[a-f0-9-]{36}$"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Sfxfiles"
+          },
+          "sfxVolume": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Sfxvolume",
+            "default": "25"
+          },
+          "sfxInterval": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Sfxinterval",
+            "default": "6"
+          },
+          "sfxCount": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Sfxcount",
+            "default": "6"
+          },
+          "generatedMusic": {
+            "type": "boolean",
+            "title": "Generatedmusic",
+            "default": false
+          },
+          "generatedMusicMood": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Generatedmusicmood",
+            "default": "ให้ AI เลือกตามเรื่อง"
+          },
+          "generatedMusicFrequency": {
+            "type": "string",
+            "maxLength": 128,
+            "title": "Generatedmusicfrequency",
+            "default": "พอดี · ประมาณ 30%"
+          },
+          "reviewBeforeImages": {
+            "type": "boolean",
+            "title": "Reviewbeforeimages",
+            "default": false
+          },
+          "queueOnly": {
+            "type": "boolean",
+            "title": "Queueonly",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DraftConfig"
+      },
+      "DraftEventResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "draft_id": {
+            "type": "string",
+            "title": "Draft Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "trace_id": {
+            "type": "string",
+            "title": "Trace Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "at": {
+            "type": "number",
+            "title": "At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "draft_id",
+          "revision",
+          "trace_id",
+          "name",
+          "at"
+        ],
+        "title": "DraftEventResponse"
+      },
+      "DraftInput": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version",
+            "default": 1
+          },
+          "active_step": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Active Step",
+            "default": 0
+          },
+          "config": {
+            "$ref": "#/components/schemas/DraftConfig"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "DraftInput"
+      },
+      "DraftIssue": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALUE_OUT_OF_RANGE",
+              "OPTION_INVALID"
+            ],
+            "title": "Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "code"
+        ],
+        "title": "DraftIssue"
+      },
+      "DraftResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "active_step": {
+            "type": "integer",
+            "title": "Active Step"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          },
+          "config": {
+            "$ref": "#/components/schemas/DraftConfig"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/DraftIssue"
+            },
+            "type": "array",
+            "title": "Issues"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "schema_version",
+          "active_step",
+          "created_at",
+          "updated_at",
+          "config",
+          "issues"
+        ],
+        "title": "DraftResponse"
+      },
+      "DraftSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "active_step": {
+            "type": "integer",
+            "title": "Active Step"
+          },
+          "created_at": {
+            "type": "number",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "revision",
+          "schema_version",
+          "active_step",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DraftSummary"
+      },
+      "DraftUpdate": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schema Version",
+            "default": 1
+          },
+          "active_step": {
+            "type": "integer",
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Active Step",
+            "default": 0
+          },
+          "config": {
+            "$ref": "#/components/schemas/DraftConfig"
+          },
+          "expected_revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Expected Revision"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "expected_revision"
+        ],
+        "title": "DraftUpdate"
       },
       "ErrorInfo": {
         "properties": {
@@ -2596,6 +4336,28 @@
       },
       "LogResponse": {
         "properties": {
+          "draft_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Id"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
           "at": {
             "type": "string",
             "title": "At"
@@ -2886,7 +4648,9 @@
           "jobs:create",
           "jobs:command",
           "diagnostics:read",
-          "support:export"
+          "support:export",
+          "stories:drafts:read",
+          "stories:drafts:write"
         ],
         "title": "Permission"
       },

@@ -16,6 +16,8 @@ class Permission(StrEnum):
     JOBS_COMMAND = "jobs:command"
     DIAGNOSTICS_READ = "diagnostics:read"
     SUPPORT_EXPORT = "support:export"
+    DRAFTS_READ = "stories:drafts:read"
+    DRAFTS_WRITE = "stories:drafts:write"
 
 
 class Role(StrEnum):
@@ -33,8 +35,15 @@ class AuthMode(StrEnum):
 BASE = frozenset({Permission.SESSION_READ, Permission.SCHEMA_READ})
 ROLE_PERMISSIONS = {
     Role.OWNER: frozenset(Permission),
-    Role.OPERATOR: BASE | {Permission.JOBS_READ, Permission.JOBS_CREATE, Permission.JOBS_COMMAND},
-    Role.VIEWER: BASE | {Permission.JOBS_READ},
+    Role.OPERATOR: BASE
+    | {
+        Permission.JOBS_READ,
+        Permission.JOBS_CREATE,
+        Permission.JOBS_COMMAND,
+        Permission.DRAFTS_READ,
+        Permission.DRAFTS_WRITE,
+    },
+    Role.VIEWER: BASE | {Permission.JOBS_READ, Permission.DRAFTS_READ},
     Role.SUPPORT: BASE | {Permission.DIAGNOSTICS_READ, Permission.SUPPORT_EXPORT},
 }
 

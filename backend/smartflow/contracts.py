@@ -165,6 +165,8 @@ class EventRow(Contract):
 
 
 class LogResponse(Contract):
+    draft_id: str | None = None
+    revision: int | None = None
     at: str
     level: str
     event: str

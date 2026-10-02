@@ -1,8 +1,6 @@
 from contextlib import contextmanager
 from pathlib import Path
 
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
 
@@ -24,11 +22,9 @@ class Database:
             connection.execute("PRAGMA synchronous=FULL")
 
     def migrate(self):
-        config = Config()
-        config.set_main_option("script_location", str(Path(__file__).parent / "migrations"))
-        with self.engine.begin() as connection:
-            config.attributes["connection"] = connection
-            command.upgrade(config, "head")
+        from smartflow.migration_safety import migrate
+
+        migrate(self)
 
     @contextmanager
     def transaction(self, write=False):

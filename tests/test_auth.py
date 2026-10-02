@@ -46,10 +46,23 @@ def auth_client(tmp_path):
                 "jobs:command",
                 "diagnostics:read",
                 "support:export",
+                "stories:drafts:read",
+                "stories:drafts:write",
             },
         ),
-        ("operator", {"session:read", "schema:read", "jobs:read", "jobs:create", "jobs:command"}),
-        ("viewer", {"session:read", "schema:read", "jobs:read"}),
+        (
+            "operator",
+            {
+                "session:read",
+                "schema:read",
+                "jobs:read",
+                "jobs:create",
+                "jobs:command",
+                "stories:drafts:read",
+                "stories:drafts:write",
+            },
+        ),
+        ("viewer", {"session:read", "schema:read", "jobs:read", "stories:drafts:read"}),
         ("support", {"session:read", "schema:read", "diagnostics:read", "support:export"}),
     ],
 )
@@ -57,19 +70,28 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
     client = auth_client(role)
     job = Jobs(client.app.state.db).create(CreateJob(title="PRIVATE_TITLE"), "seed-job-key", "seed-trace")
     schema = client.get("/api/openapi.json").json()
+    from smartflow.draft_contracts import DraftInput
+    from smartflow.drafts import Drafts
+
+    draft = Drafts(client.app.state.db).save(DraftInput(), "seed-draft", "seed-trace")
     for route, operations in schema["paths"].items():
         path = route.replace("{job_id}", job["id"]).replace("{action}", "cancel").replace("{table}", "jobs")
+        path = path.replace("{draft_id}", draft["id"])
         for method, operation in operations.items():
             permission = operation["x-required-permission"]
             assert permission in set(Permission)
             payload = {"title": "created through API"} if method == "post" and path == "/api/jobs" else None
+            if method == "post" and path == "/api/story-drafts":
+                payload = {}
+            elif method == "patch":
+                payload = {"expected_revision": 1}
             for bad_auth in ("", "Bearer wrong-session", "Basic invalid"):
                 denied = client.request(method, path, json=payload, headers={"Authorization": bad_auth})
                 assert denied.status_code == 401, (role, method, path)
                 assert denied.headers["www-authenticate"] == "Bearer"
                 assert denied.json()["error"]["code"] == "UNAUTHORIZED"
             response = client.request(
-                method, path, json=payload, headers={"Idempotency-Key": "matrix-created"}
+                method, path, json=payload, headers={"Idempotency-Key": f"matrix-{method}-created"}
             )
             if permission in allowed:
                 assert response.status_code in {200, 201}, (role, method, path, response.text)

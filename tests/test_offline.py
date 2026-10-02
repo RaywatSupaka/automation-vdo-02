@@ -13,7 +13,7 @@ def test_offline_inspection_reads_counts_without_titles(system):
     create(title="PRIVATE_TITLE")
     report = diagnose(Settings(engine.data_dir, ""))
     assert report["job_counts"] == {"queued": 1}
-    assert report["schema_revision"] == "0001"
+    assert report["schema_revision"] == "0002"
     assert "PRIVATE_TITLE" not in str(report)
 
 

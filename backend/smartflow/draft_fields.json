@@ -1,0 +1,773 @@
+{
+  "creationMode": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "single",
+      "batch"
+    ],
+    "initial": "single"
+  },
+  "topic": {
+    "kind": "text",
+    "maxLength": 2000,
+    "initial": ""
+  },
+  "batchTopics": {
+    "kind": "textarea",
+    "maxLength": 20000,
+    "initial": ""
+  },
+  "storyText": {
+    "kind": "textarea",
+    "maxLength": 10000,
+    "initial": ""
+  },
+  "audience": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ผู้ชมทั่วไป",
+      "เด็กและครอบครัว",
+      "วัยรุ่น",
+      "วัยทำงาน"
+    ],
+    "initial": "ผู้ชมทั่วไป"
+  },
+  "mainImage": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 1,
+    "accept": ".png,.jpg,.jpeg,.webp",
+    "initial": []
+  },
+  "speaker": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "narrator",
+      "solo",
+      "dialogue",
+      "visual"
+    ],
+    "initial": "narrator"
+  },
+  "structure": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "legacy",
+      "auto",
+      "ending_first",
+      "countdown",
+      "two_viewpoints",
+      "clue_trail",
+      "object_journey",
+      "what_if",
+      "ordinary_to_unusual",
+      "cause_chain",
+      "one_small_decision",
+      "misunderstanding_unfolds"
+    ],
+    "initial": "legacy"
+  },
+  "tone": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ให้ AI เลือกตามเรื่อง",
+      "ตลก",
+      "อบอุ่น",
+      "ดราม่า",
+      "ลึกลับ",
+      "สร้างแรงบันดาลใจ"
+    ],
+    "initial": "ให้ AI เลือกตามเรื่อง"
+  },
+  "hook": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ตามเนื้อเรื่อง",
+      "เปิดด้วยเหตุการณ์",
+      "เปิดด้วยคำถาม",
+      "เปิดด้วยสิ่งผิดปกติ"
+    ],
+    "initial": "ตามเนื้อเรื่อง"
+  },
+  "ending": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ตามลำดับตอน",
+      "จบเรื่องสมบูรณ์",
+      "หักมุม",
+      "ทิ้งปมให้ติดตาม",
+      "ทิ้งคำถาม"
+    ],
+    "initial": "ตามลำดับตอน"
+  },
+  "cta": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "visualStyle": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "auto",
+      "realistic",
+      "cinematic",
+      "anime",
+      "3d",
+      "watercolor",
+      "comic",
+      "custom"
+    ],
+    "initial": "auto"
+  },
+  "visualCustom": {
+    "kind": "textarea",
+    "maxLength": 400,
+    "initial": ""
+  },
+  "notes": {
+    "kind": "textarea",
+    "maxLength": 1000,
+    "initial": ""
+  },
+  "imageProvider": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "chatgpt",
+      "gemini"
+    ],
+    "initial": "chatgpt"
+  },
+  "chatgptModel": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "auto",
+      "instant",
+      "thinking",
+      "pro"
+    ],
+    "initial": "auto"
+  },
+  "geminiModel": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "auto",
+      "flash_lite",
+      "flash",
+      "pro",
+      "long_thinking"
+    ],
+    "initial": "long_thinking"
+  },
+  "videoMode": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "image_motion",
+      "google_flow",
+      "meta_ai"
+    ],
+    "initial": "image_motion"
+  },
+  "scenes": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 6,
+    "max": 15,
+    "step": 1,
+    "initial": "10"
+  },
+  "seconds": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 30,
+    "max": 60,
+    "step": 1,
+    "initial": "45"
+  },
+  "fictionalCharacters": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "flowModel": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "",
+      "Omni 1.1 Flash",
+      "Veo 3.1 - Lite",
+      "Veo 3.1 - Fast",
+      "Veo 3.1 - Quality",
+      "Veo 3.1 - Lite [Lower Priority]"
+    ],
+    "initial": ""
+  },
+  "flowReference": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "",
+      "Frames",
+      "Ingredients"
+    ],
+    "initial": ""
+  },
+  "flowResolution": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "",
+      "360p",
+      "720p"
+    ],
+    "initial": ""
+  },
+  "flowDuration": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "",
+      "4s",
+      "6s",
+      "8s",
+      "10s"
+    ],
+    "initial": ""
+  },
+  "motion": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 200,
+    "step": 1,
+    "initial": "100"
+  },
+  "transition": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 600,
+    "step": 20,
+    "initial": "220"
+  },
+  "aiCover": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": true
+  },
+  "coverScene": {
+    "kind": "select",
+    "maxLength": 128,
+    "initial": "auto"
+  },
+  "coverHeadline": {
+    "kind": "text",
+    "maxLength": 40,
+    "initial": ""
+  },
+  "coverEmphasis": {
+    "kind": "text",
+    "maxLength": 40,
+    "initial": ""
+  },
+  "coverTheme": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ตัวใหญ่ชัด",
+      "ลึกลับชวนดู",
+      "สินค้าเด่น",
+      "โรแมนติก"
+    ],
+    "initial": "ตัวใหญ่ชัด"
+  },
+  "coverPosition": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ด้านบน",
+      "ตรงกลาง",
+      "ด้านล่าง"
+    ],
+    "initial": "ตรงกลาง"
+  },
+  "introEnabled": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "introFile": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 1,
+    "accept": ".mp4,.mov,.mkv,.webm,.m4v,.avi",
+    "initial": []
+  },
+  "greenEnabled": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "greenFiles": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 3,
+    "accept": ".mp4,.mov,.mkv,.webm,.m4v,.avi",
+    "initial": []
+  },
+  "greenOpacity": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 1,
+    "max": 100,
+    "step": 1,
+    "initial": "50"
+  },
+  "greenFit": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "แสดงครบภาพ ไม่ยืด",
+      "เต็มเฟรม ตัดส่วนเกิน"
+    ],
+    "initial": "แสดงครบภาพ ไม่ยืด"
+  },
+  "logoEnabled": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "logoFile": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 1,
+    "accept": ".png,.jpg,.jpeg,.webp",
+    "initial": []
+  },
+  "logoOpacity": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 5,
+    "max": 100,
+    "step": 1,
+    "initial": "100"
+  },
+  "logoSize": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 3,
+    "max": 60,
+    "step": 1,
+    "initial": "15"
+  },
+  "logoPosition": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "บนซ้าย",
+      "บนกลาง",
+      "บนขวา",
+      "กลางซ้าย",
+      "กึ่งกลาง",
+      "กลางขวา",
+      "ล่างซ้าย",
+      "ล่างกลาง",
+      "ล่างขวา",
+      "กำหนดพิกัดเอง"
+    ],
+    "initial": "บนขวา"
+  },
+  "logoMargin": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 0,
+    "max": 120,
+    "step": 1,
+    "initial": "24"
+  },
+  "logoX": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 0,
+    "max": 100,
+    "step": 0.1,
+    "initial": "50"
+  },
+  "logoY": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 0,
+    "max": 100,
+    "step": 0.1,
+    "initial": "50"
+  },
+  "audioMode": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "api",
+      "flow_original",
+      "none"
+    ],
+    "initial": "api"
+  },
+  "voice": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      ""
+    ],
+    "initial": ""
+  },
+  "voiceReference": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 1,
+    "accept": ".mp3,.wav,.m4a,.aac,.ogg",
+    "initial": []
+  },
+  "voiceReferenceId": {
+    "kind": "text",
+    "maxLength": 1000,
+    "initial": ""
+  },
+  "voiceLanguage": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "th",
+      "en",
+      "ja",
+      "zh"
+    ],
+    "initial": "th"
+  },
+  "voiceEmotion": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "Normal (มาตรฐาน)"
+    ],
+    "initial": "Normal (มาตรฐาน)"
+  },
+  "voiceSpeed": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 1,
+    "max": 1,
+    "step": 1,
+    "initial": "1"
+  },
+  "voiceSilence": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 0,
+    "max": 3,
+    "step": 0.1,
+    "initial": "0"
+  },
+  "voiceFormat": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "mp3",
+      "wav",
+      "mp4"
+    ],
+    "initial": "mp3"
+  },
+  "voiceScript": {
+    "kind": "textarea",
+    "maxLength": 10000,
+    "initial": ""
+  },
+  "keepVideoAudio": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "videoAudioVolume": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "initial": "35"
+  },
+  "allowSilent": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "subtitles": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": true
+  },
+  "subtitleLanguage": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "th",
+      "en"
+    ],
+    "initial": "th"
+  },
+  "subtitleSyllables": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 1,
+    "max": 5,
+    "step": 1,
+    "initial": "3"
+  },
+  "subtitleTheme": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "standard",
+      "clean_impact",
+      "comic_burst",
+      "neon_punch",
+      "creator_badge",
+      "spotlight_card",
+      "yellow_pop",
+      "minimal",
+      "pastel",
+      "classic",
+      "outline",
+      "product_review"
+    ],
+    "initial": "standard"
+  },
+  "subtitleAnimation": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "none",
+      "fade",
+      "wordPop",
+      "bounce",
+      "slideup",
+      "glow",
+      "shake",
+      "scaleRotate",
+      "karaoke"
+    ],
+    "initial": "none"
+  },
+  "subtitleFont": {
+    "kind": "text",
+    "maxLength": 1000,
+    "initial": "Kanit-Bold"
+  },
+  "subtitleFontFile": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 1,
+    "accept": ".ttf,.otf",
+    "initial": []
+  },
+  "subtitleSize": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 14,
+    "max": 72,
+    "step": 1,
+    "initial": "28"
+  },
+  "subtitleMarkGap": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 20,
+    "step": 1,
+    "initial": "14"
+  },
+  "subtitleOutline": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 8,
+    "step": 1,
+    "initial": "2"
+  },
+  "subtitleY": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 5,
+    "max": 95,
+    "step": 1,
+    "initial": "80"
+  },
+  "subtitleTextColor": {
+    "kind": "color",
+    "maxLength": 128,
+    "initial": "#ffffff"
+  },
+  "subtitleHighlight": {
+    "kind": "color",
+    "maxLength": 128,
+    "initial": "#facc15"
+  },
+  "subtitleOutlineColor": {
+    "kind": "color",
+    "maxLength": 128,
+    "initial": "#000000"
+  },
+  "subtitleBackgroundColor": {
+    "kind": "color",
+    "maxLength": 128,
+    "initial": "#000000"
+  },
+  "subtitleBackground": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": true
+  },
+  "subtitleBackgroundOpacity": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "initial": "100"
+  },
+  "musicEnabled": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "musicFiles": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 100,
+    "accept": ".mp3,.wav,.m4a,.aac,.ogg",
+    "initial": []
+  },
+  "musicCount": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 1,
+    "max": 100,
+    "step": 1,
+    "initial": "1"
+  },
+  "musicVolume": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 3,
+    "max": 35,
+    "step": 1,
+    "initial": "15"
+  },
+  "musicSegment": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 8,
+    "max": 12,
+    "step": 1,
+    "initial": "10"
+  },
+  "musicDuck": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 20,
+    "max": 65,
+    "step": 1,
+    "initial": "35"
+  },
+  "sfxEnabled": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "sfxMode": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "อัตโนมัติ • เว้นจังหวะ",
+      "สุ่มเสียงทุกจุด",
+      "เลือกเสียงเดียว"
+    ],
+    "initial": "อัตโนมัติ • เว้นจังหวะ"
+  },
+  "sfxFiles": {
+    "kind": "file",
+    "maxLength": 128,
+    "maxFiles": 100,
+    "accept": ".mp3,.wav,.m4a,.aac,.ogg",
+    "initial": []
+  },
+  "sfxVolume": {
+    "kind": "range",
+    "maxLength": 128,
+    "min": 5,
+    "max": 60,
+    "step": 1,
+    "initial": "25"
+  },
+  "sfxInterval": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 4,
+    "max": 15,
+    "step": 1,
+    "initial": "6"
+  },
+  "sfxCount": {
+    "kind": "number",
+    "maxLength": 128,
+    "min": 1,
+    "max": 12,
+    "step": 1,
+    "initial": "6"
+  },
+  "generatedMusic": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "generatedMusicMood": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "ให้ AI เลือกตามเรื่อง",
+      "อบอุ่น",
+      "สดใส",
+      "ลุ้นเบา ๆ",
+      "ซึ้ง"
+    ],
+    "initial": "ให้ AI เลือกตามเรื่อง"
+  },
+  "generatedMusicFrequency": {
+    "kind": "select",
+    "maxLength": 128,
+    "options": [
+      "น้อย",
+      "พอดี · ประมาณ 30%"
+    ],
+    "initial": "พอดี · ประมาณ 30%"
+  },
+  "reviewBeforeImages": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  },
+  "queueOnly": {
+    "kind": "checkbox",
+    "maxLength": 128,
+    "initial": false
+  }
+}

@@ -369,6 +369,9 @@ def create_app(settings: Settings | None = None):
         return table_rows(db, table, limit, offset)
 
     app.include_router(router)
+    from smartflow.draft_routes import draft_router
+
+    app.include_router(draft_router(db))
     root = web_root()
     if (root / "assets").exists():
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")

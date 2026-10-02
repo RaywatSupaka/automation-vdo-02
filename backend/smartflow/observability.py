@@ -6,6 +6,8 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 SAFE_FIELDS = {
+    "draft_id",
+    "revision",
     "actor_id",
     "role",
     "auth_mode",
