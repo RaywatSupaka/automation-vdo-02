@@ -1,6 +1,7 @@
 # Story Shorts: feature plan
 
 **สถานะ: ออกแบบเท่านั้น ยังไม่มี Story workflow หรือ Extension ใหม่ที่ทำงานจริง**
+เฉพาะ UI แบบร่าง 5 ขั้นทำใน source แล้ว ดู [Shared step wizard](../architecture/step-wizard.md); ยังไม่เชื่อม Story API
 ใช้พฤติกรรมของงานเก่าเป็น reference; เอกสารนี้เขียนใหม่ ไม่ย้าย source, MD หรือข้อมูลลูกค้า
 
 ## ผลลัพธ์ที่ต้องการ

@@ -4,6 +4,7 @@ import { Activity, ArrowRight, Box, CheckCircle2, ChevronRight, CircleDot, Datab
 import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent,
   type Permission, type Session } from './api';
 import { actions, statusLabels } from './status';
+import { StoryShorts } from './features/story-shorts/StoryShorts';
 
 const scenarios = [
   ['success', 'ทำงานสำเร็จ', 'สร้างและบันทึก checkpoint'],
@@ -68,7 +69,8 @@ export function App() {
         if (!stopped) {
           setSession(nextSession);
           if (!readable && view === 'jobs') setView('database');
-          if (!inspectable && view !== 'jobs') setView('jobs');
+          if (!inspectable && (view === 'database' || view === 'logs')) setView('jobs');
+          if (view === 'story' && !nextSession.permissions.includes('jobs:create')) setView(readable ? 'jobs' : 'database');
           setHealth(nextHealth); setJobs(nextJobs); setEvents(nextEvents);
           if (view === 'database') setDatabase(extra);
           if (view === 'logs') setLogs(extra);
@@ -127,6 +129,7 @@ export function App() {
             <Component size={19}/>{text as string}{view === key && <span className="nav-dot"/>}
           </button>;
         })}
+        {can('jobs:create') && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><FileText size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
       </nav>
       <div className="sidebar-bottom"><ShieldCheck size={23}/><strong>ตรวจสอบได้ทุกขั้นตอน</strong>
         <p>สถานะงานและ checkpoint<br/>บันทึกไว้ในเครื่องของคุณ</p>
@@ -134,11 +137,12 @@ export function App() {
       </div>
     </aside>
 
-    <main className="main">
-      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}</span>
+    <main className={`main ${view === 'story' ? 'story-main' : ''}`}>
+      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}</span>
         <span className="connection-status"><i className={health?.worker_alive ? 'online' : ''}/>{health?.worker_alive ? 'ตัวประมวลผลพร้อม' : 'ยังไม่พบตัวประมวลผล'}</span>
       </header>
-      <div className="content">
+      <div className="story-host" hidden={view !== 'story'}>{can('jobs:create') && <StoryShorts/>}</div>
+      <div className="content" hidden={view === 'story'}>
         <div className="page-heading"><div><p className="eyebrow">YOUR AUTOMATION, IN FOCUS</p>
           <h1>{view === 'jobs' ? 'ทุกงาน อยู่ในสายตา' : view === 'database' ? 'ตรวจสอบข้อมูลของระบบ' : 'ลำดับเหตุการณ์ของระบบ'}</h1>
           <p className="subtitle">{view === 'jobs' ? 'สร้างงาน ติดตามผล และทำต่อจากจุดที่บันทึกไว้' : 'ข้อมูลสำหรับวิเคราะห์ปัญหา พร้อมรหัสอ้างอิงที่ติดตามได้'}</p></div>

@@ -17,6 +17,8 @@
 | เลือกเทสและควบคุมเวลาทดสอบ | [Testing](development/testing.md) |
 | เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |
 | เข้าใจ frontend / API / worker / desktop | [Runtime boundaries](architecture/runtime.md) |
+| ใช้การ์ดกรอกทีละขั้น / แก้ฟอร์ม Story Shorts | [Shared step wizard](architecture/step-wizard.md) |
+| ดูหลักฐานเทสและเปิดหน้าฟอร์มใหม่ใน Dev | [Verification Story wizard](delivery/verification-story-wizard.md) |
 | แก้คิว checkpoint retry cancel และ resume | [Automation lifecycle](architecture/automation.md) |
 | แก้ schema, transaction และไฟล์งาน | [Storage](architecture/storage.md) |
 | เพิ่มผู้ให้บริการจริง | [Provider adapters](architecture/providers.md) |

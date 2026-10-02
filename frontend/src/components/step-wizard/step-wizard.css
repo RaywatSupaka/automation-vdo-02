@@ -1,0 +1,27 @@
+.step-wizard{display:flex;flex-direction:column;min-height:0;flex:1;background:#fff;border:1px solid #dee5e7;border-radius:20px;box-shadow:0 12px 40px #203c4e08;overflow:hidden}
+.wizard-progress{padding:22px 30px 18px;border-bottom:1px solid #edf0f2;flex-shrink:0}
+.wizard-progress-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#75838c}
+.wizard-progress-caption strong{color:#2b6861;font-size:13px}
+.wizard-progress progress{display:block;width:100%;height:5px;margin:14px 0 20px;border:0;border-radius:5px;overflow:hidden;background:#eaf0ef;accent-color:#2b6861}
+.wizard-progress progress::-webkit-progress-bar{background:#eaf0ef}
+.wizard-progress progress::-webkit-progress-value{background:#2b6861;transition:width .2s}
+.wizard-steps{list-style:none;display:grid;gap:8px;padding:0;margin:0}
+.wizard-step{width:100%;justify-content:flex-start;text-align:left;gap:10px;padding:8px;border:0;background:transparent;min-width:0}
+.wizard-step:disabled{cursor:default;opacity:1;color:#8b949e}
+.wizard-step-number{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;border:1px solid #dce3e6;border-radius:50%;font-size:12px;background:#f7f9fa}
+.wizard-step.is-done .wizard-step-number{background:#e6f3ed;border-color:#d1e7dc;color:#357662}
+.wizard-step.is-current{background:#f0f6f4;color:#245d55}
+.wizard-step.is-current .wizard-step-number{background:#2b6861;border-color:#2b6861;color:white;box-shadow:0 0 0 3px #dcebe5}
+.wizard-step-copy{min-width:0}.wizard-step-copy strong{display:block;font-size:12px;font-weight:600}.wizard-step-copy small{display:block;font-size:10px;font-weight:400;margin-top:3px;color:#85928c}
+.wizard-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:28px 36px}
+.wizard-page{max-width:880px;margin:auto;animation:wizard-enter .18s ease-out}
+.wizard-step-heading{margin-bottom:24px}.wizard-step-heading .eyebrow{font-size:10px;color:#559489;letter-spacing:2px;margin-bottom:8px}.wizard-step-heading h2{font-size:24px;font-weight:650;letter-spacing:-.4px;outline-offset:5px}.wizard-step-heading>p:last-child{margin-top:8px;color:#7a8792;font-size:13px;line-height:1.7}
+.wizard-footer{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #e9eeee;padding:18px 30px;background:#fcfdfd}.wizard-footer>p{color:#7c898e;font-size:11px;max-width:360px;line-height:1.6}.wizard-actions{display:flex;gap:10px;flex-shrink:0}.wizard-actions button{min-width:116px}.wizard-actions button:disabled{cursor:default}
+.wizard-error{border:1px solid #efcbc5;border-radius:10px;color:#984c43;background:#fff5f2;padding:12px 16px;margin-bottom:18px;font-size:13px}
+.wizard-confirmation{display:flex;align-items:center;gap:10px;background:#eaf5ef;color:#2d6a54;padding:14px;border-radius:10px;margin-bottom:18px;font-size:13px}
+@keyframes wizard-enter{from{opacity:.35;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.wizard-page{animation:none}.wizard-progress progress::-webkit-progress-value{transition:none}}
+@media(max-width:1050px){.wizard-progress{padding:18px}.wizard-step-copy small{display:none}.wizard-step{gap:7px;padding:7px 3px}.wizard-step-copy strong{font-size:11px}.wizard-body{padding:24px}.wizard-footer{padding:16px 20px}}
+@media(max-width:650px){.wizard-progress{padding:14px 12px}.wizard-progress-caption{font-size:10px;gap:6px}.wizard-progress-caption strong{font-size:12px}.wizard-progress progress{margin:10px 0}.wizard-step{flex-direction:column;text-align:center;gap:7px;padding:7px 1px}.wizard-step-copy strong{font-size:9px;overflow-wrap:anywhere}.wizard-step-number{width:26px;height:26px}.wizard-body{padding:20px 16px}.wizard-step-heading h2{font-size:21px}.wizard-footer{padding:12px;flex-direction:column;gap:8px;align-items:stretch}.wizard-footer>p{font-size:10px;max-width:none}.wizard-actions{justify-content:space-between}.wizard-actions button{min-width:100px}}
+@media(max-height:700px) and (min-width:651px){.wizard-progress{padding-top:12px;padding-bottom:10px}.wizard-progress progress{margin:9px 0}.wizard-body{padding-top:18px;padding-bottom:18px}.wizard-footer{padding-top:12px;padding-bottom:12px}}
+@media(min-width:1051px) and (max-height:800px){.wizard-progress{padding:14px 24px 12px}.wizard-progress progress{margin:10px 0}.wizard-step-copy small{display:none}.wizard-body{padding:20px 30px}.wizard-step-heading{margin-bottom:16px}.wizard-step-heading h2{font-size:22px}.wizard-footer{padding:14px 24px}}
