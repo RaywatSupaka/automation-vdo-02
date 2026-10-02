@@ -6,6 +6,7 @@
 | เปลี่ยนส่วนไหน | Scope | สิ่งที่ตรวจ |
 |---|---|---|
 | กติกาล้วน ไม่เปิด API/DB | unit | tests/unit ทั้งหมด |
+| ปิด desktop รอ save ACK | unit-close | duplicate close, save failure และ late callback หลัง timeout |
 | Permission/token policy ล้วน | unit-auth | auth policy ไม่เปิด API/DB |
 | Validation/error catalog ล้วน | unit-input | schema validation |
 | Lock, migration, startup failure | contracts | integration ด้วย temporary SQLite/ไฟล์ |
@@ -14,6 +15,7 @@
 | API, auth, export, log | api | ASGI requests และฐานข้อมูลจริงใน sandbox |
 | แบบร่างและสิทธิ์ | story-api | incomplete save, restart, idempotency, revision conflict และ privacy |
 | สำรอง/อัปเกรด DB | migration | WAL backup, rollback DDL/data, unknown version และ offline checks |
+| Pairing/ไฟล์แนบ | pairing | nonce/revoke/scoped token, DPAPI, interrupted import และ native framing |
 | Native framing/hello | bridge-contract | malformed/oversize/origin/version และ subprocess stdout |
 | Extension protocol/background | extension-unit | WXT/Vitest, sender, timeout และ reconnect |
 | Build Extension | build-extension | WXT prepare, TypeScript และ MV3 output |
@@ -62,3 +64,7 @@ Starlette รุ่นปัจจุบันมี TestClient/httpx deprecatio
 Source: [check.py](../../tools/check.py), [pytest config](../../pyproject.toml),
 [Playwright config](../../frontend/playwright.config.ts), [CI](../../.github/workflows/checks.yml)
 เทส EXE/เครื่องลูกค้า: [Packaging](../delivery/packaging.md)
+
+Native EXE integration: `python tools/pairing_smoke.py` หลัง build helper; profile/backend/HKCU host แยกจากผู้ใช้
+
+Native close integration: `python tools/desktop_close_smoke.py` เปิด WebView ในข้อมูลชั่วคราว แล้วปิดก่อน debounce และตรวจ DB

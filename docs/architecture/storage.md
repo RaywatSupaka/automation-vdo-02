@@ -1,6 +1,6 @@
 # Storage
 
-ใช้ SQLite + SQLAlchemy 2 และ Alembic migration `0002`
+ใช้ SQLite + SQLAlchemy 2 และ Alembic migration `0003`
 ข้อมูลแยกจากโฟลเดอร์ติดตั้ง; ตำแหน่งตามโหมดอยู่ใน [Setup](../development/setup.md)
 
 | ตาราง | หน้าที่ |
@@ -12,7 +12,10 @@
 | alembic_version | schema revision |
 | story_drafts | แบบร่าง 95 ช่อง, revision และขั้นปัจจุบัน |
 | draft_commands | idempotency hash และ response เดิม |
-| draft_events | audit การบันทึก ไม่มีเนื้อหาเรื่อง |
+| draft_events | audit การบันทึก/นำเข้า ไม่มีเนื้อหาเรื่อง |
+| draft_assets | เจ้าของ field, display name, checksum, ขนาดและสถานะสำเนาไฟล์ |
+| browser_pairings | hashes ของ nonce/token, expiry, state และ last_seen |
+| browser_events | audit การจับคู่/เพิกถอน ไม่มี credential |
 
 ## Transaction และไฟล์
 

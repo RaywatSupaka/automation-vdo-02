@@ -26,13 +26,15 @@ Route ที่ไม่ได้ระบุ permission ถูกปฏิเ�
 
 | Role | สิทธิ์ |
 |---|---|
-| owner | ทุก permission ที่ประกาศในระบบ |
+| owner | จัดการงาน/diagnostics/draft และ browser:manage; ไม่ใช้ permission เฉพาะ agent/nonce |
 | operator | อ่าน/สร้าง/สั่งงาน พร้อมดู session/schema; ไม่มี log/DB/export |
 | viewer | อ่านงานและ session/schema; สั่งงานไม่ได้ |
 | support | อ่าน diagnostics/DB projections/log และ export แบบกรองข้อมูล; อ่านเนื้อหางานหรือสั่งงานไม่ได้ |
 
 Draft API เพิ่ม `stories:drafts:read` ให้ owner/operator/viewer และ `stories:drafts:write` ให้ owner/operator
-Support อ่านเฉพาะ draft diagnostics ที่ไม่มี config; Extension ยังไม่มี API credential/pairing หรือ draft access
+Support อ่านเฉพาะ draft diagnostics ที่ไม่มี config
+Extension ใช้ DPAPI-protected scoped credential; agent ได้เฉพาะ browser:status ไม่มี draft access
+Pairing nonce/expiry/revoke และขอบเขต host: [Extension pairing](../architecture/extension-foundation.md)
 
 `SMARTFLOW_SESSION_ROLE` กำหนด role ฝั่ง server ของ API token หลัก (default owner)
 `SMARTFLOW_DIAGNOSTICS_TOKEN` เป็น token ทางเลือกสำหรับ support ต้องต่างจาก token หลักและยาวอย่างน้อย 24 ตัว

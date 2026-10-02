@@ -52,10 +52,13 @@ UI, backend และ worker ทำงานในเครื่องเดี
 
 ห้ามปิดโปรแกรมเก่า Chrome หรือ process อื่นแบบเหมารวม และห้าม force-kill งานเพื่อให้ผ่านขั้นตอนนี้
 การกด F5, ดูหน้าเว็บ หรือดู screenshot จาก browser test ไม่แทนการปิดเปิด desktop
-แบบร่าง Story ปัจจุบันยังอยู่ใน memory: ถ้ามีข้อมูลที่ยังเก็บคืนไม่ได้ ต้องแจ้งตัวบล็อกและการรีสตาร์ตที่ค้างให้ชัดเจน
+Story มี Autosave และ close flush แล้ว; ถ้า save error/conflict ยังไม่ถูกแก้ จะคงหน้าต่างไว้
+สำหรับรุ่นเก่าที่ไม่มี persistence ต้องรักษาข้อมูลหรือขอการตัดสินใจก่อนทิ้งแบบร่าง
 ห้ามทิ้งข้อมูลเงียบ ๆ หรืออ้างว่าเปิดใช้แล้ว; ขอการตัดสินใจเฉพาะข้อมูลที่จำเป็นต้องทิ้งเมื่อไม่มีวิธีรักษาจริง
 ข้อบังคับนี้ใช้เมื่อแก้ UX/UI; งานเอกสารอย่างเดียวไม่ต้อง build/restart
 
 Source: [setup.py](../../tools/setup.py), [config.py](../../backend/smartflow/config.py),
 [RUN_DEV.vbs](../../RUN_DEV.vbs), [RUN_DEV.bat](../../RUN_DEV.bat), [Vite config](../../frontend/vite.config.ts)
 การตรวจ: [Testing](testing.md)
+
+การ build/register helper และโหลด Extension Dev: [Extension pairing](../architecture/extension-foundation.md)

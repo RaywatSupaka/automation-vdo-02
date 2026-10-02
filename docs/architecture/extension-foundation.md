@@ -1,46 +1,60 @@
-# Extension foundation: implemented boundary
+# Extension pairing: implemented boundary
 
-โครงใหม่อยู่ใน `browser_extension/`: WXT 0.21.4 + TypeScript + React + Manifest V3
-Dependencies pin และมี package-lock; ใช้ Vitest กับ WXT test plugin
-ทำแล้ว: background sender guard, popup ตรวจ helper, bounded hello protocol และ Python native framing
-ยังไม่ทำ: host registration/installer, pairing/credential, backend bridge, content adapter หรือ ChatGPT จริง
-แผนเต็ม: [Extension](../planning/browser-extension.md), [Protocol](../planning/extension-protocol.md)
+WXT 0.21.4 + TypeScript + React + Manifest V3; Extension/helper **0.1.1**, protocol **1**
+ทำแล้ว: sender guard, native framing, Windows registration, pairing, DPAPI credential, probe และ revoke
+ยังไม่ทำ: provider content adapter, operation dispatch/claim หรือการสร้างบท/ภาพจริง
+แผนถัดไป: [Coordinated plan](../planning/story-extension-milestones.md)
 
-## ขอบเขตปัจจุบัน
+## Identity และ permission
 
-- Permission มี `nativeMessaging` อย่างเดียว ไม่มี host access/content script/clipboard/debugger
-- Background รับคำสั่ง probe เฉพาะ popup URL ของ Extension ID ตัวเอง รวมเมื่อเปิด popup เป็นแท็บ
-- หน้าเว็บหรือ content script ใช้ handler นี้เป็น proxy ไป native host ไม่ได้
-- Host name ใหม่ `com.smartflow.next.dev`; ไม่เกี่ยวกับ identity/host ของระบบเก่า
-- Hello protocol version 1, Extension/helper version 0.1.0; รุ่นหรือ field ผิดถูกปฏิเสธ
-- Response ต้องตรง message_id และแสดง `unpaired`, capabilities ว่างเสมอ
-- Probe มี deadline 5 วินาที ไม่มี retry/send งานผลิตสื่อ; reconnect ต้อง probe ใหม่
-- Native framing ใช้ UTF-8 และ uint32 ความยาวแบบ native endian; cap 64 KiB ต่ำกว่า Chrome transport limit
-- Native host ตรวจ calling origin ตรงกับ Extension ID ที่กำหนด; stdout มีแต่ framed JSON
-- Native helper ยังไม่เก็บ credential ไม่ยิง HTTP และไม่รับ dispatch/shell/path commands
+- Permission มี `nativeMessaging` อย่างเดียว ไม่มี host access/content scripts/clipboard/debugger
+- Host `com.smartflow.next.dev`; Extension ID `fdohildaocnlmoaecommlohgpcdhknmb`
+- Public manifest key ใช้กำหนด ID คงที่; ไม่มี private signing key ใน repo
+- Background รับ probe/pair เฉพาะ popup URL และ ID ของตัวเอง
+- Host ตรวจ calling origin แบบ exact match; framed UTF-8 uint32, cap 64 KiB
+- `bridge_config.json` กำหนดรุ่น/ID ที่ backend ยอมรับ; native และ Extension ตรวจ protocol เช่นกัน
 
-คำว่า `unpaired` หมายถึงตรวจข้อความ hello ผ่านเท่านั้น ไม่ได้ยืนยัน backend พร้อมหรือ provider พร้อม
-ยังไม่ install ใน Chrome ของผู้ใช้; smoke ใช้ Chromium กับ profile ชั่วคราวแยกต่างหากแล้วปิดเอง
+## Pairing flow
 
-## คำสั่งตรวจ
+1. Owner เปิด “เชื่อมต่อ Extension” และสร้างรหัสแบบสุ่ม อายุ 120 วินาที
+2. ผู้ใช้ใส่รหัสใน popup; host สร้าง agent token และบันทึก pending ด้วย Windows current-user DPAPI ก่อน exchange
+3. Host ส่งรหัสกับ token ไป local API; DB เก็บเฉพาะ hashes ไม่เก็บค่า token/nonce
+4. Retry exchange เดิมต้องใช้ token เดิม; code เดิมกับ token ต่างถูกปฏิเสธ
+5. Pairing ใหม่สำเร็จเพิกถอนอันเก่าของ ID เดียวกัน; owner กดยกเลิกได้ทันที
+6. Agent token ได้เฉพาะ `/api/browser/agent`; อ่าน draft/jobs/logs/DB หรือจัดการ pairing ไม่ได้
 
-ใช้ Python/Node ที่ติดตั้งใน root โปรเจกต์จาก [Setup](../development/setup.md)
+Owner ใช้ `browser:manage`; code ใช้ `browser:pair`; agent ใช้ `browser:status`
+Role สองชนิดหลังเป็น internal identity และตั้งเป็น desktop role ไม่ได้
+Native host ยึด loopback port ใน config, timeout 4 วินาที, ไม่ใช้ proxy/redirect และไม่รับ arbitrary URL/shell
+Popup probe มี deadline 7 วินาที; polling ทุก 5 วินาทีเฉพาะตอน popup เปิด
+Desktop แสดง connected เมื่อมีการยืนยันใน 15 วินาทีล่าสุด; ไม่ใช่ readiness ของ ChatGPT
+ยังไม่มี background heartbeat ขณะปิด popup; อยู่ใน P3
+Transitions การจับคู่มี `browser_events` ใน transaction; logs มี trace/event โดยไม่มีรหัสหรือ credential
+
+## Build และติดตั้ง Dev
 
 ```powershell
-.venv\Scripts\python.exe tools/check.py --scope bridge-contract extension-unit build-extension
-.venv\Scripts\python.exe tools/check.py --scope extension-smoke
+.venv\Scripts\python.exe tools/check.py --scope build-extension
+.venv\Scripts\python.exe -m PyInstaller --noconfirm --onedir --console --name SmartFlowNextHost --paths backend --distpath build/native --workpath build/native-work --specpath build native_entry.py
+.venv\Scripts\python.exe tools/register_native_host.py --exe build/native/SmartFlowNextHost/SmartFlowNextHost.exe
 ```
 
-Smoke ต้องมี Extension build และ Playwright Chromium แล้ว; SETUP ติดตั้ง dependencies ทั้งสองโปรเจกต์
-Build output `browser_extension/.output/chrome-mv3` ไม่เข้า Git; ยังไม่ใช่ชุดส่งมอบให้ลูกค้า
-P2 จะเพิ่ม native registration, nonce pairing, protected credentials, revoke และ bridge auth จริง
-ห้ามใส่ owner token ลง popup/content script เพื่อข้ามงาน pairing ที่ยังไม่ทำ
+Registration ใช้ HKCU เฉพาะ host ใหม่ และปฏิเสธการทับ path ของ installation อื่น
+Helper ใช้ stdio ตาม Chrome protocol; Chrome เป็นผู้เปิด process ไม่มี terminal ที่ลูกค้าต้องเปิดค้าง
+Config ข้าง EXE มี port/ID/path ของไฟล์ DPAPI; ไม่มี owner token หรือ provider credential
+โหลด `browser_extension/.output/chrome-mv3` ผ่าน Load unpacked ใน Chrome ที่ผู้ใช้เลือก
+ห้ามย้ายโฟลเดอร์ helper หลัง register โดยไม่ลงทะเบียน path ใหม่
+ยังไม่ใช่ installer หรือชุด client-ready; ไม่แก้ identity/profile/Extension ของระบบเดิม
 
-Source: [WXT config](../../browser_extension/wxt.config.ts), [protocol](../../browser_extension/protocol/index.ts),
-[background](../../browser_extension/entrypoints/background.ts), [native host](../../backend/smartflow/native_host.py)
-Tests: [unit](../../browser_extension/protocol/protocol.test.ts), [framing/process](../../tests/test_native_host.py),
-[owned browser smoke](../../tools/extension_smoke.mjs)
-หลักฐาน: [Verification](../delivery/verification-draft-extension-foundation.md)
+## หลักฐานและการทดสอบ
 
-อ้างอิงการใช้ framework/protocol: [WXT unit testing](https://wxt.dev/guide/essentials/unit-testing),
-[Chrome Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)
+`pairing`, `auth`, `extension-unit`, `build-extension` ตรวจ contract และสิทธิ์
+`extension-smoke` เปิด popup ใน Chromium profile แยก; ไม่ลงทะเบียน host
+`python tools/pairing_smoke.py` ใช้ compiled helper, temporary backend/profile และ unique HKCU host
+ตรวจ Chrome native exchange, credential ข้าม helper process และ revocation แล้วลบเฉพาะ registry key ของเทส
+เทสนี้ไม่ติดตั้ง Extension ใน Chrome profile ของผู้ใช้ และไม่ใช่หลักฐาน provider output
+
+Source: [bridge](../../backend/smartflow/browser_bridge.py), [native client](../../backend/smartflow/native_client.py),
+[protocol](../../browser_extension/protocol/index.ts), [registration](../../tools/register_native_host.py)
+Tests: [pairing/assets](../../tests/test_assets_pairing.py), [native framing](../../tests/test_native_host.py)
+หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)

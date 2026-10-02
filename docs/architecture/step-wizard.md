@@ -1,7 +1,7 @@
 # Shared step wizard and Story Shorts form
 
 **ทำแล้วใน source:** การ์ดกรอกข้อมูลทีละขั้น และแบบร่าง Story Shorts
-**ยังไม่ทำ:** บันทึกแบบร่างลง DB, Story API, สร้างบท/ภาพ/เสียง/วิดีโอจริง
+**ยังไม่ทำ:** สร้างบท/ภาพ/เสียง/วิดีโอจริง; Story มี [Autosave/API](draft-api.md) แล้ว
 
 ## Component กลาง
 
@@ -49,7 +49,8 @@ Source: [StoryShorts](../../frontend/src/features/story-shorts/StoryShorts.tsx),
 ช่องบังคับแสดง `*` สีแดง; เมื่อเปิดตัวเลือกที่ต้องใช้ไฟล์ ช่องไฟล์นั้นจะบังคับตามเงื่อนไข
 Validation นี้ให้ feedback ผู้ใช้; Story API ในอนาคตต้อง enforce schema เอง
 ยังไม่มี voice selector จริง; ไม่แสดงรายชื่อเสียงหรือ provider ว่าเชื่อมแล้ว
-แบบร่างอยู่ใน React memory; เปลี่ยนเมนูไปมาได้ แต่ปิด/reload แล้วข้อมูลหาย มีข้อความแจ้งที่ footer
+แบบร่างมี Autosave/restore; wizard รับ initialStep และ onStepChange เพื่อเก็บขั้นล่าสุด
+ข้อมูลที่บันทึกสำเร็จคืนจาก API เมื่อเปิดใหม่; close guard รอ flush และไม่ปิดเมื่อ save ล้มเหลว
 ไม่ส่งเนื้อหาไป API/log/localStorage; session หมดอายุหรือสิทธิ์ถูกถอนจะ unmount และทิ้ง draft
 เมนูเปิดให้ session ที่มี jobs:create; ไม่มี route ใหม่และไม่เปลี่ยน auth/bypass policy
 

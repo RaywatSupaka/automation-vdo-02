@@ -1,7 +1,7 @@
 # Story Shorts: feature plan
 
 **สถานะ: ทำ UI, draft API และ Extension skeleton แล้ว; ยังไม่มี Story generation workflow จริง**
-UI แบบร่าง 5 ขั้นยังไม่ต่อ persistence API ดู [Shared step wizard](../architecture/step-wizard.md)
+UI แบบร่าง 5 ขั้นต่อ Autosave/API และ local assets แล้ว ดู [Shared step wizard](../architecture/step-wizard.md)
 ส่วน backend/Extension ที่ทำแล้ว: [Foundation verification](../delivery/verification-draft-extension-foundation.md)
 ฟอร์มมีตัวเลือกจากระบบเดิมครบหมวดเพื่อออกแบบล่วงหน้า ดู [รายการช่อง](../architecture/story-form.md)
 การเลือก Gemini/Flow/Meta, ตัวละครสนทนา หรือเสียงในแบบร่าง ไม่ได้หมายถึงมี adapter ใช้งานแล้ว

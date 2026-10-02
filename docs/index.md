@@ -11,7 +11,8 @@
 | ทำระบบบันทึกแบบร่างและ Extension ควบคู่กัน | [Coordinated milestones](planning/story-extension-milestones.md) |
 | ออกแบบ autosave กู้คืนแบบร่าง และไฟล์แนบ | [Draft persistence](planning/draft-persistence.md) |
 | ใช้ API บันทึกแบบร่างที่ทำแล้ว | [Draft API](architecture/draft-api.md) |
-| ดูโครง Extension และ native hello ที่ทำแล้ว | [Extension foundation](architecture/extension-foundation.md) |
+| จับคู่ Extension/helper และอ่านขอบเขตสิทธิ์ | [Extension foundation](architecture/extension-foundation.md) |
+| ดูผลตรวจ Autosave และการจับคู่จริง | [P2 verification](delivery/verification-autosave-pairing.md) |
 | ดูผลตรวจพื้นฐานแบบร่างและ Extension | [Foundation verification](delivery/verification-draft-extension-foundation.md) |
 | ดูแนวคิดที่เรียนรู้จาก source เดิม | [Story reference](planning/story-reference.md) |
 | ออกแบบข้อมูล/ฉาก/revision/API ของ Story | [Story data and API](planning/story-data-api.md) |

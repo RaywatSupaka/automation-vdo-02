@@ -1,8 +1,8 @@
 # Story drafts + Extension: coordinated implementation plan
 
-สถานะ: เริ่ม P0/P1 ส่วน draft schema/API และ Extension skeleton/native hello แล้ว
-ยังไม่ปิด P0/P1 ทั้งรอบ: asset schema/import และ operation envelope ยังต้องทำต่อ; P2–P4 ยังไม่เปิดใช้
-หลักฐาน: [Foundation verification](../delivery/verification-draft-extension-foundation.md)
+สถานะ: P2 Autosave/assets/restore/close flush และ native pairing ทำแล้วใน source Dev
+Operation envelope/dispatch/recovery ของ P3 และ integration handoff P4 ยังต้องทำต่อ
+หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)
 ทำสองสายงานใน milestone เดียวกัน โดยใช้ contract ร่วม ไม่รอให้ Story workflow ครบก่อนเริ่ม Extension
 Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Extension ใช้ WXT/TypeScript/MV3 + React popup และ Python native host
 ตรวจและล็อก dependency versions ตอนเริ่ม implementation; ไม่คัดลอก runtime ของโปรเจกต์เก่า
