@@ -12,6 +12,7 @@ This is a new project. Do not import legacy source, MD files, jobs, browser prof
 - Persist state transitions and events in the same transaction. A UI progress label is not proof of a saved artifact.
 - Add behavioral tests for the changed boundary, including a relevant crash, timing or duplicate case. Use injected clocks instead of real sleeps except process/browser integration tests.
 - Choose checks from `docs/development/testing.md`. Run `--scope all` for broad changes and release handoffs; do not repeat a completed full run for documentation or fixture-only corrections.
+- Default to the smallest affected scope or `--match` case, then affected contracts. Use `--changed --dry-run` to inspect selection and add scope mappings with new features. Do not build UI/EXE, run browser tests or restart the desktop for backend-only or test-tool changes unless that boundary is affected; see `docs/development/test-selection.md`.
 - Report exact checks and measured durations. Offline simulation, source UI, packaged EXE, clean Windows and live provider evidence are separate claims.
 - One topic per document; follow `docs/development/documentation.md`. Keep this file as rules and the index as links only.
 - Update the owning topic in place and add its index link. Never append release history, reports or plans to a central file; Git preserves edits.

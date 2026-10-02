@@ -1,0 +1,88 @@
+"""Conservative changed-file selection. Unknown files fall back to full checks."""
+
+import subprocess
+from fnmatch import fnmatchcase
+
+PYTHON_SCOPES = {
+    "unit": ["tests/unit"],
+    "unit-auth": ["tests/unit/test_auth_policy.py"],
+    "unit-input": ["tests/unit/test_inputs.py"],
+    "contracts": ["tests/test_contracts.py"],
+    "auth": ["tests/test_auth.py"],
+    "api-core": ["tests/test_api.py"],
+    "api": ["tests/test_api.py", "tests/test_auth.py"],
+    "workflow": ["tests/test_workflow.py"],
+    "runtime": ["tests/test_runtime.py"],
+    "offline": ["tests/test_offline.py"],
+    "tooling": ["tests/test_check_tools.py"],
+    "backend": ["tests"],
+}
+ALL_SCOPES = [*PYTHON_SCOPES, "ui", "typecheck", "build-ui", "e2e", "desktop", "all"]
+RULES = [
+    ("*.md", []),
+    ("tests/unit/*", ["unit"]),
+    ("tests/test_auth.py", ["auth"]),
+    ("tests/test_api.py", ["api-core"]),
+    ("tests/test_contracts.py", ["contracts"]),
+    ("tests/test_workflow.py", ["workflow"]),
+    ("tests/test_runtime.py", ["runtime"]),
+    ("tests/test_offline.py", ["offline"]),
+    ("tests/test_check_tools.py", ["tooling"]),
+    ("tests/conftest.py", ["backend"]),
+    ("tools/check*.py", ["tooling"]),
+    ("backend/smartflow/auth.py", ["unit-auth", "api"]),
+    ("backend/smartflow/api.py", ["api"]),
+    ("backend/smartflow/contracts.py", ["api"]),
+    ("contracts/openapi.json", ["api"]),
+    ("backend/smartflow/errors.py", ["unit", "api", "workflow"]),
+    ("backend/smartflow/offline.py", ["offline"]),
+    ("backend/smartflow/diagnostics.py", ["api-core", "offline"]),
+    ("backend/smartflow/observability.py", ["api", "workflow", "offline"]),
+    ("backend/smartflow/runtime.py", ["contracts", "runtime"]),
+    ("backend/smartflow/worker.py", ["runtime", "workflow"]),
+    ("backend/smartflow/cli.py", ["backend", "build-ui", "e2e"]),
+    ("backend/smartflow/*.py", ["backend"]),
+    ("frontend/src/status*", ["ui", "typecheck"]),
+    ("frontend/*", ["ui", "build-ui", "e2e"]),
+]
+
+
+def select_scopes(paths):
+    scopes = set()
+    for path in paths:
+        path = path.replace("\\", "/")
+        for pattern, affected in RULES:
+            if fnmatchcase(path, pattern):
+                scopes.update(affected)
+                break
+        else:
+            return ["all"]
+    return [scope for scope in ALL_SCOPES if scope in scopes]
+
+
+def changed_files(root, base=None):
+    if base and set(base) == {"0"}:  # First push has no comparable parent.
+        return ["<initial-push>"]
+    # Disabling rename detection includes both deleted and added paths.
+    args = ["git", "diff", "--no-renames", "--name-only", "-z", base or "HEAD"]
+    data = subprocess.check_output(args, cwd=root).decode("utf-8")
+    paths = [path for path in data.split("\0") if path]
+    if not base:
+        extra = subprocess.check_output(
+            ["git", "ls-files", "--others", "--exclude-standard", "-z"], cwd=root
+        ).decode("utf-8")
+        paths.extend(path for path in extra.split("\0") if path)
+    return sorted(set(paths))
+
+
+def plan(scopes):
+    selected = list(dict.fromkeys(scopes))
+    if "all" in selected:
+        selected = ["all"]
+    browser = any(scope in selected for scope in ("all", "e2e"))
+    return {
+        "scopes": selected,
+        "needs_node": browser or any(s in selected for s in ("ui", "typecheck", "build-ui")),
+        "needs_browser": browser,
+        "has_checks": bool(selected),
+    }

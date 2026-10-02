@@ -9,6 +9,7 @@
 | เลือกงานถัดไปและเกณฑ์จบงาน | [แผนโครงสร้างพื้นฐาน](planning/foundation.md) |
 | ติดตั้งเครื่องมือ / เปิด Dev / ตั้งค่าเครื่อง | [Development setup](development/setup.md) |
 | เลือกเทสและควบคุมเวลาทดสอบ | [Testing](development/testing.md) |
+| เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |
 | เข้าใจ frontend / API / worker / desktop | [Runtime boundaries](architecture/runtime.md) |
 | แก้คิว checkpoint retry cancel และ resume | [Automation lifecycle](architecture/automation.md) |
 | แก้ schema, transaction และไฟล์งาน | [Storage](architecture/storage.md) |
