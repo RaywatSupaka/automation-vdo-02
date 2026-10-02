@@ -21,13 +21,12 @@ try {
   await page.getByRole('button', { name: 'ตรวจการเชื่อมต่อ' }).waitFor();
   await page.waitForFunction(() => !document.querySelector('button').disabled);
   const text = await page.getByRole('status').innerText();
-  // P1 deliberately does not register a host. Probe must show disconnected,
-  // never paired/ready based on the popup simply having loaded.
-  if (text !== 'ยังไม่เชื่อมต่อ helper') throw new Error('Unexpected native host state');
+  // Routine smoke never registers a host. A dev helper may be present but unpaired.
+  if (!['ยังไม่เชื่อมต่อ helper', 'พบ helper แล้ว · ยังไม่จับคู่', 'โปรแกรมยังไม่พร้อมเชื่อมต่อ'].includes(text)) throw new Error('Unexpected native host state');
   const evidence = path.join(root, 'build/extension-smoke');
   await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: path.join(evidence, 'popup.png') });
-  await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ loaded: true, probe: 'disconnected',
-    native_host_registered: false, paired: false, provider_tested: false }, null, 2));
+  await writeFile(path.join(evidence, 'result.json'), JSON.stringify({ loaded: true, probe: text,
+    native_host_responded: text !== 'ยังไม่เชื่อมต่อ helper', paired: false, provider_tested: false }, null, 2));
   console.log('Extension loaded in owned Chromium profile; popup and unavailable-host behavior passed.');
 } finally { await context.close(); }

@@ -6,6 +6,7 @@ import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type J
 import { actions, statusLabels } from './status';
 import { BrandIcon } from './components/BrandIcon';
 import { StoryShorts } from './features/story-shorts/StoryShorts';
+import { BrowserPairing } from './features/BrowserPairing';
 
 const scenarios = [
   ['success', 'ทำงานสำเร็จ', 'สร้างและบันทึก checkpoint'],
@@ -21,7 +22,8 @@ function time(value: number) {
 }
 
 export function App() {
-  const [connected, setConnected] = useState(!!takeToken());
+  const [connected, setConnected] = useState(() => !!takeToken());
+  const [authEpoch, setAuthEpoch] = useState(0);
   const [token, setToken] = useState('');
   const [view, setView] = useState('jobs');
   const [health, setHealth] = useState<Health | null>(null);
@@ -52,13 +54,30 @@ export function App() {
       : error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
   }
 
+  useEffect(() => {
+    const changed = () => {
+      if (!new URLSearchParams(location.hash.slice(1)).has('token')) return;
+      takeToken();
+      setSession(null); setHealth(null); setJobs([]); setEvents([]); setDatabase([]); setLogs([]);
+      setSelected(null); setModal(false); setMessage(''); setView('jobs');
+      setConnected(true); setAuthEpoch(value => value + 1);
+    };
+    window.addEventListener('hashchange', changed);
+    return () => window.removeEventListener('hashchange', changed);
+  }, []);
   useEffect(() => { commandKey.current = crypto.randomUUID(); }, [title, scenario]);
+  useEffect(() => {
+    const lost = () => showError(new ApiError('UNAUTHORIZED', 'สิทธิ์ของ session หมดอายุ', ''));
+    window.addEventListener('smartflow-auth-lost', lost);
+    return () => window.removeEventListener('smartflow-auth-lost', lost);
+  }, []);
 
   useEffect(() => {
     if (!connected) return;
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     async function refresh() {
+      const requestToken = takeToken();
       try {
         const [nextHealth, nextSession] = await Promise.all([api<Health>('/health'), api<Session>('/session')]);
         const readable = nextSession.permissions.includes('jobs:read');
@@ -67,21 +86,22 @@ export function App() {
         const nextEvents = readable && selected ? await api<JobEvent[]>(`/jobs/${selected}/events`) : [];
         const extra = inspectable && view === 'database' ? await api<unknown[]>(`/diagnostics/database/${table}`)
           : inspectable && view === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
-        if (!stopped) {
+        if (!stopped && requestToken === takeToken()) {
           setSession(nextSession);
           if (!readable && view === 'jobs') setView('database');
           if (!inspectable && (view === 'database' || view === 'logs')) setView('jobs');
+          if (view === 'browser' && !nextSession.permissions.includes('browser:manage')) setView(readable ? 'jobs' : 'database');
           if (view === 'story' && !nextSession.permissions.includes('jobs:create')) setView(readable ? 'jobs' : 'database');
           setHealth(nextHealth); setJobs(nextJobs); setEvents(nextEvents);
           if (view === 'database') setDatabase(extra);
           if (view === 'logs') setLogs(extra);
         }
-      } catch (error) { if (!stopped) showError(error); }
+      } catch (error) { if (!stopped && requestToken === takeToken()) showError(error); }
       finally { if (!stopped) timer = setTimeout(refresh, 1500); }
     }
     void refresh();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [connected, selected, view, table]);
+  }, [connected, selected, view, table, authEpoch]);
 
   async function createJob(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage('');
@@ -123,6 +143,7 @@ export function App() {
       <div className="workspace"><span className="workspace-icon">S</span><div>พื้นที่ทำงานของฉัน<small>บนเครื่องนี้</small></div><ChevronRight size={16}/></div>
       <p className="nav-label">WORKSPACE</p>
       <nav aria-label="เมนูหลัก">
+        {can('browser:manage') && <button className={view === 'browser' ? 'active' : ''} onClick={() => setView('browser')}><ShieldCheck size={19}/>เชื่อมต่อ Extension</button>}
         {[['jobs', 'งานอัตโนมัติ', Box], ['database', 'ตรวจฐานข้อมูล', Database], ['logs', 'บันทึกระบบ', FileText]].map(([key, text, Icon]) => {
           if (!can(key === 'jobs' ? 'jobs:read' : 'diagnostics:read')) return null;
           const Component = Icon as typeof Box;
@@ -139,11 +160,12 @@ export function App() {
     </aside>
 
     <main className={`main ${view === 'story' ? 'story-main' : ''}`}>
-      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}</span>
+      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}</span>
         <span className="connection-status"><i className={health?.worker_alive ? 'online' : ''}/>{health?.worker_alive ? 'ตัวประมวลผลพร้อม' : 'ยังไม่พบตัวประมวลผล'}</span>
       </header>
       <div className="story-host" hidden={view !== 'story'}>{can('jobs:create') && <StoryShorts/>}</div>
-      <div className="content" hidden={view === 'story'}>
+      {view === 'browser' && can('browser:manage') && <div className="content"><BrowserPairing/></div>}
+      <div className="content" hidden={view === 'story' || view === 'browser'}>
         <div className="page-heading"><div><p className="eyebrow">YOUR AUTOMATION, IN FOCUS</p>
           <h1>{view === 'jobs' ? 'ทุกงาน อยู่ในสายตา' : view === 'database' ? 'ตรวจสอบข้อมูลของระบบ' : 'ลำดับเหตุการณ์ของระบบ'}</h1>
           <p className="subtitle">{view === 'jobs' ? 'สร้างงาน ติดตามผล และทำต่อจากจุดที่บันทึกไว้' : 'ข้อมูลสำหรับวิเคราะห์ปัญหา พร้อมรหัสอ้างอิงที่ติดตามได้'}</p></div>

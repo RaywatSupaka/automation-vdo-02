@@ -4,10 +4,12 @@ import subprocess
 from fnmatch import fnmatchcase
 
 PYTHON_SCOPES = {
-    "story-api": ["tests/test_drafts.py"],
+    "story-api": ["tests/test_drafts.py", "tests/test_assets_pairing.py"],
+    "pairing": ["tests/test_assets_pairing.py", "tests/test_native_host.py"],
     "migration": ["tests/test_migration_safety.py", "tests/test_contracts.py", "tests/test_offline.py"],
     "bridge-contract": ["tests/test_native_host.py"],
     "unit": ["tests/unit"],
+    "unit-close": ["tests/unit/test_desktop_close.py"],
     "unit-auth": ["tests/unit/test_auth_policy.py"],
     "unit-input": ["tests/unit/test_inputs.py"],
     "contracts": ["tests/test_contracts.py"],
@@ -34,6 +36,12 @@ ALL_SCOPES = [
 ]
 RULES = [
     ("*.md", []),
+    ("tests/test_assets_pairing.py", ["pairing", "story-api"]),
+    ("backend/smartflow/asset*", ["story-api", "auth"]),
+    ("backend/smartflow/*bridge*", ["pairing", "auth", "extension-unit"]),
+    ("backend/smartflow/native_client.py", ["pairing"]),
+    ("backend/smartflow/protected_store.py", ["pairing"]),
+    ("backend/smartflow/desktop_close.py", ["unit-close"]),
     ("tests/test_drafts.py", ["story-api"]),
     ("tests/test_migration_safety.py", ["migration"]),
     ("tests/test_native_host.py", ["bridge-contract"]),

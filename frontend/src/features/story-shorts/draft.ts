@@ -18,6 +18,7 @@ export function validateStoryStep(draft: StoryDraft, step: number): string | nul
     }
     if (field.kind === 'select' && !choices(field, draft).some(([key]) => key === value)) return `เลือก${field.label}ใหม่ให้ตรงกับตัวเลือกที่มี`;
     if (field.kind === 'file' && Array.isArray(value)) {
+      if (value.some(file => 'missing' in file && file.missing)) return `${field.label}: ไฟล์ที่บันทึกไว้หาย กรุณาเลือกใหม่`;
       if (field.maxFiles && value.length > field.maxFiles) return `${field.label}เลือกได้ไม่เกิน ${field.maxFiles} ไฟล์`;
       const extensions = field.accept?.split(',') || [];
       if (value.some(file => !extensions.some(extension => file.name.toLowerCase().endsWith(extension)))) return `${field.label}: ชนิดไฟล์ไม่รองรับ`;

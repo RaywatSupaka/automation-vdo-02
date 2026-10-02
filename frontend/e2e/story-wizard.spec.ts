@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, request }) => {
+  await request.post('/api/story-drafts', { headers: { Authorization: 'Bearer e2e-fixture-session-not-a-real-secret', 'Idempotency-Key': crypto.randomUUID() }, data: {} });
   await page.goto('/#token=e2e-fixture-session-not-a-real-secret');
   await page.getByRole('button', { name: 'เรื่องเล่า Shorts', exact: true }).click();
 });
 
 test('Story wizard validates, preserves draft and requires review again after edits', async ({ page }) => {
   const posts: string[] = [];
-  page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+  page.on('request', request => { if (request.method() === 'POST' && !request.url().includes('/story-drafts')) posts.push(request.url()); });
   const next = page.getByRole('button', { name: 'ถัดไป', exact: true });
   const progress = page.getByRole('progressbar', { name: 'ขั้นตอนที่ผ่านแล้ว' });
   await expect(progress).toHaveAttribute('aria-valuenow', '0');
@@ -33,7 +34,7 @@ test('Story wizard validates, preserves draft and requires review again after ed
   await expect(page.locator('.story-review')).toContainText('8');
   await expect(progress).toHaveAttribute('aria-valuenow', '4');
   await page.getByRole('button', { name: 'ยืนยันรายละเอียดแบบร่าง', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('ยังไม่เริ่มสร้างสื่อ');
+  await expect(page.getByRole('status').filter({ hasText: 'ตรวจรายละเอียดครบแล้ว' })).toContainText('ยังไม่เริ่มสร้างสื่อ');
   await expect(progress).toHaveAttribute('aria-valuenow', '5');
   // Merely viewing an earlier step must not trap navigation after confirmation.
   await page.getByRole('button', { name: '1. เรื่องที่จะเล่า · ผ่านแล้ว' }).click();
@@ -57,7 +58,7 @@ test('Story wizard fits desktop and narrow screens with visible footer and inter
     await expect(page.locator('.wizard-progress')).toBeInViewport();
     await expect(page.locator('.wizard-progress')).not.toContainText('ขั้นที่');
     await expect(page.locator('.wizard-progress')).not.toContainText('ผ่านแล้ว');
-    await expect(page.locator('.story-page-heading')).toHaveText('เรื่องเล่า short');
+    await expect(page.locator('.story-page-heading h1')).toHaveText('เรื่องเล่า short');
     const geometry = await page.locator('.wizard-steps').evaluate(list => {
       const circles = [...list.querySelectorAll('.wizard-step-number')].map(el => el.getBoundingClientRect());
       const labels = [...list.querySelectorAll('.wizard-step-copy')].map(el => el.getBoundingClientRect());
@@ -108,14 +109,14 @@ test('Story wizard is unavailable to a support session and clears on session exp
 
 test('Story wizard exposes legacy details, conditional red stars and file drafts without provider requests', async ({ page }) => {
   const posts: string[] = [];
-  page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+  page.on('request', request => { if (request.method() === 'POST' && !request.url().includes('/story-drafts')) posts.push(request.url()); });
   await expect(page.getByLabel('หัวข้อคลิป', { exact: true })).toHaveAttribute('aria-required', 'true');
   await expect(page.locator('.story-setting-field').filter({ has: page.getByLabel('หัวข้อคลิป', { exact: true }) }).locator('.required-mark')).toHaveCSS('color', 'rgb(255, 102, 124)');
   await page.getByLabel('หัวข้อคลิป', { exact: true }).fill('หัวข้อเดี่ยวที่ต้องคงไว้');
   await page.getByLabel('รายละเอียดเรื่องและวิธีเล่าที่ต้องการ', { exact: true }).fill('ให้ตัวเอกค้นพบจดหมายลับ');
   await page.getByLabel('จำนวนคลิปที่ต้องการเตรียม').selectOption('batch');
   await page.getByLabel('หัวข้อคลิปในชุด', { exact: true }).fill('เรื่องที่หนึ่ง\nเรื่องที่สอง');
-  await page.getByLabel('รูปหลัก / รูปอ้างอิงร่วม').setInputFiles({ name: 'reference.png', mimeType: 'image/png', buffer: Buffer.from('fixture metadata only') });
+  await page.getByLabel('รูปหลัก / รูปอ้างอิงร่วม').setInputFiles({ name: 'reference.png', mimeType: 'image/png', buffer: Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), Buffer.alloc(40)]) });
   await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();
   await expect(page.getByLabel('โครงเรื่อง', { exact: true }).locator('option')).toHaveCount(12);
   await expect(page.getByLabel('สไตล์ภาพ', { exact: true }).locator('option')).toHaveCount(8);
@@ -135,7 +136,7 @@ test('Story wizard exposes legacy details, conditional red stars and file drafts
   await page.getByLabel('สุ่มแทรกอินโทรหลังเริ่มเล่าเรื่อง', { exact: true }).check();
   await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('วิดีโออินโทร');
-  await page.getByLabel('วิดีโออินโทร', { exact: true }).setInputFiles({ name: 'intro.mp4', mimeType: 'video/mp4', buffer: Buffer.from('fixture metadata only') });
+  await page.getByLabel('วิดีโออินโทร', { exact: true }).setInputFiles({ name: 'intro.mp4', mimeType: 'video/mp4', buffer: Buffer.concat([Buffer.from([0,0,0,24]), Buffer.from('ftypisom'), Buffer.alloc(40)]) });
   await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();
   await expect(page.getByLabel('เสียงจากระบบ API', { exact: true })).toBeDisabled();
   await page.locator('summary').filter({ hasText: /^คำบรรยายและรูปแบบซับ/ }).click();

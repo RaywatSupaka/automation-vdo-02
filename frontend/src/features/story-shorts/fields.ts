@@ -1,6 +1,7 @@
 import { chatgptModels, geminiModels, structures, subtitleAnimations, subtitleThemes, visualStyles } from './catalog';
 
-export type DraftValue = string | boolean | File[];
+export type StoredAsset = { id: string; name: string; size: number; missing?: boolean; sha256?: string };
+export type DraftValue = string | boolean | (File | StoredAsset)[];
 export type StoryDraft = Record<string, DraftValue>;
 export type Option = readonly [string, string];
 export type Field = {
@@ -17,7 +18,7 @@ const select = (id: string, label: string, choices: Field['options'], initial: s
 const text = (id: string, label: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'text', initial: '', maxLength: 1000, ...extra });
 const toggle = (id: string, label: string, initial = false): Field => ({ id, label, kind: 'checkbox', initial });
 const number = (id: string, label: string, initial: string, min: number, max: number, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'number', initial, min, max, step: 1, ...extra });
-const file = (id: string, label: string, accept: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'file', initial: [], accept, help: 'เลือกไว้ในแบบร่างเท่านั้น ยังไม่อัปโหลดหรือนำเข้าไลบรารี', ...extra });
+const file = (id: string, label: string, accept: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'file', initial: [], accept, help: 'นำเข้าสำเนาไว้ในเครื่องพร้อมแบบร่าง · ไม่ส่งไฟล์ไปบริการภายนอก', ...extra });
 const imageTypes = '.png,.jpg,.jpeg,.webp';
 const videoTypes = '.mp4,.mov,.mkv,.webm,.m4v,.avi';
 const audioTypes = '.mp3,.wav,.m4a,.aac,.ogg';

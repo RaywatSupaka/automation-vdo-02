@@ -19,6 +19,9 @@ spec.loader.exec_module(runner)
     [
         (["docs/index.md", "AGENTS.md"], []),
         (["backend/smartflow/auth.py"], ["unit-auth", "api"]),
+        (["backend/smartflow/desktop_close.py"], ["unit-close"]),
+        (["backend/smartflow/assets.py"], ["story-api", "auth"]),
+        (["backend/smartflow/native_client.py"], ["pairing"]),
         (["tests/test_auth.py"], ["auth"]),
         (["frontend/src/status.ts"], ["ui", "typecheck"]),
         (["frontend/src/App.tsx"], ["ui", "build-ui", "e2e"]),

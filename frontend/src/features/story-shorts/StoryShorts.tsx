@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useDraft } from './useDraft';
 import { StepWizard, type WizardStep } from '../../components/step-wizard/StepWizard';
-import { batchTopics, createStoryDraft, draftWarnings, validateStoryStep } from './draft';
+import { batchTopics, draftWarnings, validateStoryStep } from './draft';
 import { fieldGroups, visible, type DraftValue } from './fields';
 import { fieldDisplay, RequiredMark, StoryFields } from './StoryFields';
 import './story-shorts.css';
@@ -19,12 +19,13 @@ const examples: Record<string, string> = {
 };
 
 export function StoryShorts() {
-  const [draft, setDraft] = useState(createStoryDraft);
+  const persistence = useDraft();
+  const draft = persistence.draft;
   const warnings = draftWarnings(draft);
   const steps: WizardStep[] = stepInfo.map(([id, label, title, description], index) => ({
     id, label, title, description, validate: () => validateStoryStep(draft, index),
     render: dirty => {
-      function update(key: string, value: DraftValue) { setDraft(current => ({ ...current, [key]: value })); dirty(); }
+      function update(key: string, value: DraftValue) { persistence.update({ ...draft, [key]: value }); dirty(); }
       const topics = batchTopics(draft);
       return <div className="story-all-details">
         <div className="story-form-note"><span><RequiredMark/> ช่องที่ต้องระบุ</span><span>เลือกค่าเพื่อเตรียมแบบร่าง · ยังไม่เชื่อมบริการหรือสร้างสื่อ</span></div>
@@ -46,10 +47,16 @@ export function StoryShorts() {
         <dl className="story-review-grid">{group.fields.filter(field => visible(field, draft)).map(field => <div key={field.id}><dt>{field.label}</dt><dd>{fieldDisplay(field, draft)}</dd></div>)}</dl>
       </details>)}
       {warnings.length > 0 && <aside className="story-configuration-notes"><strong>ยังต้องตรวจความเข้ากันได้</strong><ul>{warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></aside>}
-      <p className="story-draft-notice">ยังไม่บันทึกลงฐานข้อมูล ไม่อัปโหลดไฟล์ ไม่เชื่อม API และไม่สร้างบท ภาพ เสียง หรือวิดีโอ</p>
+      <p className="story-draft-notice">บันทึกแบบร่างและไฟล์ไว้ในเครื่อง ยังไม่ส่งให้ AI หรือสร้างสื่อ</p>
     </div> });
-  return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1></div>
-    <StepWizard steps={steps} finishLabel="ยืนยันรายละเอียดแบบร่าง" completionMessage="ตรวจรายละเอียดครบแล้ว · แบบร่างยังอยู่ในหน้านี้ ยังไม่เริ่มสร้างสื่อ"
-      footerNote="ข้อมูลและไฟล์ที่เลือกอยู่ชั่วคราวในหน้านี้ · ปิดหรือรีโหลดแล้วข้อมูลจะหาย"/>
+  return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1>
+    <div className="draft-save-status" role="status">{{ loading: 'กำลังเปิดแบบร่าง…', load_error: 'เปิดแบบร่างไม่สำเร็จ', saved: 'บันทึกแล้วในเครื่อง', saving: 'กำลังบันทึก…', error: 'บันทึกไม่สำเร็จ', conflict: 'พบข้อมูลจากอีกหน้าต่าง' }[persistence.state]}</div></div>
+    {persistence.error && <div role="alert" className="story-configuration-notes">{persistence.error}
+      {persistence.state === 'conflict' ? <button onClick={() => { if (confirm('แทนข้อมูลในหน้านี้ด้วยแบบร่างล่าสุดที่บันทึกไว้?')) void persistence.reload(); }}>โหลดแบบร่างล่าสุดแทนหน้านี้</button>
+        : <button onClick={() => void persistence.retry()}>ลองบันทึกอีกครั้ง</button>}</div>}
+    {!['loading', 'load_error'].includes(persistence.state) && <StepWizard key={persistence.generation} steps={steps} initialStep={persistence.step}
+      onStepChange={step => { if (step !== persistence.step) persistence.update(draft, step); }}
+      finishLabel="ยืนยันรายละเอียดแบบร่าง" completionMessage="ตรวจรายละเอียดครบแล้ว · ยังไม่เริ่มสร้างสื่อ"
+      footerNote="บันทึกอัตโนมัติในเครื่อง · รอสถานะบันทึกแล้วก่อนปิดโปรแกรม"/>}
   </div>;
 }

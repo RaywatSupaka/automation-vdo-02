@@ -12,11 +12,16 @@ export type WizardStep = {
   validate?: () => string | null;
 };
 
-type Props = { steps: WizardStep[]; finishLabel: string; completionMessage: string; footerNote: string };
+type Props = { steps: WizardStep[]; finishLabel: string; completionMessage: string; footerNote: string;
+  initialStep?: number; onStepChange?: (step: number) => void };
 
 /** Presentation/navigation only. Hosts own data, validation and persistence. Keep step IDs stable. */
-export function StepWizard({ steps, finishLabel, completionMessage, footerNote }: Props) {
-  const [state, setState] = useState(initialWizardState);
+export function StepWizard({ steps, finishLabel, completionMessage, footerNote, initialStep = 0, onStepChange }: Props) {
+  const [state, setState] = useState(() => {
+    let active = Math.min(initialStep, steps.length - 1);
+    for (let i = 0; i < active; i++) if (steps[i].validate?.()) { active = i; break; }
+    return { ...initialWizardState(), active, completed: Array.from({ length: active }, (_, i) => i) };
+  });
   const [error, setError] = useState('');
   const heading = useRef<HTMLHeadingElement>(null);
   const alert = useRef<HTMLDivElement>(null);
@@ -33,6 +38,7 @@ export function StepWizard({ steps, finishLabel, completionMessage, footerNote }
     }
   }, [state.active]);
   useEffect(() => { if (error) alert.current?.focus(); }, [error]);
+  useEffect(() => { onStepChange?.(state.active); }, [state.active, onStepChange]);
 
   if (!step) return null;
   function markChanged() { setState(invalidate); setError(''); }
