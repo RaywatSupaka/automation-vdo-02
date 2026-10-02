@@ -1,7 +1,7 @@
 # SmartFlow Next working rules
 
 This is a new project. Do not import legacy source, MD files, jobs, browser profiles or credentials.
-Owner-authorized exception: reuse legacy brand images, icon artwork and palette in the new UI; do not import runtime controllers or legacy MD.
+Owner-authorized exception: reuse legacy brand assets/palette and form option labels as design references in the new UI; do not import runtime controllers or legacy MD.
 
 - Open `docs/index.md`, then only the topic needed for the task. Do not read all MD files or all source files.
 - Check Git status before editing. The owner requested development on `dev`; preserve existing changes.

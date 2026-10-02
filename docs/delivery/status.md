@@ -16,6 +16,8 @@ EXE 0.1.0 ที่ build ก่อนหน้านี้ยังไม่ร
 UI แบบร่าง Story Shorts แบบ 5 ขั้นพร้อม shared component อยู่ใน source แล้ว: [Step wizard](../architecture/step-wizard.md)
 กรอก/ย้อนกลับ/ตรวจรายละเอียดได้; ยังไม่ persist draft หรือส่งสร้างสื่อ และยังไม่รวมใน EXE เดิม
 UI ใช้สี/โลโก้/ไอคอนเดิม และ stepper แบบวงกลมเชื่อมกัน: [Branding verification](verification-story-branding.md)
+เพิ่มรายละเอียดฟอร์มจากระบบเดิมครบหมวด พร้อม `*` แดงตามเงื่อนไข: [รายการช่อง](../architecture/story-form.md)
+เลือกไฟล์และค่าต่าง ๆ ในแบบร่างได้ แต่ยังไม่อัปโหลด/เชื่อม provider; [หลักฐานทดสอบ](verification-story-details.md)
 
 ## ยังไม่ทำ
 
