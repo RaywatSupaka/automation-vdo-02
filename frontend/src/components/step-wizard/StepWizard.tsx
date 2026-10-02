@@ -52,21 +52,20 @@ export function StepWizard({ steps, finishLabel, completionMessage, footerNote }
 
   return <section className="step-wizard" aria-label="แบบฟอร์มทีละขั้น">
     <header className="wizard-progress">
-      <div className="wizard-progress-caption" aria-live="polite">
-        <strong>{state.confirmed ? `ตรวจครบ ${steps.length} ขั้นแล้ว` : `ขั้นที่ ${state.active + 1} จาก ${steps.length}`}</strong>
-        <span>ผ่านแล้ว {state.completed.length} ขั้น · {state.confirmed ? 'ไม่มีขั้นที่เหลือ' : `เหลืออีก ${steps.length - state.active - 1} ขั้นหลังขั้นนี้`}</span>
-      </div>
-      <progress aria-label="ขั้นตอนที่ผ่านแล้ว" max={steps.length} value={state.completed.length}/>
+      <span className="wizard-sr-only" role="progressbar" aria-label="ขั้นตอนที่ผ่านแล้ว"
+        aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={state.completed.length}/>
       <ol className="wizard-steps" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
         {steps.map((item, index) => {
           const done = state.completed.includes(index);
           const current = index === state.active;
           const status = current ? 'ขั้นปัจจุบัน' : done ? 'ผ่านแล้ว' : 'ยังไม่ถึง';
-          return <li key={item.id}><button type="button" aria-current={current ? 'step' : undefined}
+          return <li key={item.id} className={done ? 'is-done' : ''}>
+            {index < steps.length - 1 && <span className="wizard-connector" aria-hidden="true"><span/></span>}
+            <button type="button" aria-current={current ? 'step' : undefined}
             aria-label={`${index + 1}. ${item.label} · ${status}`} disabled={!current && !done}
             className={`wizard-step ${current ? 'is-current' : ''} ${done ? 'is-done' : ''}`} onClick={() => go(index)}>
             <span className="wizard-step-number">{done ? <Check size={15}/> : index + 1}</span>
-            <span className="wizard-step-copy"><strong>{item.label}</strong><small>{status}</small></span>
+            <span className="wizard-step-copy"><strong>{item.label}</strong></span>
           </button></li>;
         })}
       </ol>

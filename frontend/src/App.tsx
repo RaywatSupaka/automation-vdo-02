@@ -4,6 +4,7 @@ import { Activity, ArrowRight, Box, CheckCircle2, ChevronRight, CircleDot, Datab
 import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent,
   type Permission, type Session } from './api';
 import { actions, statusLabels } from './status';
+import { BrandIcon } from './components/BrandIcon';
 import { StoryShorts } from './features/story-shorts/StoryShorts';
 
 const scenarios = [
@@ -104,7 +105,7 @@ export function App() {
   }
 
   if (!connected) return <main className="connection"><div className="connection-card">
-    <div className="brand-icon"><Layers3 size={25}/></div><h1>SmartFlow Next</h1>
+    <img className="connection-brand" src="/assets/brand/smartflow-icon.png" alt="SmartFlow AI"/><h1>SmartFlow Next</h1>
     <p>เชื่อมต่อกับโปรแกรมในเครื่องเพื่อดูและจัดการงาน</p>
     {message && <p role="alert">{message}</p>}
     <form onSubmit={event => { event.preventDefault(); sessionStorage.setItem('smartflow-session', token); setConnected(true); }}>
@@ -118,7 +119,7 @@ export function App() {
   const filtered = jobs.filter(j => `${j.title} ${j.id}`.toLowerCase().includes(search.toLowerCase()));
   return <div className="shell" data-testid="dashboard">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-icon"><Layers3 size={22}/></div><div>SmartFlow<span>NEXT / AUTOMATION</span></div></div>
+      <div className="brand"><picture><source media="(max-width: 760px)" srcSet="/assets/brand/smartflow-icon.png"/><img src="/assets/brand/smartflow-logo.png" alt="SmartFlow AI"/></picture></div>
       <div className="workspace"><span className="workspace-icon">S</span><div>พื้นที่ทำงานของฉัน<small>บนเครื่องนี้</small></div><ChevronRight size={16}/></div>
       <p className="nav-label">WORKSPACE</p>
       <nav aria-label="เมนูหลัก">
@@ -129,7 +130,7 @@ export function App() {
             <Component size={19}/>{text as string}{view === key && <span className="nav-dot"/>}
           </button>;
         })}
-        {can('jobs:create') && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><FileText size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
+        {can('jobs:create') && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><BrandIcon name="story" size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
       </nav>
       <div className="sidebar-bottom"><ShieldCheck size={23}/><strong>ตรวจสอบได้ทุกขั้นตอน</strong>
         <p>สถานะงานและ checkpoint<br/>บันทึกไว้ในเครื่องของคุณ</p>

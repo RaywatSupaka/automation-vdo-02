@@ -10,7 +10,7 @@ test('Story wizard validates, preserves draft and requires review again after ed
   page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
   const next = page.getByRole('button', { name: 'ถัดไป', exact: true });
   const progress = page.getByRole('progressbar', { name: 'ขั้นตอนที่ผ่านแล้ว' });
-  await expect(progress).toHaveAttribute('value', '0');
+  await expect(progress).toHaveAttribute('aria-valuenow', '0');
   await expect(page.getByRole('button', { name: '5. ตรวจรายละเอียด · ยังไม่ถึง' })).toBeDisabled();
   await next.click();
   await expect(page.getByRole('alert')).toContainText('ใส่หัวข้อ');
@@ -29,10 +29,10 @@ test('Story wizard validates, preserves draft and requires review again after ed
   await next.click();
   await expect(page.locator('.story-review')).toContainText('ลึกลับ');
   await expect(page.locator('.story-review')).toContainText('4 ฉาก');
-  await expect(progress).toHaveAttribute('value', '4');
+  await expect(progress).toHaveAttribute('aria-valuenow', '4');
   await page.getByRole('button', { name: 'ยืนยันรายละเอียดแบบร่าง', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('ยังไม่เริ่มสร้างสื่อ');
-  await expect(progress).toHaveAttribute('value', '5');
+  await expect(progress).toHaveAttribute('aria-valuenow', '5');
   // Merely viewing an earlier step must not trap navigation after confirmation.
   await page.getByRole('button', { name: '1. เรื่องที่จะเล่า · ผ่านแล้ว' }).click();
   await expect(page.getByLabel('หัวข้อหรือเรื่องย่อ')).toHaveValue('แมวจรที่รอรถไฟกับเด็กน้อย');
@@ -41,7 +41,7 @@ test('Story wizard validates, preserves draft and requires review again after ed
   await page.getByRole('button', { name: 'เรื่องเล่า Shorts', exact: true }).click();
   await expect(page.getByLabel('หัวข้อหรือเรื่องย่อ')).toHaveValue('แมวจรที่รอรถไฟกับเด็กน้อย');
   await page.getByLabel('หัวข้อหรือเรื่องย่อ').fill('เรื่องฉบับแก้ไข');
-  await expect(progress).toHaveAttribute('value', '0');
+  await expect(progress).toHaveAttribute('aria-valuenow', '0');
   await expect(page.getByRole('button', { name: '5. ตรวจรายละเอียด · ยังไม่ถึง' })).toBeDisabled();
   await next.click();
   await expect(page.getByRole('radio', { name: 'ลึกลับ', exact: true })).toBeChecked();
@@ -52,7 +52,21 @@ test('Story wizard fits desktop and narrow screens with visible footer and inter
   for (const viewport of [{ width: 1366, height: 768 }, { width: 1024, height: 600 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
     await expect(page.getByRole('button', { name: 'ถัดไป', exact: true })).toBeInViewport();
-    await expect(page.getByRole('progressbar')).toBeInViewport();
+    await expect(page.locator('.wizard-progress')).toBeInViewport();
+    await expect(page.locator('.wizard-progress')).not.toContainText('ขั้นที่');
+    await expect(page.locator('.wizard-progress')).not.toContainText('ผ่านแล้ว');
+    await expect(page.locator('.story-page-heading')).toHaveText('เรื่องเล่า short');
+    const geometry = await page.locator('.wizard-steps').evaluate(list => {
+      const circles = [...list.querySelectorAll('.wizard-step-number')].map(el => el.getBoundingClientRect());
+      const labels = [...list.querySelectorAll('.wizard-step-copy')].map(el => el.getBoundingClientRect());
+      const connectors = [...list.querySelectorAll('.wizard-connector')].map(el => el.getBoundingClientRect());
+      return circles.every((circle, index) => circle.bottom <= labels[index].top) &&
+        connectors.every((line, index) => Math.abs(line.left - circles[index].right) < 1 &&
+          Math.abs(line.right - circles[index + 1].left) < 1 &&
+          Math.abs(line.top + line.height / 2 - (circles[index].top + circles[index].height / 2)) < 1);
+    });
+    expect(geometry).toBe(true);
+    await expect.poll(() => page.locator('.brand img').evaluate(img => (img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0)).toBe(true);
     const fits = await page.evaluate(() => ({
       width: document.documentElement.scrollWidth <= innerWidth,
       height: document.documentElement.scrollHeight <= innerHeight,

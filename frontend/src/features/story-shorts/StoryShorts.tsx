@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Clapperboard, Image, Mic2, Sparkles, Captions, Check } from 'lucide-react';
+import { Clapperboard, Captions, Check } from 'lucide-react';
 import { StepWizard, type WizardStep } from '../../components/step-wizard/StepWizard';
 import { createStoryDraft, validateStoryStep, type StoryDraft } from './draft';
 import './story-shorts.css';
+import { BrandIcon } from '../../components/BrandIcon';
 
 function Choices({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
   return <fieldset className="story-choices"><legend>{label}</legend><div>{options.map(option => <label key={option} className={value === option ? 'is-selected' : ''}>
@@ -31,7 +32,7 @@ export function StoryShorts() {
           <label htmlFor="story-audience">เล่าให้ใครฟัง</label><select id="story-audience" value={draft.audience} onChange={e => update('audience', e.target.value)}>
             {['ผู้ชมทั่วไป', 'เด็กและครอบครัว', 'วัยรุ่น', 'วัยทำงาน'].map(value => <option key={value}>{value}</option>)}
           </select>
-        </div><aside className="story-tip"><span className="story-tip-icon"><Sparkles size={23}/></span><p className="eyebrow">จากไอเดีย สู่เรื่องราว</p>
+        </div><aside className="story-tip"><span className="story-tip-icon"><BrandIcon name="sparkle" size={23}/></span><p className="eyebrow">จากไอเดีย สู่เรื่องราว</p>
           <h3>เรื่องเล็ก ๆ<br/>ก็เป็น Short ที่น่าจดจำได้</h3><p>เริ่มจากหนึ่งตัวละคร หนึ่งเหตุการณ์ และหนึ่งความรู้สึกที่อยากทิ้งไว้ให้คนดู</p>
           <div className="story-example">“ร้านกาแฟที่รับฟังความฝัน<br/>แทนการรับเงิน”</div><small>ตัวอย่างไอเดีย · ไม่ได้เติมลงในเรื่องของคุณ</small></aside></div>;
       } },
@@ -55,13 +56,13 @@ export function StoryShorts() {
           <p className="story-help">30–60 วินาทีสำหรับแบบร่างรุ่นแรก</p>
           <label htmlFor="story-scenes">จำนวนฉาก</label><input id="story-scenes" type="number" min={1} max={12} step={1} value={draft.scenes} onChange={e => update('scenes', e.target.value)}/>
           <p className="story-help">1–12 ฉาก · เริ่มต้นแนะนำ 6 ฉาก</p>
-          <div className="story-info"><Image size={20}/><div><strong>ภาพนิ่ง พร้อมแพนและซูม</strong><p>วางแผนภาพจาก ChatGPT Web แล้วประกอบการเคลื่อนไหวในเครื่อง</p></div></div>
+          <div className="story-info"><BrandIcon name="image" size={20}/><div><strong>ภาพนิ่ง พร้อมแพนและซูม</strong><p>วางแผนภาพจาก ChatGPT Web แล้วประกอบการเคลื่อนไหวในเครื่อง</p></div></div>
         </div><div className="story-format"><div className="story-phone"><span>STORY SHORTS</span><Clapperboard size={34}/><strong>9:16</strong><small>แนวตั้ง</small></div><p>เป้าหมาย 1080 × 1920</p></div></div>;
       } },
     { id: 'audio', label: 'เสียงและซับ', title: 'ให้เรื่องเล่ามีเสียงของตัวเอง',
       description: 'กำหนดรูปแบบเสียงและซับไว้ก่อน รายชื่อเสียงจริงจะเพิ่มเมื่อเชื่อมผู้ให้บริการแล้ว', render: dirty => {
         const update = fields(dirty);
-        return <div className="story-fields"><div className="story-info"><Mic2 size={23}/><div><strong>ผู้บรรยายภาษาไทย · หนึ่งคน</strong><p>เสียงพากย์จะสร้างผ่านบริการเสียงแยกจาก ChatGPT Web</p><span className="story-coming">ยังไม่ได้เชื่อมบริการเสียง</span></div></div>
+        return <div className="story-fields"><div className="story-info"><BrandIcon name="voice" size={23}/><div><strong>ผู้บรรยายภาษาไทย · หนึ่งคน</strong><p>เสียงพากย์จะสร้างผ่านบริการเสียงแยกจาก ChatGPT Web</p><span className="story-coming">ยังไม่ได้เชื่อมบริการเสียง</span></div></div>
           <label className="story-toggle"><span className="story-toggle-icon"><Captions size={23}/></span><span><strong>ซับภาษาไทย</strong><small>วางซับตามจังหวะเสียงพากย์</small></span><input type="checkbox" checked={draft.subtitles} onChange={e => update('subtitles', e.target.checked)} aria-label="ซับภาษาไทย"/></label>
           <label className="story-toggle"><span className="story-toggle-icon"><Check size={23}/></span><span><strong>พักให้ตรวจบทก่อนสร้างภาพ</strong><small>ปิดไว้เพื่อให้ทำต่ออัตโนมัติเมื่อข้อมูลผ่านการตรวจ</small></span><input type="checkbox" checked={draft.reviewBeforeImages} onChange={e => update('reviewBeforeImages', e.target.checked)} aria-label="พักให้ตรวจบทก่อนสร้างภาพ"/></label>
         </div>;
@@ -78,7 +79,7 @@ export function StoryShorts() {
       </div> },
   ];
 
-  return <div className="story-workspace"><div className="story-page-heading"><div><p className="eyebrow">CREATE A STORY</p><h1>เรื่องเล่า Shorts</h1><p>ค่อย ๆ เติมไอเดีย แล้วให้เรื่องราวเป็นรูปเป็นร่าง</p></div><span className="story-draft-badge">แบบร่าง</span></div>
+  return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1></div>
     <StepWizard steps={steps} finishLabel="ยืนยันรายละเอียดแบบร่าง" completionMessage="ตรวจรายละเอียดครบแล้ว · แบบร่างยังอยู่ในหน้านี้ ยังไม่เริ่มสร้างสื่อ"
       footerNote="ข้อมูลอยู่ชั่วคราวในหน้านี้ · ปิดหรือรีโหลดโปรแกรมแล้วข้อมูลจะหาย"/>
   </div>;

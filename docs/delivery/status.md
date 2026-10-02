@@ -15,6 +15,7 @@ F1 ใน source: typed API/error contracts, command trace, pagination และ
 EXE 0.1.0 ที่ build ก่อนหน้านี้ยังไม่รวม F1/permissions; source Dev กับ packaged build เป็นคนละหลักฐาน
 UI แบบร่าง Story Shorts แบบ 5 ขั้นพร้อม shared component อยู่ใน source แล้ว: [Step wizard](../architecture/step-wizard.md)
 กรอก/ย้อนกลับ/ตรวจรายละเอียดได้; ยังไม่ persist draft หรือส่งสร้างสื่อ และยังไม่รวมใน EXE เดิม
+UI ใช้สี/โลโก้/ไอคอนเดิม และ stepper แบบวงกลมเชื่อมกัน: [Branding verification](verification-story-branding.md)
 
 ## ยังไม่ทำ
 
