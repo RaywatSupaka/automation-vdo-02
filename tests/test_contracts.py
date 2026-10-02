@@ -18,7 +18,7 @@ def test_migration_is_repeatable_and_unknown_version_is_not_reset(system):
     db, *_ = system
     db.migrate()
     with db.engine.begin() as connection:
-        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
+        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
         connection.exec_driver_sql("UPDATE alembic_version SET version_num='future_version'")
     with pytest.raises(CommandError):
         db.migrate()

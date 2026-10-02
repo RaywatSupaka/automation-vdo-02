@@ -4,7 +4,8 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 root = Path(SPECPATH).parent
 data = [(str(root / "frontend" / "dist"), "web"),
         (str(root / "backend" / "smartflow" / "migrations"), "smartflow/migrations"),
-        (str(root / "backend" / "smartflow" / "draft_fields.json"), "smartflow")]
+        (str(root / "backend" / "smartflow" / "draft_fields.json"), "smartflow"),
+        (str(root / "backend" / "smartflow" / "bridge_config.json"), "smartflow")]
 data += collect_data_files("webview")
 a = Analysis([str(root / "desktop_entry.py")], pathex=[str(root / "backend")],
     datas=data, hiddenimports=collect_submodules("uvicorn") + ["webview.platforms.edgechromium"],

@@ -32,7 +32,7 @@ def test_wal_backup_preserves_existing_data_and_repeat_migration_is_noop(tmp_pat
             assert saved.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "0001"
         with db.engine.connect() as current:
             assert current.exec_driver_sql("SELECT value FROM private_fixture").scalar() == "PRIVATE_WAL_DATA"
-            assert current.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
+            assert current.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
         db.migrate()
         assert len(list((tmp_path / "backups").glob("*.sqlite3"))) == 1
     finally:

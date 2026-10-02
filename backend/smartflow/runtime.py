@@ -125,6 +125,10 @@ def desktop(settings, smoke=False):
             height=860,
             min_size=(980, 680),
         )
+        if not smoke:
+            from smartflow.desktop_close import install_close_guard
+
+            install_close_guard(window, app.state.db.logger)
 
         def smoke_check():
             # Explicit owned smoke only. Never closes an existing user window.

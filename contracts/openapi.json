@@ -1873,6 +1873,468 @@
         "x-required-permission": "diagnostics:read"
       }
     },
+    "/api/story-drafts/{draft_id}/assets": {
+      "get": {
+        "summary": "List Assets",
+        "operationId": "list_assets_api_story_drafts__draft_id__assets_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetResponse"
+                  },
+                  "title": "Response List Assets Api Story Drafts  Draft Id  Assets Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:read"
+      },
+      "post": {
+        "summary": "Import Asset",
+        "operationId": "import_asset_api_story_drafts__draft_id__assets_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "title": "Field"
+            }
+          },
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 80,
+              "pattern": "^[a-zA-Z0-9_-]+$",
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "x-file-name",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "title": "X-File-Name"
+            }
+          },
+          {
+            "name": "x-file-size",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 524288000,
+              "exclusiveMinimum": 0,
+              "title": "X-File-Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:write"
+      }
+    },
+    "/api/story-drafts/{draft_id}/assets/{asset_id}": {
+      "get": {
+        "summary": "Download Asset",
+        "operationId": "download_asset_api_story_drafts__draft_id__assets__asset_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "draft_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Draft Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "stories:drafts:read"
+      }
+    },
     "/api/story-drafts": {
       "post": {
         "summary": "Create",
@@ -2791,10 +3253,717 @@
         },
         "x-required-permission": "diagnostics:read"
       }
+    },
+    "/api/browser": {
+      "get": {
+        "summary": "Info",
+        "operationId": "info_api_browser_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BridgeInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-required-permission": "browser:manage"
+      }
+    },
+    "/api/browser/pairings": {
+      "post": {
+        "summary": "Create",
+        "operationId": "create_api_browser_pairings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairCode"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-required-permission": "browser:manage"
+      }
+    },
+    "/api/browser/pair": {
+      "post": {
+        "summary": "Exchange",
+        "operationId": "exchange_api_browser_pair_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PairExchange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-required-permission": "browser:pair"
+      }
+    },
+    "/api/browser/agent": {
+      "get": {
+        "summary": "Status",
+        "operationId": "status_api_browser_agent_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-required-permission": "browser:status"
+      }
+    },
+    "/api/browser/pairings/{pair_id}/revoke": {
+      "post": {
+        "summary": "Revoke",
+        "operationId": "revoke_api_browser_pairings__pair_id__revoke_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pair_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Pair Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PairResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Domain conflict; inspect error.code and recovery",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "x-required-permission": "browser:manage"
+      }
     }
   },
   "components": {
     "schemas": {
+      "AssetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "size": {
+            "type": "integer",
+            "title": "Size"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "missing": {
+            "type": "boolean",
+            "title": "Missing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "field",
+          "name",
+          "size",
+          "sha256",
+          "missing"
+        ],
+        "title": "AssetResponse"
+      },
       "AuthMode": {
         "type": "string",
         "enum": [
@@ -2802,6 +3971,42 @@
           "dev_bypass"
         ],
         "title": "AuthMode"
+      },
+      "BridgeInfo": {
+        "properties": {
+          "extension_id": {
+            "type": "string",
+            "title": "Extension Id"
+          },
+          "extension_version": {
+            "type": "string",
+            "title": "Extension Version"
+          },
+          "helper_version": {
+            "type": "string",
+            "title": "Helper Version"
+          },
+          "host_name": {
+            "type": "string",
+            "title": "Host Name"
+          },
+          "pairings": {
+            "items": {
+              "$ref": "#/components/schemas/PairResponse"
+            },
+            "type": "array",
+            "title": "Pairings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "extension_id",
+          "extension_version",
+          "helper_version",
+          "host_name",
+          "pairings"
+        ],
+        "title": "BridgeInfo"
       },
       "ColumnInfo": {
         "properties": {
@@ -4639,6 +5844,110 @@
         ],
         "title": "OpenAPIDocument"
       },
+      "PairCode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "expires_at": {
+            "type": "number",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "expires_at"
+        ],
+        "title": "PairCode"
+      },
+      "PairExchange": {
+        "properties": {
+          "extension_id": {
+            "type": "string",
+            "pattern": "^[a-p]{32}$",
+            "title": "Extension Id"
+          },
+          "agent_token": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 43,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "title": "Agent Token"
+          },
+          "extension_version": {
+            "type": "string",
+            "title": "Extension Version"
+          },
+          "helper_version": {
+            "type": "string",
+            "title": "Helper Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "extension_id",
+          "agent_token",
+          "extension_version",
+          "helper_version"
+        ],
+        "title": "PairExchange"
+      },
+      "PairRequest": {
+        "properties": {
+          "extension_id": {
+            "type": "string",
+            "pattern": "^[a-p]{32}$",
+            "title": "Extension Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "extension_id"
+        ],
+        "title": "PairRequest"
+      },
+      "PairResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "extension_id": {
+            "type": "string",
+            "title": "Extension Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "last_seen": {
+            "type": "number",
+            "title": "Last Seen"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "extension_id",
+          "state",
+          "connected",
+          "last_seen"
+        ],
+        "title": "PairResponse"
+      },
       "Permission": {
         "type": "string",
         "enum": [
@@ -4650,7 +5959,10 @@
           "diagnostics:read",
           "support:export",
           "stories:drafts:read",
-          "stories:drafts:write"
+          "stories:drafts:write",
+          "browser:manage",
+          "browser:pair",
+          "browser:status"
         ],
         "title": "Permission"
       },
@@ -4719,6 +6031,8 @@
       "Role": {
         "type": "string",
         "enum": [
+          "browser_agent",
+          "browser_pairing",
           "owner",
           "operator",
           "viewer",

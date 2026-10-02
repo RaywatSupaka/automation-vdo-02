@@ -18,9 +18,14 @@ class Permission(StrEnum):
     SUPPORT_EXPORT = "support:export"
     DRAFTS_READ = "stories:drafts:read"
     DRAFTS_WRITE = "stories:drafts:write"
+    BROWSER_MANAGE = "browser:manage"
+    BROWSER_PAIR = "browser:pair"
+    BROWSER_STATUS = "browser:status"
 
 
 class Role(StrEnum):
+    BROWSER_AGENT = "browser_agent"
+    BROWSER_PAIRING = "browser_pairing"
     OWNER = "owner"
     OPERATOR = "operator"
     VIEWER = "viewer"
@@ -34,7 +39,9 @@ class AuthMode(StrEnum):
 
 BASE = frozenset({Permission.SESSION_READ, Permission.SCHEMA_READ})
 ROLE_PERMISSIONS = {
-    Role.OWNER: frozenset(Permission),
+    Role.OWNER: frozenset(Permission) - {Permission.BROWSER_PAIR, Permission.BROWSER_STATUS},
+    Role.BROWSER_AGENT: frozenset({Permission.BROWSER_STATUS}),
+    Role.BROWSER_PAIRING: frozenset({Permission.BROWSER_PAIR}),
     Role.OPERATOR: BASE
     | {
         Permission.JOBS_READ,
@@ -63,6 +70,8 @@ class AccessControl:
     def __init__(self, settings):
         self.mode = AuthMode(settings.auth_mode)
         self.role = Role(settings.session_role)
+        if self.role in {Role.BROWSER_AGENT, Role.BROWSER_PAIRING}:
+            raise ValueError("Browser identities require pairing, not a desktop session role")
         if self.mode == AuthMode.DEV_BYPASS and (
             settings.mode not in {"dev", "test"} or getattr(sys, "frozen", False)
         ):

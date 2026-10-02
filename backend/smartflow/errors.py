@@ -9,6 +9,16 @@ class ErrorSpec:
 
 
 ERRORS = {
+    "DRAFT_ASSET_INVALID": ErrorSpec("ไฟล์ไม่ถูกต้องหรือไม่ได้เป็นของแบบร่างนี้", "select_valid_file", 422),
+    "DRAFT_ASSET_MISSING": ErrorSpec("ไฟล์ที่บันทึกไว้หายหรือเสียหาย", "replace_missing_file"),
+    "DRAFT_ASSET_QUOTA": ErrorSpec("พื้นที่ไฟล์ของแบบร่างเต็ม", "use_new_draft"),
+    "DRAFT_ASSET_BUSY": ErrorSpec("กำลังนำเข้าไฟล์เดียวกัน", "retry_same_import"),
+    "DRAFT_SAVE_FAILED": ErrorSpec("บันทึกแบบร่างหรือไฟล์ไม่สำเร็จ", "retry_same_request", 500),
+    "EXTENSION_ID_MISMATCH": ErrorSpec("Extension ID ไม่ตรงกับโปรแกรมรุ่นนี้", "use_matching_extension"),
+    "EXTENSION_VERSION_MISMATCH": ErrorSpec("รุ่น Extension หรือ helper ไม่ตรงกัน", "update_extension"),
+    "PAIRING_EXPIRED": ErrorSpec("รหัสจับคู่หมดอายุ", "create_new_pairing"),
+    "PAIRING_ALREADY_USED": ErrorSpec("รหัสนี้ถูกใช้จับคู่แล้ว", "create_new_pairing"),
+    "PAIRING_NOT_FOUND": ErrorSpec("ไม่พบการจับคู่", "refresh_pairings", 404),
     "DRAFT_NOT_FOUND": ErrorSpec("ไม่พบแบบร่างในพื้นที่ทำงานนี้", "check_draft_id", 404),
     "DRAFT_REVISION_CONFLICT": ErrorSpec("แบบร่างมีการแก้ไขจากอีกหน้าต่าง", "read_latest_before_save"),
     "DRAFT_ASSET_UNAVAILABLE": ErrorSpec("ยังไม่เปิดนำเข้าไฟล์แบบร่าง", "keep_local_files"),

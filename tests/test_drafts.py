@@ -84,8 +84,8 @@ def test_closed_draft_schema_rejects_wrong_types_and_never_echoes_content(client
 
 def test_asset_references_are_not_acknowledged_before_import_exists(client):
     result = client.post("/api/story-drafts", json={"config": {"mainImage": [str(uuid4())]}}, headers=KEY)
-    assert result.status_code == 409
-    assert result.json()["error"]["code"] == "DRAFT_ASSET_UNAVAILABLE"
+    assert result.status_code == 422
+    assert result.json()["error"]["code"] == "DRAFT_ASSET_INVALID"
 
 
 def test_diagnostic_projection_and_logs_never_include_draft_content(client):

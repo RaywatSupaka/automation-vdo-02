@@ -50,6 +50,9 @@ def create_app(settings: Settings | None = None):
     access = AccessControl(settings)
     logger = create_logger(settings.data_dir)
     db = Database(settings.db_path, logger)
+    from smartflow.browser_bridge import Bridge
+
+    bridge = Bridge(db, access.mode)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -68,7 +71,11 @@ def create_app(settings: Settings | None = None):
         if request.url.path != "/api" and not request.url.path.startswith("/api/"):
             return  # Public desktop shell/assets contain no user data.
         try:
-            principal = access.authenticate(credentials.credentials if credentials else None)
+            token = credentials.credentials if credentials else None
+            try:
+                principal = access.authenticate(token)
+            except AppError:
+                principal = bridge.authenticate(token)
             request.state.principal = principal
             required = (getattr(request.scope.get("route"), "openapi_extra", None) or {}).get(
                 "x-required-permission"
@@ -193,9 +200,7 @@ def create_app(settings: Settings | None = None):
 
     from fastapi import APIRouter
 
-    router = APIRouter(
-        prefix="/api", responses=error_responses(401, 403, 405, 422, 500)
-    )
+    router = APIRouter(prefix="/api", responses=error_responses(401, 403, 405, 422, 500))
 
     @router.get("/session", response_model=SessionResponse, openapi_extra=policy(Permission.SESSION_READ))
     def session_info(request: Request):
@@ -372,6 +377,9 @@ def create_app(settings: Settings | None = None):
     from smartflow.draft_routes import draft_router
 
     app.include_router(draft_router(db))
+    from smartflow.bridge_routes import bridge_router
+
+    app.include_router(bridge_router(bridge))
     root = web_root()
     if (root / "assets").exists():
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")

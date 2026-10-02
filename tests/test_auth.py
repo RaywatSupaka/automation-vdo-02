@@ -1,3 +1,4 @@
+import asyncio
 import io
 import json
 import zipfile
@@ -46,6 +47,7 @@ def auth_client(tmp_path):
                 "jobs:command",
                 "diagnostics:read",
                 "support:export",
+                "browser:manage",
                 "stories:drafts:read",
                 "stories:drafts:write",
             },
@@ -74,9 +76,30 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
     from smartflow.drafts import Drafts
 
     draft = Drafts(client.app.state.db).save(DraftInput(), "seed-draft", "seed-trace")
+    from smartflow.assets import Assets
+    from smartflow.auth import AuthMode
+    from smartflow.browser_bridge import COMPAT, Bridge, PairRequest
+
+    png = b"\x89PNG\r\n\x1a\n" + bytes(40)
+
+    async def stream():
+        yield png
+
+    asset = asyncio.run(
+        Assets(client.app.state.db).import_file(
+            draft["id"], "mainImage", "image.png", len(png), "matrix-asset", stream(), "trace"
+        )
+    )
+    pair = Bridge(client.app.state.db, AuthMode.LOCAL_SESSION).create(
+        PairRequest(extension_id=COMPAT["extension_id"]), "trace"
+    )
     for route, operations in schema["paths"].items():
         path = route.replace("{job_id}", job["id"]).replace("{action}", "cancel").replace("{table}", "jobs")
-        path = path.replace("{draft_id}", draft["id"])
+        path = (
+            path.replace("{draft_id}", draft["id"])
+            .replace("{asset_id}", asset["id"])
+            .replace("{pair_id}", pair["id"])
+        )
         for method, operation in operations.items():
             permission = operation["x-required-permission"]
             assert permission in set(Permission)
@@ -85,14 +108,26 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
                 payload = {}
             elif method == "patch":
                 payload = {"expected_revision": 1}
+            if method == "post" and path == "/api/browser/pairings":
+                payload = {"extension_id": COMPAT["extension_id"]}
+            request_options = {"json": payload}
+            good_headers = {"Idempotency-Key": f"matrix-{method}-created"}
+            if method == "post" and path.endswith("/assets"):
+                path += "?field=mainImage"
+                request_options = {"content": png}
+                good_headers |= {
+                    "X-File-Name": "image.png",
+                    "X-File-Size": str(len(png)),
+                    "Content-Type": "application/octet-stream",
+                }
             for bad_auth in ("", "Bearer wrong-session", "Basic invalid"):
-                denied = client.request(method, path, json=payload, headers={"Authorization": bad_auth})
+                denied = client.request(
+                    method, path, **request_options, headers={**good_headers, "Authorization": bad_auth}
+                )
                 assert denied.status_code == 401, (role, method, path)
                 assert denied.headers["www-authenticate"] == "Bearer"
                 assert denied.json()["error"]["code"] == "UNAUTHORIZED"
-            response = client.request(
-                method, path, json=payload, headers={"Idempotency-Key": f"matrix-{method}-created"}
-            )
+            response = client.request(method, path, **request_options, headers=good_headers)
             if permission in allowed:
                 assert response.status_code in {200, 201}, (role, method, path, response.text)
             else:

@@ -65,10 +65,6 @@ class Drafts:
     def save(self, data: DraftInput, key: str, trace_id: str, draft_id=None):
         payload = data.model_dump()
         config = payload["config"]
-        # Asset import is P2. Reject references that cannot yet be verified;
-        # never acknowledge a browser File or arbitrary path as persisted media.
-        if any(config[field] for field, spec in REGISTRY.items() if spec["kind"] == "file"):
-            raise AppError("DRAFT_ASSET_UNAVAILABLE")
         command_id = digest([self.scope, key])
         input_hash = digest([draft_id, payload])
         with self.db.transaction(write=True) as session:
@@ -88,6 +84,18 @@ class Drafts:
                 session.add(row)
             row.schema_version, row.active_step = data.schema_version, data.active_step
             row.config, row.updated_at = encode(config), self.clock()
+            from smartflow.asset_models import DraftAsset
+            from smartflow.assets import metadata
+
+            for field, spec in REGISTRY.items():
+                if spec["kind"] != "file":
+                    continue
+                for asset_id in config[field]:
+                    asset = session.get(DraftAsset, asset_id)
+                    if not asset or asset.draft_id != row.id or asset.field != field:
+                        raise AppError("DRAFT_ASSET_INVALID")
+                    if metadata(self.db, asset)["missing"]:
+                        raise AppError("DRAFT_ASSET_MISSING")
             session.flush()
             result = response(row)
             session.add(
