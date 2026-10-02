@@ -24,6 +24,7 @@ installer, code signing, automatic update และ remote support
 
 - หลักฐาน source, browser และ EXE: [Verification 0.1.0](verification-0.1.0.md)
 - งานถัดไปและเกณฑ์เสร็จ: [Foundation plan](../planning/foundation.md)
+- Feature แรกที่ออกแบบแล้ว แต่ยังไม่ implement: [Story Shorts + Extension](../planning/story-shorts.md)
 - วิธีเปิดและพัฒนา: [Setup](../development/setup.md)
 
 อัปเดตไฟล์นี้เมื่อความสามารถหรือข้อจำกัดเปลี่ยน ไม่สะสมรายงานและประวัติทุกรุ่นที่นี่

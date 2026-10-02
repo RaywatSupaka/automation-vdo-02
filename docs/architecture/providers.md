@@ -31,3 +31,5 @@ Simulator ต้องยังใช้ได้ใน normal tests เพื�
 
 เทสต้นแบบ: [test_workflow.py](../../tests/test_workflow.py)
 เกณฑ์จัดลำดับงาน: [Foundation plan](../planning/foundation.md)
+แผน provider แรก (ยังไม่ implement): [Story Shorts](../planning/story-shorts.md)
+ขอบเขต browser adapter ใหม่: [Extension design](../planning/browser-extension.md)

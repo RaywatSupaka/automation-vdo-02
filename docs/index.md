@@ -7,6 +7,12 @@
 |---|---|
 | ดูสิ่งที่ทำได้จริงและข้อจำกัดปัจจุบัน | [สถานะโปรเจกต์](delivery/status.md) |
 | เลือกงานถัดไปและเกณฑ์จบงาน | [แผนโครงสร้างพื้นฐาน](planning/foundation.md) |
+| ขอบเขตและลำดับ feature เรื่องเล่า Short | [Story Shorts plan](planning/story-shorts.md) |
+| ดูแนวคิดที่เรียนรู้จาก source เดิม | [Story reference](planning/story-reference.md) |
+| ออกแบบข้อมูล/ฉาก/revision/API ของ Story | [Story data and API](planning/story-data-api.md) |
+| ออกแบบ Extension ใหม่และเลือก framework | [Browser extension](planning/browser-extension.md) |
+| ออกแบบ bridge, สิทธิ์ agent และป้องกันส่งซ้ำ | [Extension protocol](planning/extension-protocol.md) |
+| เลือกเทสของ Story/Extension ที่จะเพิ่ม | [Story testing plan](planning/story-testing.md) |
 | ติดตั้งเครื่องมือ / เปิด Dev / ตั้งค่าเครื่อง | [Development setup](development/setup.md) |
 | เลือกเทสและควบคุมเวลาทดสอบ | [Testing](development/testing.md) |
 | เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |

@@ -17,7 +17,10 @@
 | F5 | Packaging และ clean Windows | ติดตั้ง เปิด ทำงานต่อ อัปเกรด และถอนติดตั้งตามนโยบายข้อมูลที่ระบุไว้ได้ |
 | F6 | Provider pilot หนึ่งราย | งานหนึ่งขั้นตอนจบจริง ผ่าน retry/crash/duplicate cases และตรวจผลที่บันทึก |
 
-ลำดับ F1–F5 ทำให้ฐานพร้อมสำหรับ provider pilot; ไม่ต้องเพิ่มหลาย provider หรือหลาย workflow พร้อมกัน
+Story domain/API และ Extension mock bridge เริ่มพัฒนาแยกขั้นได้ตาม [Story Shorts](story-shorts.md)
+F2 เป็น gate ก่อน live provider automation; F3 เป็น gate ก่อน migration ของข้อมูลจริง
+F4/F5 เป็น gate ก่อนส่งให้ลูกค้า ไม่ต้องรอ installer ก่อนทดสอบ source prototype ในเครื่อง dev
+F6 เริ่มจาก ChatGPT Web สร้างบทหนึ่งงาน ต่อด้วยภาพหนึ่งฉาก ก่อนขยาย workflow
 แต่ละ F เป็นงานแยกที่ส่งตรวจได้ ไม่ใช่คำสั่งให้แก้ทุกระบบในครั้งเดียว
 
 ## F1 ที่ทำแล้ว
