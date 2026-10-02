@@ -21,3 +21,5 @@ playwright-report/
 *.db-shm
 *.log
 *.tsbuildinfo
+browser_extension/.wxt/
+browser_extension/.output/

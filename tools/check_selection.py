@@ -4,6 +4,9 @@ import subprocess
 from fnmatch import fnmatchcase
 
 PYTHON_SCOPES = {
+    "story-api": ["tests/test_drafts.py"],
+    "migration": ["tests/test_migration_safety.py", "tests/test_contracts.py", "tests/test_offline.py"],
+    "bridge-contract": ["tests/test_native_host.py"],
     "unit": ["tests/unit"],
     "unit-auth": ["tests/unit/test_auth_policy.py"],
     "unit-input": ["tests/unit/test_inputs.py"],
@@ -17,9 +20,27 @@ PYTHON_SCOPES = {
     "tooling": ["tests/test_check_tools.py"],
     "backend": ["tests"],
 }
-ALL_SCOPES = [*PYTHON_SCOPES, "ui", "typecheck", "build-ui", "e2e", "desktop", "all"]
+ALL_SCOPES = [
+    *PYTHON_SCOPES,
+    "ui",
+    "typecheck",
+    "build-ui",
+    "extension-unit",
+    "build-extension",
+    "extension-smoke",
+    "e2e",
+    "desktop",
+    "all",
+]
 RULES = [
     ("*.md", []),
+    ("tests/test_drafts.py", ["story-api"]),
+    ("tests/test_migration_safety.py", ["migration"]),
+    ("tests/test_native_host.py", ["bridge-contract"]),
+    ("backend/smartflow/draft*", ["story-api", "auth"]),
+    ("backend/smartflow/migration*", ["migration", "story-api"]),
+    ("backend/smartflow/native_host.py", ["bridge-contract", "extension-unit"]),
+    ("browser_extension/*", ["extension-unit", "build-extension", "bridge-contract"]),
     ("tests/unit/*", ["unit"]),
     ("tests/test_auth.py", ["auth"]),
     ("tests/test_api.py", ["api-core"]),
@@ -79,10 +100,13 @@ def plan(scopes):
     selected = list(dict.fromkeys(scopes))
     if "all" in selected:
         selected = ["all"]
-    browser = any(scope in selected for scope in ("all", "e2e"))
+    browser = any(scope in selected for scope in ("all", "e2e", "extension-smoke"))
     return {
         "scopes": selected,
-        "needs_node": browser or any(s in selected for s in ("ui", "typecheck", "build-ui")),
+        "needs_node": browser
+        or any(s in selected for s in ("ui", "typecheck", "build-ui", "extension-unit", "build-extension")),
         "needs_browser": browser,
+        "needs_extension": "all" in selected
+        or any(s in selected for s in ("extension-unit", "build-extension", "extension-smoke")),
         "has_checks": bool(selected),
     }

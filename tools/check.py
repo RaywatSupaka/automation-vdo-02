@@ -24,7 +24,11 @@ def node_environment():
 
 def build_steps(scopes, npm, match=None):
     full = "all" in scopes
-    selected = ["backend", "ui", "build-ui", "e2e"] if full else scopes
+    selected = (
+        ["backend", "ui", "build-ui", "extension-unit", "build-extension", "extension-smoke", "e2e"]
+        if full
+        else scopes
+    )
     steps = []
     if full:
         steps.append(
@@ -53,6 +57,20 @@ def build_steps(scopes, npm, match=None):
     for scope in ("ui", "typecheck", "build-ui", "e2e"):
         if scope in selected and not (scope == "typecheck" and "build-ui" in selected):
             steps.append((scope, commands[scope], ROOT / "frontend"))
+    if "extension-unit" in selected:
+        steps.append(
+            (
+                "extension-unit",
+                [npm, "test", *(["--", "-t", match] if match else [])],
+                ROOT / "browser_extension",
+            )
+        )
+    if "build-extension" in selected:
+        steps.append(("extension-typecheck", [npm, "run", "typecheck"], ROOT / "browser_extension"))
+        steps.append(("build-extension", [npm, "run", "build"], ROOT / "browser_extension"))
+    if "extension-smoke" in selected:
+        node = str(Path(npm).with_name("node.exe" if os.name == "nt" else "node")) if npm else None
+        steps.append(("extension-smoke", [node, "tools/extension_smoke.mjs"], ROOT))
     if "desktop" in selected:
         steps.append(("desktop", [sys.executable, "tools/desktop_smoke.py"], ROOT))
     return steps
@@ -71,7 +89,9 @@ def main():
     if args.base and not args.changed:
         parser.error("--base requires --changed")
     if args.match and (
-        not args.scope or len(args.scope) != 1 or args.scope[0] not in [*PYTHON_SCOPES, "ui", "e2e"]
+        not args.scope
+        or len(args.scope) != 1
+        or args.scope[0] not in [*PYTHON_SCOPES, "ui", "e2e", "extension-unit"]
     ):
         parser.error("--match requires one Python, ui or e2e scope")
     paths = changed_files(ROOT, args.base) if args.changed else []

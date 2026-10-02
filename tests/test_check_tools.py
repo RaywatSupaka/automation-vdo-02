@@ -22,6 +22,8 @@ spec.loader.exec_module(runner)
         (["tests/test_auth.py"], ["auth"]),
         (["frontend/src/status.ts"], ["ui", "typecheck"]),
         (["frontend/src/App.tsx"], ["ui", "build-ui", "e2e"]),
+        (["browser_extension/protocol/index.ts"], ["extension-unit", "build-extension", "bridge-contract"]),
+        (["backend/smartflow/drafts.py"], ["story-api", "auth"]),
         (["backend/smartflow/engine.py"], ["backend"]),
         (["backend/smartflow/new_module.py"], ["backend"]),
         (["new_service/unknown.py"], ["all"]),
@@ -51,10 +53,16 @@ def test_single_case_filter_and_full_gate_are_distinct():
         "ui",
         "build-ui",
         "e2e",
+        "extension-unit",
+        "extension-typecheck",
+        "build-extension",
+        "extension-smoke",
     ]
     assert not plan(["auth"])["needs_node"]
     assert not plan(["ui"])["needs_browser"]
     assert plan(["all"])["needs_browser"]
+    assert plan(["extension-unit"])["needs_extension"]
+    assert not plan(["ui"])["needs_extension"]
 
 
 def test_changed_files_includes_staged_untracked_and_both_rename_paths(tmp_path):

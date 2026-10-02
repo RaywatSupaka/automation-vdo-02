@@ -38,7 +38,8 @@ def main():
     npm = str(node_root / "npm.cmd")
     for args in (["ci"], ["run", "build"], ["exec", "--", "playwright", "install", "chromium"]):
         subprocess.run([npm, *args], cwd=ROOT / "frontend", env=env, check=True)
-    print("Ready: open RUN_DEV.bat")
+    subprocess.run([npm, "ci"], cwd=ROOT / "browser_extension", env=env, check=True)
+    print("Ready: open RUN_DEV.vbs")
 
 
 if __name__ == "__main__":
