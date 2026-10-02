@@ -31,6 +31,9 @@ Route ที่ไม่ได้ระบุ permission ถูกปฏิเ�
 | viewer | อ่านงานและ session/schema; สั่งงานไม่ได้ |
 | support | อ่าน diagnostics/DB projections/log และ export แบบกรองข้อมูล; อ่านเนื้อหางานหรือสั่งงานไม่ได้ |
 
+Draft API เพิ่ม `stories:drafts:read` ให้ owner/operator/viewer และ `stories:drafts:write` ให้ owner/operator
+Support อ่านเฉพาะ draft diagnostics ที่ไม่มี config; Extension ยังไม่มี API credential/pairing หรือ draft access
+
 `SMARTFLOW_SESSION_ROLE` กำหนด role ฝั่ง server ของ API token หลัก (default owner)
 `SMARTFLOW_DIAGNOSTICS_TOKEN` เป็น token ทางเลือกสำหรับ support ต้องต่างจาก token หลักและยาวอย่างน้อย 24 ตัว
 ให้สร้างด้วยตัวสุ่มที่ปลอดภัยและส่งผ่าน environment เฉพาะ process ที่ได้รับอนุญาต ห้ามบันทึกลงไฟล์หรือ Git

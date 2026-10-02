@@ -12,7 +12,7 @@
 | F1 — ทำแล้ว | API, error และ trace contracts | Typed responses, OpenAPI, pagination และ command trace; ตรวจด้วย API/workflow/E2E |
 | Auth foundation — ทำแล้ว | Session + permissions คู่กับทุก feature | Token ทุก route, deny เมื่อไม่มี policy, role matrix, dev identity bypass ใช้ใน Prod/EXE ไม่ได้; ยังไม่มี account/license |
 | F2 — ถัดไป | Worker readiness และการตรวจงานค้าง | แยก process alive/ready/progress; timeout และ recovery มี budget และไม่ replay send |
-| F3 | ฐานข้อมูลและการอัปเกรด | สำรองก่อน migration, ตรวจ integrity, กู้ได้เมื่อ upgrade ล้มเหลวโดยข้อมูลไม่หาย |
+| F3 — บางส่วน | ฐานข้อมูลและการอัปเกรด | WAL backup/integrity/transaction rollback ทำแล้ว; ยังต้อง clean Windows upgrade และ restore UX |
 | F4 | Diagnostics สำหรับเครื่องลูกค้า | เก็บหลักฐานครบเมื่อเริ่มโปรแกรมไม่ได้ export ได้และพิสูจน์การกรองข้อมูลส่วนตัว |
 | F5 | Packaging และ clean Windows | ติดตั้ง เปิด ทำงานต่อ อัปเกรด และถอนติดตั้งตามนโยบายข้อมูลที่ระบุไว้ได้ |
 | F6 | Provider pilot หนึ่งราย | งานหนึ่งขั้นตอนจบจริง ผ่าน retry/crash/duplicate cases และตรวจผลที่บันทึก |

@@ -1,6 +1,7 @@
 # Story draft persistence: proposed contract
 
-สถานะ: แผน ยังไม่มี draft tables/routes หรือ autosave ใน source
+สถานะ: draft schema/API และ revision/idempotency ทำแล้ว ดู [Implemented API](../architecture/draft-api.md)
+Autosave/restore UI, assets import และ close flush ด้านล่างยังเป็นแผน
 แผนทำคู่กับ Extension: [Coordinated plan](story-extension-milestones.md)
 ฟอร์มที่ต้องเก็บครบ: [Story form](../architecture/story-form.md)
 

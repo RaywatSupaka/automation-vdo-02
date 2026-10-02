@@ -38,6 +38,10 @@ Payload ตัวอย่างอยู่ [examples/create-job.json](../../ex
 | โครงสร้าง / แถว DB | GET /api/diagnostics/database, GET /api/diagnostics/database/{table} |
 | Log ล่าสุด | GET /api/diagnostics/logs |
 | Error catalog / schema | GET /api/errors, GET /api/openapi.json |
+| บันทึก/อ่านแบบร่าง Story | POST/GET /api/story-drafts, GET/PATCH /api/story-drafts/{id} |
+| วินิจฉัยแบบร่างโดยไม่อ่านเนื้อหา | GET /api/diagnostics/drafts, GET /api/diagnostics/drafts/{id}/events |
+
+Payload/revision/สิทธิ์และข้อจำกัด: [Draft API](../architecture/draft-api.md); PATCH เรียกด้วย HTTP client โดยตรงก่อน (CLI เดิมยังรองรับ GET/POST)
 
 ทุก route ใช้ Bearer token ตาม [Security](security.md)
 อ่าน permission ที่ต้องใช้จาก `x-required-permission` ของแต่ละ route ใน OpenAPI

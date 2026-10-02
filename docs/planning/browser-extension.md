@@ -1,6 +1,7 @@
 # Browser extension: framework and boundaries
 
-**แผน Extension ใหม่ ยังไม่ implement/install และยังไม่พิสูจน์ live ChatGPT DOM**
+**ทำแล้วเฉพาะโครง WXT/popup/native hello; ยังไม่ install/pair/dispatch หรือพิสูจน์ live ChatGPT DOM**
+Source และขอบเขตปัจจุบัน: [Extension foundation](../architecture/extension-foundation.md)
 สร้างใหม่เพราะ source เก่ารวมหลาย provider/legacy scripts; ไม่ย้ายโค้ดเดิมมาครอบ framework
 
 ## Stack ที่เลือกสำหรับ prototype
@@ -13,7 +14,7 @@
 
 อ้างอิง: [WXT introduction](https://wxt.dev/guide/introduction.html),
 [WXT unit testing](https://wxt.dev/guide/essentials/unit-testing)
-เลือกเวอร์ชันและล็อก dependencies ตอนสร้าง E0 ไม่เพิ่ม dependencies สำหรับงานเอกสารนี้
+Foundation ใช้ WXT 0.21.4 และล็อก dependencies แล้ว; modules/transport ที่เหลือด้านล่างยังเป็นแผน
 
 ## Modules ที่เสนอ
 

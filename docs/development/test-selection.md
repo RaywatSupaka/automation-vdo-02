@@ -30,7 +30,8 @@
 
 Push เปรียบเทียบกับ before SHA; PR เปรียบเทียบกับ base SHA; checkout ประวัติครบ
 MD-only ไม่เริ่ม CI ตาม paths-ignore; docs ที่ติดมากับโค้ดไม่เพิ่ม scope
-เลือกติดตั้ง Node เฉพาะ UI/TypeScript/build/browser และติดตั้ง Chromium เฉพาะ E2E/full
+เลือกติดตั้ง Node เฉพาะ UI/TypeScript/Extension/build/browser และ Chromium เฉพาะ E2E/extension-smoke/full
+ติดตั้ง browser_extension dependencies ตาม needs_extension; ไม่เพิ่มขั้นนี้ให้ UI-only checks
 Code ที่รู้จักเลือกตาม mapping; dependency/workflow/ไฟล์ไม่รู้จักใช้ all; สั่ง workflow_dispatch เพื่อ full gate ได้
 Push ใหม่ยกเลิก CI เก่าของ ref เดียวกันที่ยังไม่จบ
 ไฟล์รายงาน `build/check-plan.json` และ `build/checks/` แนบเป็น CI artifacts

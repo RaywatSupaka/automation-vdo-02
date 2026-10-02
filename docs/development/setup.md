@@ -11,6 +11,7 @@ wscript.exe .\RUN_DEV.vbs
 Setup ดาวน์โหลด Node 24.21.0 ไป `.tools/` และตรวจ SHA-256 โดยไม่เปลี่ยน Node ของเครื่อง
 ติดตั้ง Python dependencies ตาม constraints และ npm dependencies ตาม lockfile
 พร้อมบิลด์ frontend และติดตั้ง Playwright Chromium สำหรับเทส
+Setup ติดตั้ง dependencies ของ `browser_extension/` ด้วย; ยังไม่ลงทะเบียน native host หรือเปลี่ยน Chrome ของผู้ใช้
 ใช้ Python bootstrap จึงไม่ต้องเปลี่ยน Windows PowerShell execution policy
 เปิด Dev ด้วยการดับเบิลคลิก `RUN_DEV.vbs` เพื่อใช้ pythonw โดยไม่มี console
 ตัวเปิดเลือก dev_bypass เมื่อไม่ระบุ SMARTFLOW_AUTH_MODE; ใช้ตัวตนจำลองแต่ยังตรวจ token/permission

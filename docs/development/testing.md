@@ -12,13 +12,19 @@
 | Authentication/permission ผ่าน HTTP | auth | role matrix + API boundary |
 | API shape, trace, export, log | api-core | route contracts อย่างเดียว |
 | API, auth, export, log | api | ASGI requests และฐานข้อมูลจริงใน sandbox |
+| แบบร่างและสิทธิ์ | story-api | incomplete save, restart, idempotency, revision conflict และ privacy |
+| สำรอง/อัปเกรด DB | migration | WAL backup, rollback DDL/data, unknown version และ offline checks |
+| Native framing/hello | bridge-contract | malformed/oversize/origin/version และ subprocess stdout |
+| Extension protocol/background | extension-unit | WXT/Vitest, sender, timeout และ reconnect |
+| Build Extension | build-extension | WXT prepare, TypeScript และ MV3 output |
+| Popup ใน browser จริง | extension-smoke | Chromium profile แยก; ต้อง build Extension ก่อน |
 | สถานะงาน, receipt, retry, cancel | workflow | simulator + นาฬิกาจำลอง |
 | อายุและการกู้ worker | runtime | ปิด child process จริงแล้วตรวจการกู้คืน |
 | ตัวเปิด Dev ไม่มี console (Windows) | desktop | เปิด VBS + pythonw + WebView จริงในข้อมูลชั่วคราว ตรวจ dashboard/console และปิดหน้าต่างทดสอบ |
 | กติกาปุ่ม UI | ui | Vitest |
 | TypeScript โดยไม่บิลด์หน้าเว็บ | typecheck | tsc -b |
 | หน้าจอเชื่อม API | e2e | Playwright + API + worker จริง |
-| เปลี่ยนหลายระบบ / ส่งมอบรุ่น | all | lint + backend + UI + build frontend + E2E |
+| เปลี่ยนหลายระบบ / ส่งมอบรุ่น | all | lint + backend + UI/build/E2E + Extension unit/build/smoke |
 | MD อย่างเดียว | ไม่มี runtime scope | ตรวจลิงก์ ขนาด และ `git diff --check` |
 | Test runner/ตัวเลือกชุดเทส | tooling | mapping, deduplication และ Git changes |
 

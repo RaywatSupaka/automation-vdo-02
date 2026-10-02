@@ -18,6 +18,8 @@ UI แบบร่าง Story Shorts แบบ 5 ขั้นพร้อม sh
 UI ใช้สี/โลโก้/ไอคอนเดิม และ stepper แบบวงกลมเชื่อมกัน: [Branding verification](verification-story-branding.md)
 เพิ่มรายละเอียดฟอร์มจากระบบเดิมครบหมวด พร้อม `*` แดงตามเงื่อนไข: [รายการช่อง](../architecture/story-form.md)
 เลือกไฟล์และค่าต่าง ๆ ในแบบร่างได้ แต่ยังไม่อัปโหลด/เชื่อม provider; [หลักฐานทดสอบ](verification-story-details.md)
+Backend มี [Draft API](../architecture/draft-api.md) พร้อม migration backup/rollback; UI ยังไม่ต่อ autosave
+มี [Extension skeleton/native hello](../architecture/extension-foundation.md); ยังไม่ติดตั้ง จับคู่ หรือสั่ง provider
 
 ## ยังไม่ทำ
 
