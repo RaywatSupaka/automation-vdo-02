@@ -11,7 +11,7 @@
 
 ```powershell
 .\SETUP.bat
-.\RUN_DEV.bat
+wscript.exe .\RUN_DEV.vbs
 ```
 
 โค้ดพัฒนาบน branch `dev` โปรเจกต์นี้เริ่มใหม่และใช้ผู้ให้บริการจำลองในรุ่นตั้งต้น

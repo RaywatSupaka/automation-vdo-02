@@ -9,6 +9,7 @@
 | API, auth, export, log | api | ASGI requests และฐานข้อมูลจริงใน sandbox |
 | สถานะงาน, receipt, retry, cancel | workflow | simulator + นาฬิกาจำลอง |
 | อายุและการกู้ worker | runtime | ปิด child process จริงแล้วตรวจการกู้คืน |
+| ตัวเปิด Dev ไม่มี console (Windows) | desktop | เปิด VBS + pythonw + WebView จริงในข้อมูลชั่วคราว ตรวจ dashboard/console และปิดหน้าต่างทดสอบ |
 | กติกาปุ่ม UI | ui | Vitest |
 | หน้าจอเชื่อม API | e2e | Playwright + API + worker จริง |
 | เปลี่ยนหลายระบบ / ส่งมอบรุ่น | all | lint + backend + UI + build frontend + E2E |

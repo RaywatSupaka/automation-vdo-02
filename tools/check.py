@@ -23,7 +23,9 @@ def node_environment():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--scope", choices=["unit", "api", "workflow", "runtime", "ui", "e2e", "all"], required=True
+        "--scope",
+        choices=["unit", "api", "workflow", "runtime", "desktop", "ui", "e2e", "all"],
+        required=True,
     )
     args = parser.parse_args()
     env = node_environment()
@@ -33,6 +35,7 @@ def main():
         "api": [("api", [sys.executable, "-m", "pytest", "tests/test_api.py"], ROOT)],
         "workflow": [("workflow", [sys.executable, "-m", "pytest", "tests/test_workflow.py"], ROOT)],
         "runtime": [("runtime", [sys.executable, "-m", "pytest", "tests/test_runtime.py"], ROOT)],
+        "desktop": [("desktop", [sys.executable, "tools/desktop_smoke.py"], ROOT)],
         "ui": [("ui", [npm, "test"], ROOT / "frontend")],
         "e2e": [("e2e", [npm, "run", "test:e2e"], ROOT / "frontend")],
     }

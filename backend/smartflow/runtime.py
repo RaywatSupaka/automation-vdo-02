@@ -134,8 +134,21 @@ def desktop(settings, smoke=False):
                     if window.evaluate_js(
                         "Boolean(document.querySelector('[data-testid=dashboard]') && document.querySelector('.connection-status .online'))"
                     ):
+                        import ctypes
+                        import json
+                        import os
+
                         (settings.data_dir / "desktop-smoke.json").write_text(
-                            '{"webview_loaded":true,"dashboard_rendered":true}', encoding="utf-8"
+                            json.dumps(
+                                {
+                                    "webview_loaded": True,
+                                    "dashboard_rendered": True,
+                                    "console_attached": bool(ctypes.windll.kernel32.GetConsoleWindow())
+                                    if os.name == "nt"
+                                    else None,
+                                }
+                            ),
+                            encoding="utf-8",
                         )
                         break
                     time.sleep(0.2)

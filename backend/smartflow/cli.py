@@ -59,7 +59,32 @@ def main():
     if args.command == "desktop":
         from smartflow.runtime import desktop
 
-        desktop(replace(settings, token=settings.token or secrets.token_urlsafe(32)), args.desktop_smoke)
+        try:
+            desktop(replace(settings, token=settings.token or secrets.token_urlsafe(32)), args.desktop_smoke)
+        except Exception as exc:
+            from smartflow.observability import create_logger, emit, safe_exception
+
+            # pythonw and the packaged GUI have no stderr console. Keep a safe
+            # diagnostic and show an actionable message instead of failing silently.
+            try:
+                emit(
+                    create_logger(settings.data_dir),
+                    "desktop.start_failed",
+                    code="INTERNAL_ERROR",
+                    **safe_exception(exc),
+                )
+            finally:
+                if os.name == "nt" and not args.desktop_smoke:
+                    import ctypes
+
+                    ctypes.windll.user32.MessageBoxW(
+                        None,
+                        "เปิดโปรแกรมไม่สำเร็จ ตรวจว่าไม่ได้เปิดโปรแกรมซ้ำ "
+                        "และใช้คำสั่ง doctor --offline เพื่อตรวจข้อมูลวิเคราะห์",
+                        "SmartFlow Next",
+                        0x10,
+                    )
+            return 1
         return 0
     if len(settings.token) < 24:
         parser.error("Set SMARTFLOW_API_TOKEN with at least 24 characters; never put it in Git or logs")
