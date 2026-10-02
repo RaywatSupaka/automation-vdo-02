@@ -10,7 +10,9 @@ structured logs, read-only DB inspection, support ZIP และ offline doctor
 มีเครื่องมือทดสอบและ build portable Windows
 F1 ใน source: typed API/error contracts, command trace, pagination และ privacy validation
 ตรวจการทำงานร่วมกับ frontend เดิมแล้ว ดู [Verification F1](verification-f1.md)
-EXE 0.1.0 ที่ build ก่อนหน้านี้ยังไม่รวม F1; source Dev กับ packaged build เป็นคนละหลักฐาน
+เพิ่ม authentication/permission boundary, role matrix, support token และ dev identity bypass ที่ไม่ข้ามสิทธิ์
+หน้าจอแสดงปุ่มตาม permissions; account login/license ยังไม่ implement ดู [Security](../operations/security.md)
+EXE 0.1.0 ที่ build ก่อนหน้านี้ยังไม่รวม F1/permissions; source Dev กับ packaged build เป็นคนละหลักฐาน
 
 ## ยังไม่ทำ
 

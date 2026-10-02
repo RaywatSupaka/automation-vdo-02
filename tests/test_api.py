@@ -16,6 +16,7 @@ from smartflow.contracts import (
     JobRow,
     LogResponse,
     ReceiptRow,
+    SessionResponse,
 )
 from smartflow.diagnostics import support_bundle
 from smartflow.engine import Engine
@@ -104,6 +105,7 @@ def test_all_json_response_contracts_and_saved_openapi(client):
     db = client.app.state.db
     Engine(db, Simulator(db), db.path.parent).tick()
     routes = {
+        "/api/session": SessionResponse,
         "/api/health": HealthResponse,
         "/api/jobs": list[JobResponse],
         f"/api/jobs/{job.id}": JobResponse,

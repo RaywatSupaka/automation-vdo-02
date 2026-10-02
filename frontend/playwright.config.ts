@@ -12,7 +12,8 @@ export default defineConfig({
   webServer: {
     command: `"${python}" -m smartflow.cli serve --port 8788`,
     url: 'http://127.0.0.1:8788/', reuseExistingServer: false, timeout: 20000,
-    env: { SMARTFLOW_API_TOKEN: testToken, SMARTFLOW_MODE: 'test',
+    env: { SMARTFLOW_API_TOKEN: testToken, SMARTFLOW_MODE: 'test', SMARTFLOW_AUTH_MODE: 'dev_bypass',
+      SMARTFLOW_SESSION_ROLE: 'owner', SMARTFLOW_DIAGNOSTICS_TOKEN: 'e2e-support-session-not-a-real-secret',
       SMARTFLOW_DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'smartflow-e2e-')) },
   },
 });

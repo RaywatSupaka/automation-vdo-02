@@ -13,6 +13,8 @@ Setup ดาวน์โหลด Node 24.21.0 ไป `.tools/` และตร�
 พร้อมบิลด์ frontend และติดตั้ง Playwright Chromium สำหรับเทส
 ใช้ Python bootstrap จึงไม่ต้องเปลี่ยน Windows PowerShell execution policy
 เปิด Dev ด้วยการดับเบิลคลิก `RUN_DEV.vbs` เพื่อใช้ pythonw โดยไม่มี console
+ตัวเปิดเลือก dev_bypass เมื่อไม่ระบุ SMARTFLOW_AUTH_MODE; ใช้ตัวตนจำลองแต่ยังตรวจ token/permission
+การตั้ง role และ token อ่าน diagnostics อยู่ใน [Security](../operations/security.md)
 `RUN_DEV.bat` ยังใช้ได้และส่งต่อไปตัวเปิดเดียวกัน; อาจเห็น console แวบแรกจากตัว BAT
 Log ยังเก็บในไฟล์และอ่านผ่าน API/หน้า “บันทึกระบบ” ได้ ไม่ต้องเปิด terminal ทิ้งไว้
 ถ้า desktop เริ่มไม่ได้ จะบันทึก `desktop.start_failed` และแสดงข้อความให้ตรวจ offline doctor

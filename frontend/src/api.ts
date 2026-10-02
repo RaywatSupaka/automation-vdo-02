@@ -7,6 +7,10 @@ export type Job = {
 export type JobEvent = { id: number; at: number; name: string; stage: string; code: string | null };
 export type Health = { version: string; database: string; schema_revision: string;
   worker_alive: boolean; mode: string; job_counts: Record<string, number>; events: number };
+export type Permission = 'session:read' | 'schema:read' | 'jobs:read' | 'jobs:create'
+  | 'jobs:command' | 'diagnostics:read' | 'support:export';
+export type Session = { actor_id: string; role: 'owner' | 'operator' | 'viewer' | 'support';
+  auth_mode: 'local_session' | 'dev_bypass'; permissions: Permission[] };
 
 export function takeToken(): string {
   const fragment = new URLSearchParams(location.hash.slice(1));

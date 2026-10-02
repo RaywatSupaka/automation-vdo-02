@@ -29,6 +29,7 @@ Payload ตัวอย่างอยู่ [examples/create-job.json](../../ex
 
 | หน้าที่ | Route |
 |---|---|
+| ตัวตนและสิทธิ์ของ session | GET /api/session |
 | สถานะโปรแกรม | GET /api/health |
 | สร้าง / ดูรายการงาน | POST /api/jobs, GET /api/jobs |
 | งานเดียว / เหตุการณ์ | GET /api/jobs/{job_id}, GET /api/jobs/{job_id}/events |
@@ -39,6 +40,8 @@ Payload ตัวอย่างอยู่ [examples/create-job.json](../../ex
 | Error catalog / schema | GET /api/errors, GET /api/openapi.json |
 
 ทุก route ใช้ Bearer token ตาม [Security](security.md)
+อ่าน permission ที่ต้องใช้จาก `x-required-permission` ของแต่ละ route ใน OpenAPI
+Server ตรวจ permission แม้ใช้ dev_bypass; token ผิดคืน 401, สิทธิ์ไม่พอคืน 403
 POST /api/jobs ต้องมี Idempotency-Key; การ retry ต้องใช้ key เดิมกับ input เดิม
 แต่ละ HTTP response มี X-Trace-ID สำหรับตาม request
 Error envelope และการกู้คืนอยู่ใน [Errors](errors.md)

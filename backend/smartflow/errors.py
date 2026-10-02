@@ -11,6 +11,7 @@ class ErrorSpec:
 ERRORS = {
     "INPUT_INVALID": ErrorSpec("ข้อมูลไม่ถูกต้อง", "correct_input", 422),
     "UNAUTHORIZED": ErrorSpec("ต้องเชื่อมต่อด้วยสิทธิ์ของโปรแกรมนี้", "authenticate", 401),
+    "PERMISSION_DENIED": ErrorSpec("session นี้ไม่มีสิทธิ์ทำรายการนี้", "request_permission", 403),
     "ORIGIN_REJECTED": ErrorSpec("ไม่อนุญาตคำขอจากหน้าต่างนี้", "check_client", 403),
     "JOB_NOT_FOUND": ErrorSpec("ไม่พบงาน", "check_job_id", 404),
     "ROUTE_NOT_FOUND": ErrorSpec("ไม่พบ API ที่เรียก", "check_route", 404),

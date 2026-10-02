@@ -18,6 +18,8 @@ Job ไม่พบใช้ `JOB_NOT_FOUND` (404); input ผิด 422, domain 
 | ตัวอย่าง | สิ่งที่หลักฐานบอก | แนวทาง |
 |---|---|---|
 | INPUT_INVALID | input ไม่ผ่าน schema | แก้ข้อมูลก่อนเริ่ม |
+| UNAUTHORIZED | session token ไม่มีหรือไม่ถูกต้อง | เชื่อมต่อ session ที่ได้รับอนุญาต |
+| PERMISSION_DENIED | token ถูก แต่สิทธิ์ไม่พอ | ขอสิทธิ์ที่จำเป็น ไม่ retry ด้วยคำสั่งเดิม |
 | PROVIDER_AUTH_REQUIRED | preflight ต้องการ login | พักให้ผู้ใช้ดำเนินการ |
 | SEND_ACCEPTANCE_UNKNOWN | ยังยืนยันการรับคำขอไม่ได้ | inspect คำขอเดิม ห้าม replay |
 | MEDIA_SAVE_FAILED | เก็บผลไว้แล้ว แต่บันทึกไฟล์ไม่ได้ | retry เฉพาะการบันทึก |

@@ -32,7 +32,7 @@ def main():
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm", path=env["PATH"])
     groups = {
         "unit": [("unit", [sys.executable, "-m", "pytest", "tests/test_contracts.py"], ROOT)],
-        "api": [("api", [sys.executable, "-m", "pytest", "tests/test_api.py"], ROOT)],
+        "api": [("api", [sys.executable, "-m", "pytest", "tests/test_api.py", "tests/test_auth.py"], ROOT)],
         "workflow": [("workflow", [sys.executable, "-m", "pytest", "tests/test_workflow.py"], ROOT)],
         "runtime": [("runtime", [sys.executable, "-m", "pytest", "tests/test_runtime.py"], ROOT)],
         "desktop": [("desktop", [sys.executable, "tools/desktop_smoke.py"], ROOT)],

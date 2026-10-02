@@ -1,14 +1,17 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
 @dataclass(frozen=True)
 class Settings:
     data_dir: Path
-    token: str
+    token: str = field(repr=False)
     mode: str = "dev"
     port: int = 8766
+    auth_mode: str = "local_session"
+    session_role: str = "owner"
+    diagnostics_token: str = field(default="", repr=False)
 
     @classmethod
     def from_env(cls):
@@ -22,6 +25,9 @@ class Settings:
             os.getenv("SMARTFLOW_API_TOKEN", ""),
             mode,
             int(os.getenv("SMARTFLOW_PORT", "8766")),
+            os.getenv("SMARTFLOW_AUTH_MODE", "local_session"),
+            os.getenv("SMARTFLOW_SESSION_ROLE", "owner"),
+            os.getenv("SMARTFLOW_DIAGNOSTICS_TOKEN", ""),
         )
 
     @property

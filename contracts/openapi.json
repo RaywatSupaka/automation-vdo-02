@@ -5,17 +5,17 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/api/health": {
+    "/api/session": {
       "get": {
-        "summary": "Health",
-        "operationId": "health_api_health_get",
+        "summary": "Session Info",
+        "operationId": "session_info_api_session_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
+                  "$ref": "#/components/schemas/SessionResponse"
                 }
               }
             }
@@ -38,7 +38,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -110,7 +110,117 @@
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "x-required-permission": "session:read"
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "METHOD_NOT_ALLOWED",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INPUT_INVALID; safe field locations only",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_ERROR; inspect trace",
+            "headers": {
+              "X-Trace-ID": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-required-permission": "session:read"
       }
     },
     "/api/openapi.json": {
@@ -146,7 +256,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -218,7 +328,8 @@
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "x-required-permission": "schema:read"
       }
     },
     "/api/errors": {
@@ -258,7 +369,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -330,7 +441,8 @@
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "x-required-permission": "schema:read"
       }
     },
     "/api/jobs": {
@@ -395,7 +507,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -479,7 +591,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "jobs:create"
       },
       "get": {
         "summary": "List Jobs",
@@ -547,7 +660,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -614,7 +727,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "jobs:read"
       }
     },
     "/api/jobs/{job_id}": {
@@ -666,7 +780,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -750,7 +864,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "jobs:read"
       }
     },
     "/api/jobs/{job_id}/events": {
@@ -829,7 +944,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -913,7 +1028,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "jobs:read"
       }
     },
     "/api/jobs/{job_id}/commands/{action}": {
@@ -979,7 +1095,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1080,7 +1196,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "jobs:command"
       }
     },
     "/api/jobs/{job_id}/diagnostics": {
@@ -1132,7 +1249,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1216,7 +1333,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "diagnostics:read"
       }
     },
     "/api/jobs/{job_id}/support-bundle": {
@@ -1269,7 +1387,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1353,7 +1471,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "support:export"
       }
     },
     "/api/diagnostics/database": {
@@ -1389,7 +1508,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1461,7 +1580,8 @@
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "x-required-permission": "diagnostics:read"
       }
     },
     "/api/diagnostics/logs": {
@@ -1520,7 +1640,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1587,7 +1707,8 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "diagnostics:read"
       }
     },
     "/api/diagnostics/database/{table}": {
@@ -1681,7 +1802,7 @@
             }
           },
           "403": {
-            "description": "ORIGIN_REJECTED",
+            "description": "ORIGIN_REJECTED or PERMISSION_DENIED",
             "headers": {
               "X-Trace-ID": {
                 "schema": {
@@ -1748,12 +1869,21 @@
               }
             }
           }
-        }
+        },
+        "x-required-permission": "diagnostics:read"
       }
     }
   },
   "components": {
     "schemas": {
+      "AuthMode": {
+        "type": "string",
+        "enum": [
+          "local_session",
+          "dev_bypass"
+        ],
+        "title": "AuthMode"
+      },
       "ColumnInfo": {
         "properties": {
           "name": {
@@ -2478,6 +2608,37 @@
             "type": "string",
             "title": "Event"
           },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Role"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "auth_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuthMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "job_id": {
             "anyOf": [
               {
@@ -2716,6 +2877,19 @@
         ],
         "title": "OpenAPIDocument"
       },
+      "Permission": {
+        "type": "string",
+        "enum": [
+          "session:read",
+          "schema:read",
+          "jobs:read",
+          "jobs:create",
+          "jobs:command",
+          "diagnostics:read",
+          "support:export"
+        ],
+        "title": "Permission"
+      },
       "ReceiptInfo": {
         "properties": {
           "state": {
@@ -2777,6 +2951,16 @@
           "updated_at"
         ],
         "title": "ReceiptRow"
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "operator",
+          "viewer",
+          "support"
+        ],
+        "title": "Role"
       },
       "SafeJob": {
         "properties": {
@@ -2890,6 +3074,36 @@
           "has_artifact"
         ],
         "title": "SafeJob"
+      },
+      "SessionResponse": {
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "title": "Actor Id"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "auth_mode": {
+            "$ref": "#/components/schemas/AuthMode"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "actor_id",
+          "role",
+          "auth_mode",
+          "permissions"
+        ],
+        "title": "SessionResponse"
       },
       "StackFrame": {
         "properties": {

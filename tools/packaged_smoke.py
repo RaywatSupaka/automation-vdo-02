@@ -42,6 +42,9 @@ def main():
         "SMARTFLOW_PORT": str(port),
         "SMARTFLOW_MODE": "prod",
         "SMARTFLOW_API_TOKEN": token,
+        "SMARTFLOW_AUTH_MODE": "local_session",
+        "SMARTFLOW_SESSION_ROLE": "owner",
+        "SMARTFLOW_DIAGNOSTICS_TOKEN": "",
     }
     flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     client = httpx.Client(

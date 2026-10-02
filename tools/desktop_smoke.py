@@ -17,9 +17,16 @@ def main():
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         port = probe.getsockname()[1]
-    env = {**os.environ, "SMARTFLOW_DATA_DIR": str(directory), "SMARTFLOW_PORT": str(port)}
+    env = {
+        **os.environ,
+        "SMARTFLOW_DATA_DIR": str(directory),
+        "SMARTFLOW_PORT": str(port),
+        "SMARTFLOW_AUTH_MODE": "dev_bypass",
+        "SMARTFLOW_SESSION_ROLE": "owner",
+    }
     # Do not inherit credentials of a user-owned session.
     env.pop("SMARTFLOW_API_TOKEN", None)
+    env.pop("SMARTFLOW_DIAGNOSTICS_TOKEN", None)
     subprocess.run(
         ["wscript.exe", str(ROOT / "RUN_DEV.vbs"), "--desktop-smoke"],
         env=env,

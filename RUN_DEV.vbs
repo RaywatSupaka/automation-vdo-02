@@ -11,6 +11,9 @@ If Not files.FileExists(python) Then
 End If
 shell.CurrentDirectory = root
 shell.Environment("Process")("SMARTFLOW_MODE") = "dev"
+If shell.Environment("Process")("SMARTFLOW_AUTH_MODE") = "" Then
+    shell.Environment("Process")("SMARTFLOW_AUTH_MODE") = "dev_bypass"
+End If
 arguments = " desktop"
 If WScript.Arguments.Count = 1 Then
     If WScript.Arguments(0) = "--desktop-smoke" Then arguments = arguments & " --desktop-smoke"

@@ -4,6 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from smartflow.auth import AuthMode, Permission, Role
 from smartflow.jobs import Scenario
 
 Status = Literal["queued", "running", "waiting", "failed", "needs_review", "cancelled", "completed"]
@@ -13,6 +14,13 @@ ReceiptState = Literal["prepared", "dispatching", "accepted", "completed", "unkn
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class SessionResponse(Contract):
+    actor_id: str
+    role: Role
+    auth_mode: AuthMode
+    permissions: list[Permission]
 
 
 class ErrorInfo(Contract):
@@ -160,6 +168,9 @@ class LogResponse(Contract):
     at: str
     level: str
     event: str
+    actor_id: str | None = None
+    role: Role | None = None
+    auth_mode: AuthMode | None = None
     job_id: str | None = None
     trace_id: str | None = None
     command_trace_id: str | None = None
@@ -192,7 +203,7 @@ def error_responses(*codes: int):
             "model": ErrorResponse,
             "description": {
                 401: "UNAUTHORIZED",
-                403: "ORIGIN_REJECTED",
+                403: "ORIGIN_REJECTED or PERMISSION_DENIED",
                 404: "JOB_NOT_FOUND or ROUTE_NOT_FOUND",
                 405: "METHOD_NOT_ALLOWED",
                 409: "Domain conflict; inspect error.code and recovery",

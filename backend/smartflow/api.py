@@ -1,4 +1,3 @@
-import secrets
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -14,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 
 from smartflow import __version__
+from smartflow.auth import AccessControl, AuthMode, Permission, policy
 from smartflow.config import Settings
 from smartflow.contracts import (
     DatabaseResponse,
@@ -27,6 +27,7 @@ from smartflow.contracts import (
     LogResponse,
     OpenAPIDocument,
     ReceiptRow,
+    SessionResponse,
     error_responses,
 )
 from smartflow.db import Database
@@ -46,8 +47,7 @@ def web_root():
 
 def create_app(settings: Settings | None = None):
     settings = settings or Settings.from_env()
-    if len(settings.token) < 24:
-        raise ValueError("Set SMARTFLOW_API_TOKEN with at least 24 characters")
+    access = AccessControl(settings)
     logger = create_logger(settings.data_dir)
     db = Database(settings.db_path, logger)
 
@@ -55,14 +55,36 @@ def create_app(settings: Settings | None = None):
     async def lifespan(app):
         db.migrate()
         emit(logger, "api.started", version=__version__)
+        if access.mode == AuthMode.DEV_BYPASS:
+            emit(logger, "auth.development_identity", auth_mode=access.mode.value, role=access.role.value)
         yield
         db.close()
 
     auth = HTTPBearer(auto_error=False)
 
-    def authorized(credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(auth)]):
-        if not credentials or not secrets.compare_digest(credentials.credentials, settings.token):
-            raise AppError("UNAUTHORIZED")
+    def authorized(
+        request: Request, credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(auth)]
+    ):
+        if request.url.path != "/api" and not request.url.path.startswith("/api/"):
+            return  # Public desktop shell/assets contain no user data.
+        try:
+            principal = access.authenticate(credentials.credentials if credentials else None)
+            request.state.principal = principal
+            required = (getattr(request.scope.get("route"), "openapi_extra", None) or {}).get(
+                "x-required-permission"
+            )
+            access.require(principal, required)
+        except AppError as exc:
+            principal = getattr(request.state, "principal", None)
+            emit(
+                logger,
+                "auth.denied",
+                trace_id=request.state.trace_id,
+                code=exc.code,
+                actor_id=principal.actor_id if principal else None,
+                role=principal.role.value if principal else None,
+            )
+            raise
 
     app = FastAPI(
         title="SmartFlow Next",
@@ -71,6 +93,7 @@ def create_app(settings: Settings | None = None):
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
+        dependencies=[Depends(authorized)],
     )
     app.state.db = db
     jobs = Jobs(db)
@@ -78,7 +101,9 @@ def create_app(settings: Settings | None = None):
 
     def failure(code, trace_id, stage=None):
         return JSONResponse(
-            {"error": error_payload(code, trace_id, stage)}, status_code=ERRORS[code].http_status
+            {"error": error_payload(code, trace_id, stage)},
+            status_code=ERRORS[code].http_status,
+            headers={"WWW-Authenticate": "Bearer"} if code == "UNAUTHORIZED" else None,
         )
 
     @app.middleware("http")
@@ -115,6 +140,8 @@ def create_app(settings: Settings | None = None):
             job_id=getattr(request.state, "job_id", None),
             command_trace_id=getattr(request.state, "command_trace_id", None),
             code=getattr(request.state, "error_code", None),
+            actor_id=getattr(getattr(request.state, "principal", None), "actor_id", None),
+            role=getattr(getattr(request.state, "principal", None), "role", None),
         )
         return response
 
@@ -167,10 +194,20 @@ def create_app(settings: Settings | None = None):
     from fastapi import APIRouter
 
     router = APIRouter(
-        prefix="/api", dependencies=[Depends(authorized)], responses=error_responses(401, 403, 405, 422, 500)
+        prefix="/api", responses=error_responses(401, 403, 405, 422, 500)
     )
 
-    @router.get("/health", response_model=HealthResponse)
+    @router.get("/session", response_model=SessionResponse, openapi_extra=policy(Permission.SESSION_READ))
+    def session_info(request: Request):
+        principal = request.state.principal
+        return {
+            "actor_id": principal.actor_id,
+            "role": principal.role,
+            "auth_mode": principal.auth_mode,
+            "permissions": sorted(principal.permissions),
+        }
+
+    @router.get("/health", response_model=HealthResponse, openapi_extra=policy(Permission.SESSION_READ))
     def health():
         return {
             **overview(db),
@@ -178,15 +215,21 @@ def create_app(settings: Settings | None = None):
             "worker_alive": getattr(app.state, "worker_alive", lambda: False)(),
         }
 
-    @router.get("/openapi.json", response_model=OpenAPIDocument)
+    @router.get("/openapi.json", response_model=OpenAPIDocument, openapi_extra=policy(Permission.SCHEMA_READ))
     def openapi():
         return app.openapi()
 
-    @router.get("/errors", response_model=dict[str, ErrorInfo])
+    @router.get("/errors", response_model=dict[str, ErrorInfo], openapi_extra=policy(Permission.SCHEMA_READ))
     def errors():
         return {code: error_payload(code, "") for code in ERRORS}
 
-    @router.post("/jobs", status_code=201, response_model=JobResponse, responses=error_responses(409))
+    @router.post(
+        "/jobs",
+        status_code=201,
+        response_model=JobResponse,
+        responses=error_responses(409),
+        openapi_extra=policy(Permission.JOBS_CREATE),
+    )
     def create(
         data: CreateJob,
         request: Request,
@@ -203,16 +246,22 @@ def create_app(settings: Settings | None = None):
         )
         return job
 
-    @router.get("/jobs", response_model=list[JobResponse])
+    @router.get("/jobs", response_model=list[JobResponse], openapi_extra=policy(Permission.JOBS_READ))
     def list_jobs(limit: Annotated[int, Query(ge=1, le=200)] = 100, offset: Annotated[int, Query(ge=0)] = 0):
         return jobs.list(limit, offset)
 
-    @router.get("/jobs/{job_id}", response_model=JobResponse, responses=error_responses(404))
+    @router.get(
+        "/jobs/{job_id}",
+        response_model=JobResponse,
+        responses=error_responses(404),
+        openapi_extra=policy(Permission.JOBS_READ),
+    )
     def get_job(job_id: str):
         return jobs.get(job_id)
 
     @router.get(
         "/jobs/{job_id}/events",
+        openapi_extra=policy(Permission.JOBS_READ),
         response_model=list[EventResponse],
         response_model_exclude_unset=True,
         responses=error_responses(404),
@@ -223,7 +272,10 @@ def create_app(settings: Settings | None = None):
         return jobs.events(job_id, after, limit)
 
     @router.post(
-        "/jobs/{job_id}/commands/{action}", response_model=JobResponse, responses=error_responses(404, 409)
+        "/jobs/{job_id}/commands/{action}",
+        response_model=JobResponse,
+        responses=error_responses(404, 409),
+        openapi_extra=policy(Permission.JOBS_COMMAND),
     )
     def command(job_id: str, action: Literal["resume", "cancel", "reconcile"], request: Request):
         job = jobs.get(job_id)
@@ -245,6 +297,7 @@ def create_app(settings: Settings | None = None):
 
     @router.get(
         "/jobs/{job_id}/diagnostics",
+        openapi_extra=policy(Permission.DIAGNOSTICS_READ),
         response_model=DiagnosticResponse,
         response_model_exclude_unset=True,
         responses=error_responses(404),
@@ -254,6 +307,7 @@ def create_app(settings: Settings | None = None):
 
     @router.get(
         "/jobs/{job_id}/support-bundle",
+        openapi_extra=policy(Permission.SUPPORT_EXPORT),
         response_class=Response,
         responses={
             **error_responses(404),
@@ -270,11 +324,20 @@ def create_app(settings: Settings | None = None):
             headers={"Content-Disposition": 'attachment; filename="smartflow-support.zip"'},
         )
 
-    @router.get("/diagnostics/database", response_model=DatabaseResponse)
+    @router.get(
+        "/diagnostics/database",
+        response_model=DatabaseResponse,
+        openapi_extra=policy(Permission.DIAGNOSTICS_READ),
+    )
     def database():
         return database_overview(db)
 
-    @router.get("/diagnostics/logs", response_model=list[LogResponse], response_model_exclude_unset=True)
+    @router.get(
+        "/diagnostics/logs",
+        response_model=list[LogResponse],
+        response_model_exclude_unset=True,
+        openapi_extra=policy(Permission.DIAGNOSTICS_READ),
+    )
     def logs(limit: Annotated[int, Query(ge=1, le=200)] = 50):
         import json
         from collections import deque
@@ -293,7 +356,11 @@ def create_app(settings: Settings | None = None):
                     continue  # A concurrent final line is retried on the next read.
         return sorted(result, key=lambda row: row["at"])[-limit:]
 
-    @router.get("/diagnostics/database/{table}", response_model=list[JobRow | ReceiptRow | EventRow])
+    @router.get(
+        "/diagnostics/database/{table}",
+        response_model=list[JobRow | ReceiptRow | EventRow],
+        openapi_extra=policy(Permission.DIAGNOSTICS_READ),
+    )
     def rows(
         table: Literal["jobs", "receipts", "events"],
         limit: Annotated[int, Query(ge=1, le=200)] = 50,

@@ -19,6 +19,7 @@ Offline doctor: `.venv/Scripts/python.exe -m pytest tests/test_offline.py`
 เมื่อแก้บั๊ก เพิ่ม behavioral test ที่ขอบเขตนั้น พร้อมเคสซ้ำ/เวลา/crash ที่เกี่ยวข้อง
 ใช้ injected clock แทนการรอจริง ยกเว้น process/browser integration
 ไม่เรียกผู้ให้บริการจริงในเทสปกติ
+Scope api รวม `test_auth.py`: role matrix ทุก route, token, bypass, forged role และ production guard
 
 ## งบเวลาทดสอบ
 

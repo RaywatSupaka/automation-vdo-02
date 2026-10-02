@@ -5,6 +5,7 @@ This is a new project. Do not import legacy source, MD files, jobs, browser prof
 - Open `docs/index.md`, then only the topic needed for the task. Do not read all MD files or all source files.
 - Check Git status before editing. The owner requested development on `dev`; preserve existing changes.
 - Keep business rules in backend services, not React components or desktop window callbacks.
+- Every API route must authenticate and declare a server-enforced permission; missing policy denies access. Add allow/deny tests with each feature. Dev identity bypass never skips token/permission checks and is forbidden in prod/frozen builds; see `docs/operations/security.md`.
 - Every external operation needs a persisted receipt before dispatch. An uncertain or accepted send must never be replayed automatically.
 - Recover safe local failures automatically with bounded retries. Persist the failure reason and retain checkpoints.
 - Use stable error codes, job/trace/request IDs and allowlisted logs. Never log tokens, prompts, provider output, titles, raw exception messages or user paths.

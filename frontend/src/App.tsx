@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Activity, ArrowRight, Box, CheckCircle2, ChevronRight, CircleDot, Database,
   Download, FileText, Layers3, Plus, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
-import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent } from './api';
+import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent,
+  type Permission, type Session } from './api';
 import { actions, statusLabels } from './status';
 
 const scenarios = [
@@ -22,6 +23,7 @@ export function App() {
   const [token, setToken] = useState('');
   const [view, setView] = useState('jobs');
   const [health, setHealth] = useState<Health | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [events, setEvents] = useState<JobEvent[]>([]);
@@ -36,8 +38,14 @@ export function App() {
   const [table, setTable] = useState('jobs');
   const commandKey = useRef(crypto.randomUUID());
   const job = jobs.find(j => j.id === selected);
+  const can = (permission: Permission) => session?.permissions.includes(permission) ?? false;
 
   function showError(error: unknown) {
+    if (error instanceof ApiError && error.code === 'UNAUTHORIZED') {
+      sessionStorage.removeItem('smartflow-session');
+      setConnected(false); setSession(null); setHealth(null); setJobs([]); setEvents([]);
+      setDatabase([]); setLogs([]); setSelected(null); setModal(false);
+    }
     setMessage(error instanceof ApiError ? `${error.code} · ${error.message} · Trace: ${error.traceId}`
       : error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
   }
@@ -50,11 +58,17 @@ export function App() {
     let timer: ReturnType<typeof setTimeout>;
     async function refresh() {
       try {
-        const [nextHealth, nextJobs] = await Promise.all([api<Health>('/health'), api<Job[]>('/jobs')]);
-        const nextEvents = selected ? await api<JobEvent[]>(`/jobs/${selected}/events`) : [];
-        const extra = view === 'database' ? await api<unknown[]>(`/diagnostics/database/${table}`)
-          : view === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
+        const [nextHealth, nextSession] = await Promise.all([api<Health>('/health'), api<Session>('/session')]);
+        const readable = nextSession.permissions.includes('jobs:read');
+        const inspectable = nextSession.permissions.includes('diagnostics:read');
+        const nextJobs = readable ? await api<Job[]>('/jobs') : [];
+        const nextEvents = readable && selected ? await api<JobEvent[]>(`/jobs/${selected}/events`) : [];
+        const extra = inspectable && view === 'database' ? await api<unknown[]>(`/diagnostics/database/${table}`)
+          : inspectable && view === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
         if (!stopped) {
+          setSession(nextSession);
+          if (!readable && view === 'jobs') setView('database');
+          if (!inspectable && view !== 'jobs') setView('jobs');
           setHealth(nextHealth); setJobs(nextJobs); setEvents(nextEvents);
           if (view === 'database') setDatabase(extra);
           if (view === 'logs') setLogs(extra);
@@ -90,6 +104,7 @@ export function App() {
   if (!connected) return <main className="connection"><div className="connection-card">
     <div className="brand-icon"><Layers3 size={25}/></div><h1>SmartFlow Next</h1>
     <p>เชื่อมต่อกับโปรแกรมในเครื่องเพื่อดูและจัดการงาน</p>
+    {message && <p role="alert">{message}</p>}
     <form onSubmit={event => { event.preventDefault(); sessionStorage.setItem('smartflow-session', token); setConnected(true); }}>
       <label htmlFor="token">Session token สำหรับนักพัฒนา</label>
       <input id="token" type="password" value={token} onChange={e => setToken(e.target.value)} required/>
@@ -106,6 +121,7 @@ export function App() {
       <p className="nav-label">WORKSPACE</p>
       <nav aria-label="เมนูหลัก">
         {[['jobs', 'งานอัตโนมัติ', Box], ['database', 'ตรวจฐานข้อมูล', Database], ['logs', 'บันทึกระบบ', FileText]].map(([key, text, Icon]) => {
+          if (!can(key === 'jobs' ? 'jobs:read' : 'diagnostics:read')) return null;
           const Component = Icon as typeof Box;
           return <button key={key as string} className={view === key ? 'active' : ''} onClick={() => setView(key as string)}>
             <Component size={19}/>{text as string}{view === key && <span className="nav-dot"/>}
@@ -126,10 +142,11 @@ export function App() {
         <div className="page-heading"><div><p className="eyebrow">YOUR AUTOMATION, IN FOCUS</p>
           <h1>{view === 'jobs' ? 'ทุกงาน อยู่ในสายตา' : view === 'database' ? 'ตรวจสอบข้อมูลของระบบ' : 'ลำดับเหตุการณ์ของระบบ'}</h1>
           <p className="subtitle">{view === 'jobs' ? 'สร้างงาน ติดตามผล และทำต่อจากจุดที่บันทึกไว้' : 'ข้อมูลสำหรับวิเคราะห์ปัญหา พร้อมรหัสอ้างอิงที่ติดตามได้'}</p></div>
-          <button className="primary" onClick={() => setModal(true)}><Plus size={18}/>สร้างงานทดสอบ</button>
+          {can('jobs:create') && <button className="primary" onClick={() => setModal(true)}><Plus size={18}/>สร้างงานทดสอบ</button>}
         </div>
         <div className="notice"><div className="notice-icon"><Activity size={18}/></div><div><strong>พื้นที่ทดลองระบบอัตโนมัติ</strong>
           <span>รุ่นนี้ใช้ผู้ให้บริการจำลอง เพื่อทดสอบคิวและการกู้คืน ยังไม่เชื่อม AI หรือสร้างวิดีโอจริง</span></div><span className="pill">SIMULATION</span></div>
+        {session?.auth_mode === 'dev_bypass' && <p className="inspect-note" data-testid="dev-auth-notice">โหมดพัฒนา · ใช้ตัวตนจำลองและยังตรวจสิทธิ์ทุกคำสั่ง</p>}
         {message && <div className="error-banner" role="alert"><span>{message}</span><button aria-label="ปิดข้อความ" onClick={() => setMessage('')}><X size={16}/></button></div>}
 
         {view === 'jobs' ? <>
@@ -150,7 +167,7 @@ export function App() {
                   <td><span className={`status ${item.status}`}>{statusLabels[item.status]}</span></td><td className="muted">{time(item.created_at)}</td>
                 </tr>)}
               </tbody></table></div>
-              {!filtered.length && <div className="empty"><div className="empty-icon"><Box size={32}/></div><h3>พร้อมสำหรับงานแรกของคุณ</h3><p>ลองสร้างงานเพื่อดูการทำงานตั้งแต่เริ่ม<br/>จนถึงการบันทึก checkpoint</p><button className="text-button" onClick={() => setModal(true)}>สร้างงานทดสอบ <ArrowRight size={16}/></button></div>}
+              {!filtered.length && <div className="empty"><div className="empty-icon"><Box size={32}/></div><h3>ยังไม่มีงานในรายการ</h3>{can('jobs:create') && <><p>ลองสร้างงานเพื่อดูการทำงานตั้งแต่เริ่ม<br/>จนถึงการบันทึก checkpoint</p><button className="text-button" onClick={() => setModal(true)}>สร้างงานทดสอบ <ArrowRight size={16}/></button></>}</div>}
               <footer className="panel-footer"><span><i className="online"/>อัปเดตสถานะอัตโนมัติ</span><span>แสดงล่าสุดสูงสุด 100 งาน</span></footer>
             </section>
             <section className="panel detail-panel"><div className="panel-heading"><h2>ติดตามงาน</h2><Activity size={18}/></div>
@@ -158,10 +175,10 @@ export function App() {
                 <dl><dt>รหัสงาน</dt><dd className="mono">{job.id}</dd><dt>ขั้นตอน / สถานะคำขอ</dt><dd>{job.stage} / {job.receipt?.state || 'ยังไม่ส่ง'}</dd><dt>Trace ID</dt><dd className="mono">{job.trace_id}</dd></dl>
                 {job.error && <div className="job-error"><strong>{job.error.code}</strong><p>{job.error.message}</p><small>ขั้นตอนต่อไป: {job.error.recovery}</small></div>}
                 <div className="job-actions">
-                  {available?.resume && <button disabled={busy} onClick={() => command('resume')}><RefreshCw size={15}/>ทำต่อ</button>}
-                  {available?.reconcile && <button disabled={busy} onClick={() => command('reconcile')}><Search size={15}/>ตรวจผลเดิม</button>}
-                  {available?.cancel && <button disabled={busy} onClick={() => command('cancel')}>ยกเลิกงาน</button>}
-                  <button onClick={() => downloadBundle(job.id).catch(showError)}><Download size={15}/>ข้อมูลวิเคราะห์</button>
+                  {can('jobs:command') && available?.resume && <button disabled={busy} onClick={() => command('resume')}><RefreshCw size={15}/>ทำต่อ</button>}
+                  {can('jobs:command') && available?.reconcile && <button disabled={busy} onClick={() => command('reconcile')}><Search size={15}/>ตรวจผลเดิม</button>}
+                  {can('jobs:command') && available?.cancel && <button disabled={busy} onClick={() => command('cancel')}>ยกเลิกงาน</button>}
+                  {can('support:export') && <button onClick={() => downloadBundle(job.id).catch(showError)}><Download size={15}/>ข้อมูลวิเคราะห์</button>}
                 </div>
                 <h4>ลำดับเหตุการณ์</h4><ol className="timeline">{events.map(event => <li key={event.id}><i/><div><strong>{event.name}</strong><small>{time(event.at)} · {event.stage}</small>{event.code && <code>{event.code}</code>}</div></li>)}</ol>
               </div> : <div className="empty detail-empty"><Activity size={30}/><h3>เห็นที่มาของทุกสถานะ</h3><p>เลือกงานเพื่อดูขั้นตอน<br/>checkpoint และเหตุการณ์ที่เกิดขึ้น</p></div>}
@@ -174,7 +191,7 @@ export function App() {
         <div className="bottom-note"><ShieldCheck size={15}/> บันทึกในเครื่อง · ตรวจสอบย้อนกลับได้ · ทำต่อจาก checkpoint</div>
       </div>
     </main>
-    {modal && <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-labelledby="create-heading">
+    {modal && can('jobs:create') && <div className="modal-backdrop"><section className="modal" role="dialog" aria-modal="true" aria-labelledby="create-heading">
       <div className="panel-heading"><h2 id="create-heading">สร้างงานทดสอบ</h2><button aria-label="ปิดหน้าต่าง" disabled={busy} onClick={() => setModal(false)}><X size={20}/></button></div>
       <form onSubmit={createJob}><label htmlFor="job-title">ชื่องาน</label><input autoFocus id="job-title" value={title} onChange={e => setTitle(e.target.value)} placeholder="เช่น ทดสอบการทำงานต่อจาก checkpoint" maxLength={120} required/>
         <label htmlFor="scenario">สถานการณ์จำลอง</label><select id="scenario" value={scenario} onChange={e => setScenario(e.target.value)}>{scenarios.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
