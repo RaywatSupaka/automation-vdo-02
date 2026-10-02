@@ -23,7 +23,7 @@ setup ดาวน์โหลด Node 24.21.0 มาไว้เฉพาะ `.
 
 ```powershell
 cd C:\Users\RaywatSupaka\Desktop\project
-powershell -File tools/setup.ps1
+.\SETUP.bat
 .\RUN_DEV.bat
 ```
 
@@ -64,7 +64,7 @@ $env:SMARTFLOW_API_TOKEN = [guid]::NewGuid().ToString('N')
 ```powershell
 .venv\Scripts\python.exe tools/check.py --scope workflow
 .venv\Scripts\python.exe tools/check.py --scope api
-powershell -File tools/build.ps1
+.venv\Scripts\python.exe tools/build.py
 ```
 
 ผลบิลด์: `dist/SmartFlow Next/SmartFlow Next.exe` ต้องเก็บไฟล์ทั้งโฟลเดอร์ไว้ด้วยกัน

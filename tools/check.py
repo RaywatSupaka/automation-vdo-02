@@ -53,7 +53,7 @@ def main():
     results = []
     for name, command, cwd in steps:
         if not command[0]:
-            parser.error("Node/npm missing. Run tools/setup.ps1")
+            parser.error("Node/npm missing. Run SETUP.bat")
         start = time.perf_counter()
         print(f"START {name}", flush=True)
         result = subprocess.run(command, cwd=cwd, env=env, check=False)

@@ -20,7 +20,7 @@ Test duration targets: unit/workflow/API under 10s each; full foundation check u
 are installed. These are local feedback budgets, not promises for CI provisioning or future real-media tests.
 
 For E2E, build the UI first (`npm run build` in frontend), then `--scope e2e`.
-`tools/setup.ps1` installs Playwright Chromium; E2E creates isolated data in the OS temporary directory.
+`SETUP.bat` installs Playwright Chromium; E2E creates isolated data in the OS temporary directory.
 Traces on failure and screenshots go to ignored `frontend/test-results/`. No real browser profile is used.
 
 Test typescript via `npm run build`; Python style via `python -m ruff check backend tests tools desktop_entry.py`.
@@ -28,7 +28,7 @@ The current Starlette version emits an httpx TestClient deprecation warning; tes
 
 ## Packaged verification
 
-Build using `tools/build.ps1`. Test with an isolated `SMARTFLOW_DATA_DIR` and unused port.
+Build using `tools/build.py`. Test with an isolated `SMARTFLOW_DATA_DIR` and unused port.
 `SmartFlow Next.exe --desktop-smoke` creates one owned window, verifies React rendered in WebView2,
 writes `desktop-smoke.json` in that isolated data directory, then closes its own window.
 `tools/packaged_smoke.py` verifies compiled UI, API, worker, checkpoint and restart in the actual EXE.

@@ -20,3 +20,4 @@ playwright-report/
 *.db-wal
 *.db-shm
 *.log
+*.tsbuildinfo
