@@ -36,6 +36,9 @@ ChatGPT Web ใน workflow นี้รับผิดชอบบทและ�
 
 ## Milestones ที่ส่งตรวจแยกกัน
 
+แผนลงมือรอบถัดไปสำหรับ draft persistence และ Extension ควบคู่กัน: [Coordinated milestones](story-extension-milestones.md)
+รายละเอียด autosave/restore แยกอยู่ใน [Draft persistence](draft-persistence.md)
+
 | ขั้น | ผลที่ตรวจได้ | Gate |
 |---|---|---|
 | S0 | Story schema, revision, API permissions, UI ด้วย fixtures | unit/API; F3 ก่อน migration ของข้อมูลจริง |

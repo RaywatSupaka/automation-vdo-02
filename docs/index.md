@@ -8,6 +8,8 @@
 | ดูสิ่งที่ทำได้จริงและข้อจำกัดปัจจุบัน | [สถานะโปรเจกต์](delivery/status.md) |
 | เลือกงานถัดไปและเกณฑ์จบงาน | [แผนโครงสร้างพื้นฐาน](planning/foundation.md) |
 | ขอบเขตและลำดับ feature เรื่องเล่า Short | [Story Shorts plan](planning/story-shorts.md) |
+| ทำระบบบันทึกแบบร่างและ Extension ควบคู่กัน | [Coordinated milestones](planning/story-extension-milestones.md) |
+| ออกแบบ autosave กู้คืนแบบร่าง และไฟล์แนบ | [Draft persistence](planning/draft-persistence.md) |
 | ดูแนวคิดที่เรียนรู้จาก source เดิม | [Story reference](planning/story-reference.md) |
 | ออกแบบข้อมูล/ฉาก/revision/API ของ Story | [Story data and API](planning/story-data-api.md) |
 | ออกแบบ Extension ใหม่และเลือก framework | [Browser extension](planning/browser-extension.md) |
