@@ -74,10 +74,10 @@ def signature(extension, head):
 
 
 class Assets:
-    def __init__(self, db):
+    def __init__(self, db, clock=time.time):
         from smartflow.drafts import Drafts
 
-        self.db, self.drafts = db, Drafts(db)
+        self.db, self.clock, self.drafts = db, clock, Drafts(db, clock)
 
     def list(self, draft_id):
         with self.db.transaction() as session:
@@ -144,7 +144,7 @@ class Assets:
                         revision=draft.revision,
                         trace_id=trace,
                         name="draft.asset_reserved",
-                        at=time.time(),
+                        at=self.clock(),
                     )
                 )
             asset_id = row.id
@@ -183,7 +183,7 @@ class Assets:
                                 revision=draft.revision,
                                 trace_id=trace,
                                 name="draft.asset_saved",
-                                at=time.time(),
+                                at=self.clock(),
                             )
                         )
                     row.state, row.sha256 = "ready", checksum

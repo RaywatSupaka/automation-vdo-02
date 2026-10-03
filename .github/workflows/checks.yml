@@ -26,11 +26,23 @@ jobs:
           cache-dependency-path: requirements.lock.txt
       - name: Select affected checks
         id: plan
+        # pwsh 7 does not turn native stderr into terminating errors, so the probe below is safe.
+        shell: pwsh
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           FULL_CHECK: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          if ($env:FULL_CHECK -eq 'true') {
+          $fullCheck = $env:FULL_CHECK -eq 'true'
+          # An all-zero base (first push) stays on --changed; check.py maps it to the full gate.
+          if (-not $fullCheck -and $env:BASE_SHA -notmatch '^0+$') {
+            # A force-push can leave github.event.before outside the fetched history.
+            git cat-file -e "$($env:BASE_SHA)^{commit}" 2>$null
+            if ($LASTEXITCODE -ne 0) {
+              Write-Output 'Base commit is not in history; selecting the full gate'
+              $fullCheck = $true
+            }
+          }
+          if ($fullCheck) {
             python tools/check.py --scope all --dry-run --plan-json build/check-plan.json
           } else {
             python tools/check.py --changed --base "$env:BASE_SHA" --dry-run --plan-json build/check-plan.json

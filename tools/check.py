@@ -12,6 +12,11 @@ from pathlib import Path
 from check_selection import ALL_SCOPES, PYTHON_SCOPES, changed_files, plan, select_scopes
 
 ROOT = Path(__file__).resolve().parents[1]
+LINT = (
+    "lint",
+    [sys.executable, "-m", "ruff", "check", "backend", "tests", "tools", "desktop_entry.py"],
+    ROOT,
+)
 
 
 def node_environment():
@@ -29,15 +34,7 @@ def build_steps(scopes, npm, match=None):
         if full
         else scopes
     )
-    steps = []
-    if full:
-        steps.append(
-            (
-                "lint",
-                [sys.executable, "-m", "ruff", "check", "backend", "tests", "tools", "desktop_entry.py"],
-                ROOT,
-            )
-        )
+    steps = [LINT] if full else []
     paths = sorted({path for scope in selected for path in PYTHON_SCOPES.get(scope, [])})
     paths = [
         path for path in paths if not any(path.startswith(other + "/") for other in paths if other != path)
@@ -76,6 +73,14 @@ def build_steps(scopes, npm, match=None):
     return steps
 
 
+def selected_steps(scopes, npm, match=None):
+    # Whole-repo ruff takes under a second, so every Python selection lints first.
+    steps = build_steps(scopes, npm, match)
+    if any(scope in PYTHON_SCOPES for scope in scopes) and LINT not in steps:
+        steps.insert(0, LINT)
+    return steps
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -99,7 +104,7 @@ def main():
     summary.update(files=paths, match=args.match)
     env = node_environment()
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm", path=env["PATH"])
-    steps = build_steps(summary["scopes"], npm, args.match)
+    steps = selected_steps(summary["scopes"], npm, args.match)
     summary["steps"] = [{"scope": name, "command": cmd} for name, cmd, _ in steps]
     print(json.dumps(summary, ensure_ascii=False), flush=True)
     if args.plan_json:
