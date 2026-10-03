@@ -2,11 +2,36 @@ import time
 
 import pytest
 from smartflow.config import Settings
+from smartflow.db import Database
 from smartflow.jobs import CreateJob, Jobs
 from smartflow.models import SimulatedRequest
 from smartflow.runtime import runtime
 
 pytestmark = pytest.mark.integration
+
+
+def test_runtime_and_standalone_api_each_migrate_once(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from smartflow.api import create_app
+
+    calls = []
+    original = Database.migrate
+
+    def counting_migrate(self):
+        calls.append(self)
+        return original(self)
+
+    monkeypatch.setattr(Database, "migrate", counting_migrate)
+    token = "runtime-migration-test-token"
+    with runtime(Settings(tmp_path / "desktop", token, "test"), worker=False) as app:
+        with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as client:
+            assert client.get("/api/health").status_code == 200
+        assert len(calls) == 1
+
+    standalone = create_app(Settings(tmp_path / "standalone", token, "test"))
+    with TestClient(standalone, headers={"Authorization": f"Bearer {token}"}) as client:
+        assert client.get("/api/health").status_code == 200
+    assert len(calls) == 2
 
 
 def until(predicate, timeout=8):

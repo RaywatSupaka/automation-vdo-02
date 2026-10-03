@@ -73,7 +73,7 @@ def runtime(settings, worker=True):
     settings.data_dir.mkdir(parents=True, exist_ok=True)
     with FileLock(str(settings.data_dir / "app.lock"), timeout=0):
         app = create_app(settings)
-        app.state.db.migrate()
+        app.state.ensure_migrated()
         context = multiprocessing.get_context("spawn")
         # Do not share an Event/Semaphore with a killable child: termination can
         # leave its lock permanently held. Each child gets a disposable pipe.

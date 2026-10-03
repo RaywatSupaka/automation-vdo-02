@@ -55,10 +55,17 @@ def create_app(settings: Settings | None = None):
     from smartflow.browser_bridge import Bridge
 
     bridge = Bridge(db, access.mode)
+    migrated = False
+
+    def ensure_migrated():
+        nonlocal migrated
+        if not migrated:
+            db.migrate()
+            migrated = True
 
     @asynccontextmanager
     async def lifespan(app):
-        db.migrate()
+        ensure_migrated()
         emit(logger, "api.started", version=__version__)
         if access.mode == AuthMode.DEV_BYPASS:
             emit(logger, "auth.development_identity", auth_mode=access.mode.value, role=access.role.value)
@@ -105,6 +112,7 @@ def create_app(settings: Settings | None = None):
         dependencies=[Depends(authorized)],
     )
     app.state.db = db
+    app.state.ensure_migrated = ensure_migrated
     jobs = Jobs(db, mode=settings.mode)
     engine = Engine(db, Simulator(db), settings.data_dir)
 
