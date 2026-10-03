@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Box, CheckCircle2, ChevronRight, CircleDot, Database,
   Download, FileText, Layers3, Plus, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
 import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent,
@@ -7,6 +7,7 @@ import { actions, statusLabels } from './status';
 import { BrandIcon } from './components/BrandIcon';
 import { StoryShorts } from './features/story-shorts/StoryShorts';
 import { BrowserPairing } from './features/BrowserPairing';
+import { canOpen, keepIfEqual, pollPlan, rememberView, restoreView, storyAccess, viewStorage, type View } from './navigation';
 
 const scenarios = [
   ['success', 'ทำงานสำเร็จ', 'สร้างและบันทึก checkpoint'],
@@ -25,7 +26,7 @@ export function App() {
   const [connected, setConnected] = useState(() => !!takeToken());
   const [authEpoch, setAuthEpoch] = useState(0);
   const [token, setToken] = useState('');
-  const [view, setView] = useState('jobs');
+  const [view, setView] = useState<View>(() => restoreView(viewStorage()));
   const [health, setHealth] = useState<Health | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -42,7 +43,11 @@ export function App() {
   const [table, setTable] = useState('jobs');
   const commandKey = useRef(crypto.randomUUID());
   const job = jobs.find(j => j.id === selected);
-  const can = (permission: Permission) => session?.permissions.includes(permission) ?? false;
+  const permissions = session?.permissions ?? [];
+  const can = (permission: Permission) => permissions.includes(permission);
+  const story = storyAccess(permissions);
+  // One element instance: polls that re-render the shell do not re-render the autosaving wizard.
+  const storyShorts = useMemo(() => <StoryShorts/>, []);
 
   function showError(error: unknown) {
     if (error instanceof ApiError && error.code === 'UNAUTHORIZED') {
@@ -65,6 +70,7 @@ export function App() {
     window.addEventListener('hashchange', changed);
     return () => window.removeEventListener('hashchange', changed);
   }, []);
+  useEffect(() => { rememberView(viewStorage(), view); }, [view]);
   useEffect(() => { commandKey.current = crypto.randomUUID(); }, [title, scenario]);
   useEffect(() => {
     const lost = () => showError(new ApiError('UNAUTHORIZED', 'สิทธิ์ของ session หมดอายุ', ''));
@@ -79,22 +85,22 @@ export function App() {
     async function refresh() {
       const requestToken = takeToken();
       try {
+        // Auth and worker status always; job rows/events and diagnostics only for the active, allowed view.
         const [nextHealth, nextSession] = await Promise.all([api<Health>('/health'), api<Session>('/session')]);
-        const readable = nextSession.permissions.includes('jobs:read');
-        const inspectable = nextSession.permissions.includes('diagnostics:read');
-        const nextJobs = readable ? await api<Job[]>('/jobs') : [];
-        const nextEvents = readable && selected ? await api<JobEvent[]>(`/jobs/${selected}/events`) : [];
-        const extra = inspectable && view === 'database' ? await api<unknown[]>(`/diagnostics/database/${table}`)
-          : inspectable && view === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
+        const plan = pollPlan(view, nextSession.permissions, selected);
+        const nextJobs = plan.jobs ? await api<Job[]>('/jobs') : [];
+        const nextEvents = plan.events ? await api<JobEvent[]>(`/jobs/${selected}/events`) : [];
+        const extra = plan.diagnostics === 'database' ? await api<unknown[]>(`/diagnostics/database/${table}`)
+          : plan.diagnostics === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
         if (!stopped && requestToken === takeToken()) {
-          setSession(nextSession);
-          if (!readable && view === 'jobs') setView('database');
-          if (!inspectable && (view === 'database' || view === 'logs')) setView('jobs');
-          if (view === 'browser' && !nextSession.permissions.includes('browser:manage')) setView(readable ? 'jobs' : 'database');
-          if (view === 'story' && !nextSession.permissions.includes('jobs:create')) setView(readable ? 'jobs' : 'database');
-          setHealth(nextHealth); setJobs(nextJobs); setEvents(nextEvents);
-          if (view === 'database') setDatabase(extra);
-          if (view === 'logs') setLogs(extra);
+          setSession(current => keepIfEqual(current, nextSession));
+          setHealth(current => keepIfEqual(current, nextHealth));
+          if (plan.view !== view) setView(plan.view);
+          if (plan.clearJobs) { setJobs(current => keepIfEqual(current, [])); setEvents(current => keepIfEqual(current, [])); }
+          else if (plan.jobs) { setJobs(current => keepIfEqual(current, nextJobs)); setEvents(current => keepIfEqual(current, nextEvents)); }
+          if (plan.clearDiagnostics) { setDatabase(current => keepIfEqual(current, [])); setLogs(current => keepIfEqual(current, [])); }
+          else if (plan.diagnostics === 'database') setDatabase(extra);
+          else if (plan.diagnostics === 'logs') setLogs(extra);
         }
       } catch (error) { if (!stopped && requestToken === takeToken()) showError(error); }
       finally { if (!stopped) timer = setTimeout(refresh, 1500); }
@@ -143,15 +149,15 @@ export function App() {
       <div className="workspace"><span className="workspace-icon">S</span><div>พื้นที่ทำงานของฉัน<small>บนเครื่องนี้</small></div><ChevronRight size={16}/></div>
       <p className="nav-label">WORKSPACE</p>
       <nav aria-label="เมนูหลัก">
-        {can('browser:manage') && <button className={view === 'browser' ? 'active' : ''} onClick={() => setView('browser')}><ShieldCheck size={19}/>เชื่อมต่อ Extension</button>}
+        {canOpen('browser', permissions) && <button className={view === 'browser' ? 'active' : ''} onClick={() => setView('browser')}><ShieldCheck size={19}/>เชื่อมต่อ Extension</button>}
         {[['jobs', 'งานอัตโนมัติ', Box], ['database', 'ตรวจฐานข้อมูล', Database], ['logs', 'บันทึกระบบ', FileText]].map(([key, text, Icon]) => {
-          if (!can(key === 'jobs' ? 'jobs:read' : 'diagnostics:read')) return null;
+          if (!canOpen(key as View, permissions)) return null;
           const Component = Icon as typeof Box;
-          return <button key={key as string} className={view === key ? 'active' : ''} onClick={() => setView(key as string)}>
+          return <button key={key as string} className={view === key ? 'active' : ''} onClick={() => setView(key as View)}>
             <Component size={19}/>{text as string}{view === key && <span className="nav-dot"/>}
           </button>;
         })}
-        {can('jobs:create') && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><BrandIcon name="story" size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
+        {story.visible && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><BrandIcon name="story" size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
       </nav>
       <div className="sidebar-bottom"><ShieldCheck size={23}/><strong>ตรวจสอบได้ทุกขั้นตอน</strong>
         <p>สถานะงานและ checkpoint<br/>บันทึกไว้ในเครื่องของคุณ</p>
@@ -160,11 +166,17 @@ export function App() {
     </aside>
 
     <main className={`main ${view === 'story' ? 'story-main' : ''}`}>
-      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}</span>
+      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}
+        {view === 'story' && story.readOnly && <span className="readonly-badge" role="note" data-testid="story-readonly">อ่านอย่างเดียว</span>}</span>
         <span className="connection-status"><i className={health?.worker_alive ? 'online' : ''}/>{health?.worker_alive ? 'ตัวประมวลผลพร้อม' : 'ยังไม่พบตัวประมวลผล'}</span>
       </header>
-      <div className="story-host" hidden={view !== 'story'}>{can('jobs:create') && <StoryShorts/>}</div>
-      {view === 'browser' && can('browser:manage') && <div className="content"><BrowserPairing/></div>}
+      {/* Mounted (hidden) for every session that may write drafts: it registers window.smartflowFlush for the
+          desktop close guard. Read-only sessions never mount the autosaving store (see storyAccess). */}
+      <div className="story-host" hidden={view !== 'story'}>{story.mount ? storyShorts : story.readOnly &&
+        <div className="content"><div className="notice" role="note" data-testid="story-readonly-notice"><div className="notice-icon"><ShieldCheck size={18}/></div>
+          <div><strong>บัญชีนี้มีสิทธิ์อ่านแบบร่างเท่านั้น</strong>
+            <span>ยังเปิดตัวแก้ไขแบบร่างไม่ได้ · การดูและแก้ไขแบบร่างต้องใช้สิทธิ์เขียนแบบร่าง กรุณาติดต่อเจ้าของพื้นที่ทำงาน</span></div></div></div>}</div>
+      {view === 'browser' && canOpen('browser', permissions) && <div className="content"><BrowserPairing/></div>}
       <div className="content" hidden={view === 'story' || view === 'browser'}>
         <div className="page-heading"><div><p className="eyebrow">YOUR AUTOMATION, IN FOCUS</p>
           <h1>{view === 'jobs' ? 'ทุกงาน อยู่ในสายตา' : view === 'database' ? 'ตรวจสอบข้อมูลของระบบ' : 'ลำดับเหตุการณ์ของระบบ'}</h1>

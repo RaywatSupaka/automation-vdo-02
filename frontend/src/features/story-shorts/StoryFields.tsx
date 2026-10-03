@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import { choices, visible, type Field, type FieldGroup, type StoryDraft, type DraftValue } from './fields';
+import { applyFilePick } from './file-picks';
 
 export function RequiredMark() { return <span className="required-mark" aria-hidden="true">*</span>; }
 type Props = { group: FieldGroup; draft: StoryDraft; update: (id: string, value: DraftValue) => void };
@@ -17,9 +18,7 @@ function FieldControl({ field, draft, update }: { field: Field; draft: StoryDraf
     const reorder = (index: number, offset: number) => {
       const copy = [...files]; [copy[index], copy[index + offset]] = [copy[index + offset], copy[index]]; update(field.id, copy);
     };
-    control = <><input {...common} type="file" accept={field.accept} multiple={field.multiple} onChange={e => {
-      update(field.id, Array.from(e.target.files || [])); e.target.value = '';
-    }}/>{files.length > 0 && <ul className="story-file-list">{files.map((file, index) => <li key={`${index}-${file.name}`}>
+    control = <><input {...common} type="file" accept={field.accept} multiple={field.multiple} onChange={e => applyFilePick(e.target, files, field.multiple === true, next => update(field.id, next))}/>{files.length > 0 && <ul className="story-file-list">{files.map((file, index) => <li key={`${index}-${file.name}`}>
       <span>{file.name} · {Math.max(1, Math.round(file.size / 1024))} KB {'missing' in file && file.missing ? '· ไม่พบไฟล์ กรุณาเลือกใหม่' : ''}</span><div>
         {field.id === 'greenFiles' && <><button type="button" disabled={index === 0} aria-label={`เลื่อนเอฟเฟกต์ ${index + 1} ขึ้น`} onClick={() => reorder(index, -1)}>↑</button>
           <button type="button" disabled={index === files.length - 1} aria-label={`เลื่อนเอฟเฟกต์ ${index + 1} ลง`} onClick={() => reorder(index, 1)}>↓</button></>}

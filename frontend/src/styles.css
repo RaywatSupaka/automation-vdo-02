@@ -9,3 +9,4 @@ th,td,.job-select strong,.empty p,.job-detail dd{font-size:12px}
 .status,.job-detail dt,.job-actions button,.timeline strong,.inspect-note{font-size:12px}
 .job-error strong,.job-error p,.scenario-help{font-size:12px}
 @media(max-width:760px){nav button{font-size:0}}
+.readonly-badge{border:1px solid #e5d6bc;color:#9a8159;background:#fffaf0;border-radius:4px;padding:3px 8px;white-space:nowrap}
