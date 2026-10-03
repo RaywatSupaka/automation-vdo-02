@@ -8,6 +8,7 @@ SmartFlow Next is a local-first Windows desktop app: React UI in a pywebview/Web
 
 ## Docs workflow
 
+- Task flow, handoff plans, commit messages, error handling and reports follow [docs/development/workflow.md](docs/development/workflow.md), the same standard every agent or person uses.
 - Docs are written in Thai. Start at [docs/index.md](docs/index.md) and open only the row that matches the task. Do not bulk-read docs or source.
 - One topic per doc. Update the owning doc in place and link it from the index. Never append history or reports to a central file.
 - Work on branch `dev`. Check `git status` before editing and keep existing uncommitted work.

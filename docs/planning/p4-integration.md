@@ -1,78 +1,81 @@
 # P4 integration handoff: execution plan
 
-แผนนี้เขียนให้ AI agent ทำต่อโดยไม่มีเจ้าของเฝ้าจอ (ประมาณ 2 ชั่วโมง) เริ่มจาก commit `8095921` บน `dev`
-อ่าน [AGENTS.md](../../AGENTS.md) และ [Parallel sessions](../development/parallel-work.md) ก่อนเริ่ม
-เป้าหมาย P4 อยู่ใน [Coordinated milestones](story-extension-milestones.md)
+แผนนี้เขียนให้ AI agent ทำต่อเองโดยไม่มีเจ้าของเฝ้าจอ (ประมาณ 2 ชั่วโมง) เริ่มจาก `origin/dev` ล่าสุด
+อ่านตามลำดับ: [AGENTS.md](../../AGENTS.md) → [Standard workflow](../development/workflow.md) → ไฟล์นี้ → [คู่มือคำสั่ง](p4-runbook.md) → [เมื่อเจอ error](p4-troubleshooting.md)
+ทุกคำสั่งที่ต้องพิมพ์อยู่ในคู่มือคำสั่ง ถ้าเจอ error ให้หาใน p4-troubleshooting.md ก่อนตัดสินใจเอง
 
-## สถานะตั้งต้น (ตรวจแล้ว)
+## สถานะตั้งต้น (ตรวจแล้ว 2026-10-03)
 
-- P3 ใน source: `POST/GET /api/stories`, `POST /api/browser/work`, StoryWorkflow, worker heartbeat (F2)
-- Extension/helper 0.2.0 build แล้ว ลงทะเบียน `com.smartflow.next.dev` ชี้ `build/native/` และจับคู่กับ Dev DB จริงแล้ว
-- Extension ใน Chrome ของเจ้าของ sync ทุก 30 วินาทีแม้ปิด popup; DB Dev อยู่ schema `0004`
+- P3 ใน source: `POST /api/stories`, `GET /api/stories/{job_id}`, `POST /api/browser/work`, worker heartbeat (F2)
+- Extension/helper 0.2.0 จับคู่กับ Dev DB จริงแล้ว; Extension ใน Chrome ของเจ้าของ sync ทุก 30 วินาที
+- DB Dev schema `0004`; ไม่มี migration ค้าง
 - **ยังไม่มีปุ่มเริ่มงานใน UI**: ขั้นสุดท้ายของ wizard แค่ยืนยันใน UI ([StoryShorts.tsx](../../frontend/src/features/story-shorts/StoryShorts.tsx))
-- Commit `06a9b98`, `8095921` ยังไม่ push
+- `useDraft()` ([useDraft.ts](../../frontend/src/features/story-shorts/useDraft.ts)) ยังไม่ส่ง `flush`, draft id และ revision ออกมา
 
-## กติกาสำหรับรอบนี้
+## กติกา (ห้ามฝ่าฝืน)
 
-- ทำบน `dev`, commit แยกตามงานด้านล่าง พร้อมผลเทสและเวลาที่วัดได้ใน message; **ห้าม push** เว้นแต่เจ้าของสั่ง
-- เป็น session เดียวที่แก้ working tree; ถ้า `git status` มีไฟล์ที่ไม่ได้แก้เองโผล่มา ให้หยุดแก้ไฟล์นั้นและรายงาน
-- กฎธุรกิจอยู่ backend; UI แค่เรียก API และแสดงผล ห้ามตัดสินว่าเริ่มงานได้เองนอกจากใช้ issues จาก server
-- ผลทั้งหมดเป็น simulation: ทุกจุดที่แสดงผลต้องมีป้าย SIMULATION/จำลอง ห้ามเรียกว่าสื่อจริง
-- ห้ามแตะ Extension "SmartFlow AI 0.15.507" ของระบบเดิม และห้ามแก้ registry นอก host `com.smartflow.next.dev`
-- ห้ามเพิ่ม migration ในรอบนี้; ถ้าจำเป็นต้องมี ให้หยุดและเขียนเหตุผลไว้ใน status
-- ใช้ `ruff format` เฉพาะไฟล์ที่แก้ ไม่ format ทั้งโฟลเดอร์
+1. ทำบน branch `dev` เท่านั้น; commit แยกตามงาน T1–T6; **ห้าม push**, ห้าม `git reset/stash/checkout -- <ไฟล์ที่ไม่ได้แก้เอง>`
+2. เป็น session เดียวที่แก้ไฟล์; ถ้า `git status` มีไฟล์ที่ไม่ได้แก้เอง → หยุดแก้ไฟล์นั้น เขียนรายงาน
+3. กฎธุรกิจอยู่ backend; UI เรียก API และแสดงผลเท่านั้น ห้ามเขียนกฎว่า "เริ่มงานได้หรือไม่" ใน React นอกจากใช้ issues จาก server
+4. ผลทุกที่เป็น simulation: แสดงคำว่า "จำลอง" หรือป้าย `SIMULATION` เสมอ ห้ามเรียกว่าคลิป/สื่อจริง
+5. ห้ามเพิ่ม migration, ห้ามแก้ registry, ห้าม build EXE หลัก, ห้ามติดตั้ง package ใหม่
+6. ห้ามแตะ Extension "SmartFlow AI 0.15.507" (ระบบเดิม) และห้ามปิด Chrome หรือ process ที่ไม่ใช่ของโปรเจกต์
+7. `ruff format` เฉพาะไฟล์ที่แก้; ห้ามใช้ `any`, `@ts-ignore`, `# noqa` เพื่อให้ผ่าน
+8. ห้ามใช้ sleep จริงในเทส unit ใช้ fake timers/clock; E2E ใช้ `expect(...).toPass()`/`toHaveText` ที่มี timeout
+9. ทุก commit message ระบุคำสั่งเทสที่รัน ผล และเวลา (วินาที) ตามจริง ห้ามเขียนว่าผ่านถ้าไม่ได้รัน
 
-## งาน (ทำตามลำดับ; T1–T3 คือแกนของ P4)
+## งาน (ทำตามลำดับ; จบหนึ่งข้อ = เทสผ่าน + commit)
 
-**T1 ปุ่มเริ่มงานจำลองจากแบบร่าง**
-- ขั้นตรวจรายละเอียดเพิ่มปุ่ม "เริ่มงานจำลอง" แสดงเฉพาะเมื่อมี `jobs:create`
-- ก่อนส่ง: `await persistence.flush()` ต้องได้ true แล้วใช้ `revision` ล่าสุดเป็น `expected_revision`
-- เรียก `POST /api/stories` `{draft_id, expected_revision, mode:"simulation"}` พร้อม `Idempotency-Key` ที่คงที่ต่อการกดหนึ่งครั้ง (retry ใช้ key เดิม)
-- ปิดปุ่มเมื่อ server issues มีรายการ; แสดง error ตาม code: `STORY_DRAFT_INVALID`, `DRAFT_REVISION_CONFLICT` (ให้ flush/โหลดใหม่), `STORY_CAPABILITY_UNAVAILABLE` (รองรับเฉพาะคลิปเดียว), `PERMISSION_DENIED`
-- แยก logic เป็น helper pure เช่น `frontend/src/features/story-shorts/story-job.ts` พร้อม Vitest: กดซ้ำได้ job เดิม, flush ไม่ผ่านไม่ส่ง, conflict
-- เกณฑ์จบ: Vitest + typecheck ผ่าน; backend ไม่ต้องแก้ (route มีแล้ว)
+**T1 ปุ่มเริ่มงานจำลอง** — ไฟล์: `useDraft.ts`, `StoryShorts.tsx`, ไฟล์ใหม่ `story-job.ts` + `story-job.test.ts`
+1. `useDraft()` เพิ่ม `flush: () => ref.current ? ref.current.flush() : Promise.resolve(false)`
+   และ `identity: () => ({ id: ref.current?.id, revision: ref.current?.revision ?? 0 })` (DraftStore มี `id`, `revision` อยู่แล้ว)
+2. `story-job.ts` ส่งออก `startStoryJob({ flush, identity, send, key })`:
+   flush ต้องได้ `true` (ไม่งั้นคืน `{ ok:false, code:'DRAFT_NOT_SAVED' }` โดยไม่เรียก API);
+   ไม่มี id → `{ ok:false, code:'DRAFT_NOT_SAVED' }`; แล้ว `send('/stories', { method:'POST', headers:{'Idempotency-Key': key},
+   body: JSON.stringify({ draft_id:id, expected_revision:revision, mode:'simulation' }) })`
+   ใช้ `transport()` จาก `persistence.ts` เป็น `send`; จับ `ApiError` คืน `{ ok:false, code, message, traceId }`
+3. Key: สร้าง `crypto.randomUUID()` ตอนกดครั้งแรก เก็บใน `useRef`; กดซ้ำ/retry ใช้ key เดิม; เปลี่ยน key เมื่อ revision เปลี่ยน
+4. ใน `StoryShorts.tsx` ขั้นตรวจรายละเอียด (step สุดท้าย) เพิ่มปุ่ม "เริ่มงานจำลอง" เฉพาะเมื่อมีสิทธิ์ `jobs:create`
+   (ส่ง prop `canStart` มาจาก `App.tsx` ผ่าน `storyAccess`/`can('jobs:create')`); ปิดปุ่มเมื่อ `issueSummary(persistence.issues).length > 0`
+   หรือกำลังส่ง; แสดงข้อความตาม code จาก T2
+5. เทส (Vitest, fake transport): flush false ไม่เรียก API; สำเร็จคืน job; กดสองครั้งใช้ key เดิม;
+   `DRAFT_REVISION_CONFLICT`/`STORY_DRAFT_INVALID` คืน code ถูกต้อง
+6. ตรวจ: `--scope ui typecheck` แล้ว commit `feat: start simulated Story job from the draft`
 
-**T2 แสดงสถานะ/ผลของงานจำลอง**
-- หลังเริ่มงาน poll `GET /api/stories/{job_id}` ทุก 1.5 วินาทีเฉพาะตอนเปิดหน้า Story; หยุดเมื่อ `completed`/`failed`/`cancelled`
-- แสดง status, `error_code` + ข้อความจาก `GET /api/errors`, `receipt_state` และ `result` เมื่อ completed พร้อมป้าย SIMULATION
-- `waiting` + `EXTENSION_DISCONNECTED` ให้แนะนำเปิด Chrome/ตรวจการเชื่อมต่อ; `needs_review` ให้ปุ่ม reconcile/cancel ผ่าน `POST /api/jobs/{id}/commands/{action}` (route นี้ส่งต่อให้ StoryWorkflow แล้ว)
-- หน้า Jobs: งาน `story_simulated` ต้องแสดงในรายการเดิมได้ ตรวจว่าไม่พังกับ timeline/diagnostics
-- เกณฑ์จบ: Vitest ของ mapping สถานะ→ข้อความ; ไม่มี business rule ใหม่ใน UI
+**T2 สถานะและผล** — ไฟล์ใหม่ `story-status.ts` + test, แก้ `StoryShorts.tsx`
+1. หลังได้ `job.id` เก็บใน state; poll `GET /api/stories/{id}` ทุก 1500 ms ด้วย `setTimeout` (ไม่ใช่ `setInterval`) หยุดเมื่อ
+   status เป็น `completed`/`failed`/`cancelled` หรือ component unmount
+2. `story-status.ts` ส่งออก `statusText(view)` คืนข้อความไทย: waiting+EXTENSION_DISCONNECTED → "รอ Extension: เปิด Chrome และตรวจการเชื่อมต่อ",
+   running → "Extension กำลังทำงานจำลอง", needs_review → "ไม่แน่ใจว่าส่งแล้วหรือยัง ตรวจผลเดิมก่อน", completed → "เสร็จ (จำลอง)",
+   failed → "ไม่สำเร็จ: " + ข้อความของ error code, cancelled → "ยกเลิกแล้ว"; code อื่นใช้ข้อความจาก `GET /api/errors`
+3. แสดง `result` เมื่อ completed พร้อมป้าย `SIMULATION`; needs_review แสดงปุ่ม "ตรวจผลเดิม" → `POST /api/jobs/{id}/commands/reconcile`
+   และ "ยกเลิก" → `.../commands/cancel` (มีสิทธิ์ `jobs:command` เท่านั้น)
+4. เทส Vitest ของ `statusText` ครบทุก status; ตรวจ `--scope ui typecheck`; commit `feat: show simulated Story job status and result`
 
-**T3 แสดงคู่เวอร์ชันและคำแนะนำเมื่อไม่ตรง**
-- หน้า "เชื่อมต่อ Extension" แสดง `extension_version`/`helper_version` ที่ระบบรับ (จาก `GET /api/browser`)
-- ถ้า pairing ล่าสุดเจอ `EXTENSION_VERSION_MISMATCH` ให้คำแนะนำเฉพาะ: build helper ตาม [Extension pairing](../architecture/extension-foundation.md) และ Reload Extension
-- ถ้าต้องให้ backend เก็บ/ส่งเวอร์ชันที่ Extension รายงานมา ให้เพิ่มใน response เท่านั้น (ไม่มี migration) และ regenerate `contracts/openapi.json`
+**T3 เวอร์ชันและคำแนะนำ** — แก้ component หน้า "เชื่อมต่อ Extension" (`grep -rn "BrowserPairing" frontend/src`)
+- แสดง `extension_version`, `helper_version` จาก `GET /api/browser` และข้อความ: ถ้าไม่ตรง ให้ build helper และ Reload Extension
+  ตาม [Extension pairing](../architecture/extension-foundation.md); ไม่ต้องแก้ backend; commit `feat: show expected Extension and helper versions`
 
-**T4 E2E ของ flow ใหม่ (Playwright)**
-- `frontend/e2e/story-job.spec.ts`: กรอกแบบร่างขั้นต่ำ → เริ่มงาน → เห็น waiting/EXTENSION_DISCONNECTED
-- จำลอง agent ในเทสผ่าน API: owner สร้าง pairing → exchange ด้วย token ทดสอบ → `browser/work` sync/grant/result → UI แสดง completed + SIMULATION
-- ใช้ข้อมูลชั่วคราวตาม fixture เดิม ห้ามชี้ไป `.smartflow/`
+**T4 E2E** — ไฟล์ใหม่ `frontend/e2e/story-job.spec.ts` ตามขั้นใน [คู่มือคำสั่ง](p4-runbook.md#e2e-story-job)
+- commit `test: e2e for starting and completing a simulated Story job`
 
-**T5 Test การ restart worker ที่ค้าง (ค้างจาก P3)**
-- แยกการตัดสินใจใน `supervise()` ของ [runtime.py](../../backend/smartflow/runtime.py) เป็นฟังก์ชันที่รับ status/process/restarts
-- Unit test ด้วย fake process: stalled → terminate + นับ restart, ครบ 3 → `WORKER_UNAVAILABLE`, down → restart
-- ห้ามเพิ่ม env/flag สำหรับเทสที่ใช้ได้ใน prod
+**T5 Supervisor restart test** — [runtime.py](../../backend/smartflow/runtime.py), เทสใหม่ `tests/unit/test_supervisor.py`
+1. ย้ายเนื้อหา loop ใน `supervise()` เป็นฟังก์ชัน `supervise_step(status, process, restarts, logger) -> (restarts, action)`
+   โดย action เป็น `"none" | "restart" | "exhausted"`; `supervise()` เรียกฟังก์ชันนี้แทน พฤติกรรมต้องเหมือนเดิม
+2. เทสด้วย fake process (`is_alive`, `terminate`, `join` นับจำนวนเรียก): stalled → terminate 1 ครั้ง + restart;
+   down → restart; ครบ 3 → exhausted + log `WORKER_UNAVAILABLE`; ready → none
+3. ตรวจ `--scope unit runtime`; commit `test: cover stalled worker restart decisions`
 
-**T6 เอกสารและหลักฐาน**
-- อัปเดต [status](../delivery/status.md), [milestones](story-extension-milestones.md), [Draft API](../architecture/draft-api.md) ส่วนเริ่มงาน และ [Step wizard](../architecture/step-wizard.md)
-- สร้าง `docs/delivery/verification-p4.md` (คำสั่ง, เวลา, ผล, หลักฐานแยกชั้น) และลิงก์ใน [index](../index.md)
+**T6 เอกสารและหลักฐาน** — ทำตาม [คู่มือคำสั่ง](p4-runbook.md#ปิดงาน)
+- อัปเดต [status](../delivery/status.md), [milestones](story-extension-milestones.md) (P4 ทำอะไรแล้ว), [Draft API](../architecture/draft-api.md),
+  [Step wizard](../architecture/step-wizard.md); สร้าง `docs/delivery/verification-p4.md` และเพิ่มลิงก์ใน [index](../index.md)
 
-## การตรวจ
+ถ้าเวลาไม่พอ: ทำ T1, T2, T4, T6 ให้ครบก่อน; T3 และ T5 ข้ามได้แต่ต้องเขียนในรายงานว่ายังไม่ทำ
 
-1. ระหว่างทาง: `--scope ui typecheck`, `story-workflow`, `story-api`, `runtime`, `unit` ตามไฟล์ที่แก้ (`--changed --dry-run` ดูแผน)
-2. จบงาน: `.venv/Scripts/python.exe tools/check.py --scope all` ต้องผ่านทั้งหมด
-3. ปิดเปิด desktop ตาม [Setup](../development/setup.md): ปิดหน้าต่างแบบปกติ (CloseMainWindow) เปิด `RUN_DEV.vbs`
-4. **End-to-end ใน Chrome ของเจ้าของ:** เริ่มงานจำลอง 1 งานจากแบบร่างใน UI จริง แล้วรอไม่เกิน 60 วินาที
-   ให้ alarm ของ Extension รับงาน; ตรวจผ่าน DB แบบ read-only ว่า job `completed`, `receipt_state` completed
-   และ event `story.dispatch_marked` = 1 ครั้ง (ส่งครั้งเดียว) — งานนี้จะอยู่ใน Dev DB ถาวร
-5. แยกผลในรายงาน: unit/E2E, desktop activation, real Chrome; ไม่มี EXE/clean Windows/provider จริงในรอบนี้
+## หยุดทันทีและรายงานเมื่อ
 
-## หยุดและรายงานเมื่อ
+- ต้องเพิ่ม migration, แก้ registry, ติดตั้ง package, build EXE หรือแก้ไฟล์ Extension
+- เทสที่ไม่เกี่ยวกับงานนี้ล้ม (ตรวจตาม [troubleshooting](p4-troubleshooting.md)) หรือแก้เทสเดิมแล้วยังล้ม 2 รอบ
+- หน้าต่างโปรแกรมปิดไม่ได้, Chrome ไม่รับงานภายใน 120 วินาที หรือพบไฟล์ที่คนอื่นแก้
 
-- ต้องเพิ่ม migration, แก้ registry อื่น, ติดตั้ง package ใหม่ หรือ build EXE หลัก
-- เทสที่ไม่เกี่ยวกับงานนี้ล้ม หรือ `--scope all` ล้มหลังแก้ 2 รอบ
-- Chrome ไม่รับงานภายใน 60 วินาที (อย่าแก้ registry/Extension เอง ให้บันทึกอาการและ log)
-- พบไฟล์ที่ถูกแก้โดยคนอื่นใน working tree
-
-สรุปท้ายรอบ: commit ที่ทำ, ผลเทสพร้อมเวลา, สิ่งที่ยังไม่เสร็จ และสิ่งที่ต้องให้เจ้าของตัดสินใจ
+รายงานท้ายรอบเขียนไว้ใน `docs/delivery/verification-p4.md` และสรุปในแชท: commit ที่ทำ, ผลเทส+เวลา, สิ่งที่ยังไม่ทำ, สิ่งที่เจ้าของต้องตัดสินใจ

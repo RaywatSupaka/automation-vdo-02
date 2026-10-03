@@ -10,6 +10,7 @@
 | ขอบเขตและลำดับ feature เรื่องเล่า Short | [Story Shorts plan](planning/story-shorts.md) |
 | ทำระบบบันทึกแบบร่างและ Extension ควบคู่กัน | [Coordinated milestones](planning/story-extension-milestones.md) |
 | ทำ P4 ต่อ: ปุ่มเริ่มงานจำลอง สถานะ เวอร์ชัน และหลักฐาน | [P4 execution plan](planning/p4-integration.md) |
+| คำสั่งตรงตัวของ P4 และวิธีแก้เมื่อเจอ error | [P4 runbook](planning/p4-runbook.md), [P4 troubleshooting](planning/p4-troubleshooting.md) |
 | ออกแบบ autosave กู้คืนแบบร่าง และไฟล์แนบ | [Draft persistence](planning/draft-persistence.md) |
 | ใช้ API บันทึกแบบร่างที่ทำแล้ว | [Draft API](architecture/draft-api.md) |
 | จับคู่ Extension/helper และอ่านขอบเขตสิทธิ์ | [Extension foundation](architecture/extension-foundation.md) |
@@ -21,6 +22,7 @@
 | ออกแบบ bridge, สิทธิ์ agent และป้องกันส่งซ้ำ | [Extension protocol](planning/extension-protocol.md) |
 | เลือกเทสของ Story/Extension ที่จะเพิ่ม | [Story testing plan](planning/story-testing.md) |
 | ติดตั้งเครื่องมือ / เปิด Dev / ตั้งค่าเครื่อง | [Development setup](development/setup.md) |
+| รูปแบบการทำงานมาตรฐาน (ทุก AI/ทุกคน): ลำดับงาน แผนส่งต่อ commit error รายงาน | [Standard workflow](development/workflow.md) |
 | ทำงานหลาย session/agent พร้อมกัน และ migration ที่ยังไม่ commit | [Parallel sessions](development/parallel-work.md) |
 | เลือกเทสและควบคุมเวลาทดสอบ | [Testing](development/testing.md) |
 | เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |
