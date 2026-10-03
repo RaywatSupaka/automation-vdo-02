@@ -20,7 +20,7 @@ PYTHON_SCOPES = {
     "workflow": ["tests/test_workflow.py"],
     "runtime": ["tests/test_runtime.py"],
     "offline": ["tests/test_offline.py"],
-    "tooling": ["tests/test_check_tools.py", "tests/test_check_lint.py"],
+    "tooling": ["tests/test_check_tools.py", "tests/test_check_lint.py", "tests/test_build_manifest.py"],
     "backend": ["tests"],
 }
 ALL_SCOPES = [
@@ -65,6 +65,9 @@ RULES = [
     ("tests/test_offline.py", ["offline"]),
     ("tests/test_check_tools.py", ["tooling"]),
     ("tests/test_check_lint.py", ["tooling"]),
+    ("tests/test_build_manifest.py", ["tooling"]),
+    ("tools/build.py", ["tooling"]),
+    ("packaging/*", ["tooling"]),
     ("tools/register_native_host.py", ["unit"]),
     ("tests/conftest.py", ["backend"]),
     ("tools/check*.py", ["tooling"]),
