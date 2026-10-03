@@ -1,9 +1,11 @@
+import { useRef, useState } from 'react';
 import { useDraft } from './useDraft';
 import { StepWizard, type WizardStep } from '../../components/step-wizard/StepWizard';
 import { batchTopics, draftWarnings, validateStoryStep } from './draft';
 import { fieldGroups, visible, type DraftValue } from './fields';
-import type { DraftIssue, SaveState } from './persistence';
+import { transport, type DraftIssue, type SaveState } from './persistence';
 import { fieldDisplay, RequiredMark, StoryFields } from './StoryFields';
+import { startStoryJob, type StartResult, type StoryJob } from './story-job';
 import './story-shorts.css';
 
 const stepInfo = [
@@ -42,8 +44,38 @@ export function issueNotice(state: SaveState, issues?: readonly DraftIssue[]): {
   return { lines, stale: lines.length > 0 && state !== 'saved' ? 'ผลตรวจจากการบันทึกครั้งล่าสุด ยังไม่รวมการแก้ไขที่ยังไม่บันทึก' : '' };
 }
 
-export function StoryShorts() {
+const startErrorText: Record<string, string> = {
+  DRAFT_NOT_SAVED: 'แบบร่างยังไม่บันทึก กรุณารอสถานะ “บันทึกแล้ว” แล้วลองใหม่',
+  DRAFT_REVISION_CONFLICT: 'แบบร่างเปลี่ยนระหว่างเริ่มงาน กรุณาบันทึกแล้วลองใหม่ หากยังพบปัญหาให้โหลดแบบร่างล่าสุด',
+  STORY_DRAFT_INVALID: 'แบบร่างยังไม่ถูกต้อง กรุณาตรวจรายการช่องที่ต้องแก้',
+  STORY_CAPABILITY_UNAVAILABLE: 'รอบนี้รองรับการทำงานจำลองแบบคลิปเดียวเท่านั้น',
+  DRAFT_ASSET_MISSING: 'ไฟล์แนบหาย กรุณาเลือกไฟล์ใหม่',
+  DRAFT_ASSET_INVALID: 'ไฟล์แนบไม่ถูกต้อง กรุณาเลือกไฟล์ใหม่',
+  PERMISSION_DENIED: 'ไม่มีสิทธิ์เริ่มงานจำลอง',
+  CONNECTION_FAILED: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',
+};
+
+export function StoryShorts({ canStart = false }: { canStart?: boolean }) {
   const persistence = useDraft();
+  const [starting, setStarting] = useState(false);
+  const [startResult, setStartResult] = useState<StartResult | null>(null);
+  const [job, setJob] = useState<StoryJob | null>(null);
+  const startKey = useRef<{ revision: number; value: string } | null>(null);
+  const inFlight = useRef(false);
+  async function start() {
+    if (inFlight.current) return;
+    inFlight.current = true; setStarting(true); setStartResult(null);
+    try {
+      const result = await startStoryJob({ flush: persistence.flush, identity: persistence.identity, send: transport(),
+        key: () => {
+          const revision = persistence.identity().revision;
+          if (startKey.current?.revision !== revision) startKey.current = { revision, value: crypto.randomUUID() };
+          return startKey.current.value;
+        } });
+      setStartResult(result);
+      if (result.ok) setJob(result.job);
+    } finally { inFlight.current = false; setStarting(false); }
+  }
   const draft = persistence.draft;
   const warnings = draftWarnings(draft);
   const serverIssues = issueNotice(persistence.state, persistence.issues);
@@ -66,13 +98,19 @@ export function StoryShorts() {
     },
   }));
   steps.push({ id: 'review', label: 'ตรวจรายละเอียด', title: 'ตรวจรายละเอียดเรื่องของคุณ',
-    description: 'ข้อมูลทั้งหมดที่เลือกไว้เป็นแบบร่าง ยังไม่ส่งให้ AI หรือเพิ่มลงคิวจริง', render: () => <div className="story-review">
+    description: 'ตรวจแบบร่างก่อนเริ่มงานจำลอง ผลที่ได้ไม่ใช่สื่อจริง', render: () => <div className="story-review">
       <div className="story-review-topic"><h3>{draft.creationMode === 'batch' ? batchTopics(draft).join('\n') : String(draft.topic)}</h3><p>{draft.creationMode === 'batch' ? `${batchTopics(draft).length} คลิป` : 'คลิปเดียว'} · สำหรับ{String(draft.audience)}</p></div>
       {fieldGroups.map(group => <details className="story-review-section" key={group.id} open={group.step === 0 || undefined}><summary>{group.title}</summary>
         <dl className="story-review-grid">{group.fields.filter(field => visible(field, draft)).map(field => <div key={field.id}><dt>{field.label}</dt><dd>{fieldDisplay(field, draft)}</dd></div>)}</dl>
       </details>)}
       {warnings.length > 0 && <aside className="story-configuration-notes"><strong>ยังต้องตรวจความเข้ากันได้</strong><ul>{warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></aside>}
-      <p className="story-draft-notice">บันทึกแบบร่างและไฟล์ไว้ในเครื่อง ยังไม่ส่งให้ AI หรือสร้างสื่อ</p>
+      <p className="story-draft-notice">แบบร่างและไฟล์บันทึกไว้ในเครื่อง งานที่เริ่มจากหน้านี้เป็นการจำลองเท่านั้น</p>
+      {canStart && <div className="story-start-actions"><button type="button" className="primary" onClick={() => void start()}
+        disabled={starting || !!job || issueSummary(persistence.issues).length > 0}>เริ่มงานจำลอง</button>
+        {starting && <span role="status">กำลังเริ่มงานจำลอง…</span>}
+        {startResult && !startResult.ok && <p role="alert">{startErrorText[startResult.code] || startResult.message || startResult.code}
+          {startResult.traceId && <> · Trace: {startResult.traceId}</>}</p>}
+        {job && <p role="status">สร้างงานจำลองแล้ว · รหัสงาน {job.id} · SIMULATION</p>}</div>}
     </div> });
   return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1>
     <div className="draft-save-status" role="status">{{ loading: 'กำลังเปิดแบบร่าง…', load_error: 'เปิดแบบร่างไม่สำเร็จ', saved: 'บันทึกแล้วในเครื่อง', saving: 'กำลังบันทึก…', error: 'บันทึกไม่สำเร็จ', conflict: 'พบข้อมูลจากอีกหน้าต่าง' }[persistence.state]}</div>

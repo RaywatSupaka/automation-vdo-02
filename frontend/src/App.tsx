@@ -48,7 +48,8 @@ export function App() {
   const story = storyAccess(permissions);
   const worker = workerLabel(health?.worker_state);
   // One element instance: polls that re-render the shell do not re-render the autosaving wizard.
-  const storyShorts = useMemo(() => <StoryShorts/>, []);
+  const canStartStory = can('jobs:create');
+  const storyShorts = useMemo(() => <StoryShorts canStart={canStartStory}/>, [canStartStory]);
 
   function showError(error: unknown) {
     if (error instanceof ApiError && error.code === 'UNAUTHORIZED') {
