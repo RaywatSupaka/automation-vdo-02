@@ -108,16 +108,27 @@ def test_cover_scene_options_parse_scenes_like_the_ui(scenes, count):
 def test_music_count_the_ui_cannot_parse_never_trips_the_file_limit():
     two = [ASSET, ASSET.replace("b6", "c7", 1)]
     on = config(topic="ready", musicEnabled=True, musicFiles=two)
-    # issues() (unchanged) accepts "1_0" as 10; the UI reads NaN, so neither flags the cross-field limit.
+    # issues() flags the malformed number; completeness does not report a duplicate cross-field issue.
     assert completeness({**on, "musicCount": "1_0"}) == []
-    assert completeness({**on, "musicCount": "0x3"}) == []  # issues() flags it; reported there once.
+    assert completeness({**on, "musicCount": "0x3"}) == [
+        {"field": "musicCount", "code": "VALUE_OUT_OF_RANGE"}
+    ]  # Number("0x3") is 3, which exceeds the two selected files.
     assert completeness({**on, "musicCount": " 3 "}) == [
         {"field": "musicCount", "code": "VALUE_OUT_OF_RANGE"}
     ]
 
 
-def test_issues_is_unchanged_and_ignores_completeness():
-    # Job start relies on issues(); required and cross-field rules must not leak into it.
+@pytest.mark.parametrize(
+    ("value", "valid"),
+    [("1_0", False), ("１０", False), ("0x8", True), ("1e1", True), ("Infinity", False)],
+)
+def test_single_field_number_issues_follow_ui_number_parsing(value, valid):
+    expected = [] if valid else [{"field": "scenes", "code": "VALUE_OUT_OF_RANGE"}]
+    assert issues(config(scenes=value)) == expected
+
+
+def test_issues_only_checks_single_fields_not_completeness():
+    # Job start checks both sets of issues; required and cross-field rules stay in completeness().
     incomplete = config(topic="", musicEnabled=True, musicCount="5", creationMode="batch")
     assert issues(incomplete) == []
     assert issues(config(scenes="-", coverScene="99")) == [{"field": "scenes", "code": "VALUE_OUT_OF_RANGE"}]

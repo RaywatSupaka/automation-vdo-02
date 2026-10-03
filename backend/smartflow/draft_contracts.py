@@ -94,13 +94,13 @@ def issues(config):
         if "options" in spec and value not in spec["options"]:
             code = "OPTION_INVALID"
         if "min" in spec:
-            try:
-                number = float(value)
-                quotient = number / spec.get("step", 1)
-                if not spec["min"] <= number <= spec["max"] or abs(quotient - round(quotient)) > 1e-6:
-                    code = "VALUE_OUT_OF_RANGE"
-            except (ValueError, OverflowError):
+            numeric = number(value)
+            if numeric is None or not math.isfinite(numeric):
                 code = "VALUE_OUT_OF_RANGE"
+            else:
+                quotient = numeric / spec.get("step", 1)
+                if not spec["min"] <= numeric <= spec["max"] or abs(quotient - round(quotient)) > 1e-6:
+                    code = "VALUE_OUT_OF_RANGE"
         if code:
             result.append({"field": field, "code": code})
     return result
