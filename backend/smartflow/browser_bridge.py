@@ -93,8 +93,16 @@ class Bridge:
             "last_seen": row.last_seen,
         }
 
-    def info(self):
-        with self.db.transaction() as session:
+    def expire_pending(self, session, trace):
+        for row in session.scalars(
+            select(Pairing).where(Pairing.state == "pending", Pairing.expires_at <= self.clock())
+        ):
+            row.state = "expired"
+            self.record(session, row, "browser.expired", trace)
+
+    def info(self, trace=None):
+        with self.db.transaction(write=True) as session:
+            self.expire_pending(session, trace or str(uuid4()))
             rows = [
                 self.describe(row)
                 for row in session.scalars(select(Pairing).order_by(Pairing.expires_at.desc()).limit(20))
@@ -109,6 +117,7 @@ class Bridge:
             raise AppError("EXTENSION_ID_MISMATCH")
         code = secrets.token_urlsafe(32)
         with self.db.transaction(write=True) as session:
+            self.expire_pending(session, trace)
             for old in session.scalars(select(Pairing).where(Pairing.state == "pending")):
                 old.state = "revoked"
                 self.record(session, old, "browser.revoked", trace)
@@ -185,9 +194,11 @@ class Bridge:
             row = session.get(Pairing, pair_id)
             if not row:
                 raise AppError("PAIRING_NOT_FOUND")
-            if row.state != "revoked":
+            changed = row.state != "revoked"
+            if changed:
+                row.state = "revoked"
                 self.record(session, row, "browser.revoked", trace)
-            row.state = "revoked"
             result = self.describe(row)
-        emit(self.db.logger, "browser.revoked", trace_id=trace)
+        if changed:
+            emit(self.db.logger, "browser.revoked", trace_id=trace)
         return result

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import secrets
 from uuid import uuid4
 
@@ -125,6 +126,7 @@ def test_pairing_nonce_idempotency_expiry_revoke_and_agent_scope(client):
     for path in ["/api/story-drafts", "/api/jobs", "/api/diagnostics/logs", "/api/browser"]:
         assert client.get(path, headers=agent).status_code == 403
     client.post(f"/api/browser/pairings/{created.json()['id']}/revoke")
+    client.post(f"/api/browser/pairings/{created.json()['id']}/revoke")
     from smartflow.browser_bridge import BrowserEvent
 
     with client.app.state.db.transaction() as session:
@@ -133,6 +135,7 @@ def test_pairing_nonce_idempotency_expiry_revoke_and_agent_scope(client):
     assert client.get("/api/browser/agent", headers=agent).status_code == 401
     logs = (client.app.state.db.path.parent / "logs/runtime.jsonl").read_text(encoding="utf-8")
     assert token not in logs and code not in logs
+    assert [json.loads(line)["event"] for line in logs.splitlines()].count("browser.revoked") == 1
 
 
 def test_expired_nonce_and_wrong_extension_fail_without_mutation(system):
@@ -151,7 +154,17 @@ def test_expired_nonce_and_wrong_extension_fail_without_mutation(system):
     clock.advance(121)
     with pytest.raises(AppError, match="UNAUTHORIZED"):
         bridge.authenticate(row["code"])
-    assert bridge.info()["pairings"][0]["state"] == "pending"
+    # Expiry now persists a transition and audit event, rather than leaving a stale pending row.
+    assert bridge.info()["pairings"][0]["state"] == "expired"
+    assert bridge.info()["pairings"][0]["state"] == "expired"
+    from smartflow.browser_bridge import BrowserEvent, Pairing
+
+    with db.transaction() as session:
+        assert session.get(Pairing, row["id"]).state == "expired"
+        assert list(session.scalars(select(BrowserEvent.name).order_by(BrowserEvent.id))) == [
+            "browser.pairing_requested",
+            "browser.expired",
+        ]
 
 
 def test_native_dpapi_and_lost_pair_ack_reuses_protected_pending_token(tmp_path, monkeypatch):

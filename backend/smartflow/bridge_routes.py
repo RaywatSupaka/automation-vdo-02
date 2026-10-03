@@ -11,8 +11,8 @@ def bridge_router(bridge):
     router = APIRouter(prefix="/api/browser", responses=error_responses(401, 403, 404, 409, 422, 500))
 
     @router.get("", response_model=BridgeInfo, openapi_extra=policy(Permission.BROWSER_MANAGE))
-    def info():
-        return bridge.info()
+    def info(request: Request):
+        return bridge.info(request.state.trace_id)
 
     @router.post("/pairings", response_model=PairCode, openapi_extra=policy(Permission.BROWSER_MANAGE))
     def create(data: PairRequest, request: Request):
