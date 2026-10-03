@@ -22,10 +22,18 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--story", action="store_true", help="Run actual Extension simulation loop")
+    parser.add_argument(
+        "--helper",
+        type=Path,
+        default=ROOT / "build/native/SmartFlowNextHost",
+        help="Directory containing SmartFlowNextHost.exe",
+    )
     args = parser.parse_args()
+    source = args.helper.resolve()
+    if not (source / "SmartFlowNextHost.exe").is_file():
+        parser.error("--helper must contain SmartFlowNextHost.exe")
     start = time.monotonic()
     directory = Path(tempfile.mkdtemp(prefix="smartflow-pairing-smoke-"))
-    source = ROOT / "build/native/SmartFlowNextHost"
     helper = directory / "helper"
     shutil.copytree(source, helper)
     executable = helper / "SmartFlowNextHost.exe"
@@ -92,7 +100,16 @@ def main():
                 raise RuntimeError("Owned backend failed to start")
         node = next((ROOT / ".tools").glob("node-*/node.exe"))
         subprocess.run(
-            [str(node), "tools/story_smoke.mjs" if args.story else "tools/pairing_smoke.mjs", host, str(port), token], cwd=ROOT, check=True, timeout=60
+            [
+                str(node),
+                "tools/story_smoke.mjs" if args.story else "tools/pairing_smoke.mjs",
+                host,
+                str(port),
+                token,
+            ],
+            cwd=ROOT,
+            check=True,
+            timeout=60,
         )
         assert (directory / "agent.dpapi").exists()
         result = {
@@ -104,7 +121,9 @@ def main():
             "story_simulation_verified": args.story,
             "seconds": round(time.monotonic() - start, 3),
         }
-        (ROOT / ("build/story-smoke.json" if args.story else "build/pairing-smoke.json")).write_text(json.dumps(result, indent=2), encoding="utf-8")
+        (ROOT / ("build/story-smoke.json" if args.story else "build/pairing-smoke.json")).write_text(
+            json.dumps(result, indent=2), encoding="utf-8"
+        )
         print(json.dumps(result))
     finally:
         # Only the child process and unique registry key created by this smoke.
