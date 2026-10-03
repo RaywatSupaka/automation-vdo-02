@@ -23,6 +23,7 @@ UI ใช้สี/โลโก้/ไอคอนเดิม และ stepper
 ตรวจ real Chrome/native/API ด้วย profile แยกแล้ว; ดู [P2 verification](verification-autosave-pairing.md)
 P3 ใน source: สร้างงาน `story_simulated` จาก draft revision ที่ snapshot แล้ว ให้ Extension ที่จับคู่รับงานผ่าน `POST /api/browser/work`
 ผลเป็นข้อความจำลองเท่านั้น; ผ่าน `--scope all` แต่ helper 0.2.0 ต้อง build/register ใหม่ก่อนใช้กับ Chrome จริง
+F2 ใน source: health แยก worker alive/ready/stalled จาก heartbeat และ restart worker ที่ค้างภายในโควตาเดิม
 Autosave ไม่ค้างเมื่อถูกปฏิเสธ และ draft รายงาน `FIELD_REQUIRED`/`DRAFT_ASSET_MISSING` จาก backend: [Draft API](../architecture/draft-api.md)
 
 ## ยังไม่ทำ
@@ -41,7 +42,7 @@ installer, code signing, automatic update และ remote support
 - ผู้ใช้สิทธิ์อ่านอย่างเดียวยังดูแบบร่างไม่ได้ (ต้องมีโหมดไม่เขียนใน DraftStore)
 - Native helper ไม่อยู่ใน `tools/build.py`; main EXE ใน `dist/` ยังเป็น build จาก 5847f79
 - `--scope all` ใช้ราว 158 วินาที (2026-10-03) เกินเป้า 60 วินาทีใน [Testing](../development/testing.md)
-งานค้างเฉพาะ P3 อยู่ใน [Coordinated milestones](../planning/story-extension-milestones.md)
+สถานะงานค้างของ P3 อยู่ใน [Coordinated milestones](../planning/story-extension-milestones.md)
 
 ## เปิดอ่านต่อเฉพาะงาน
 

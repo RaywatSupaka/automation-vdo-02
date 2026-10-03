@@ -11,7 +11,7 @@
 | F0 — ทำแล้ว | แยกเอกสารและ index | อ่านเฉพาะหัวข้อได้ ลิงก์ไม่เสีย ไม่รวม history ไว้ไฟล์กลาง |
 | F1 — ทำแล้ว | API, error และ trace contracts | Typed responses, OpenAPI, pagination และ command trace; ตรวจด้วย API/workflow/E2E |
 | Auth foundation — ทำแล้ว | Session + permissions คู่กับทุก feature | Token ทุก route, deny เมื่อไม่มี policy, role matrix, dev identity bypass ใช้ใน Prod/EXE ไม่ได้; ยังไม่มี account/license |
-| F2 — ถัดไป | Worker readiness และการตรวจงานค้าง | แยก process alive/ready/progress; timeout และ recovery มี budget และไม่ replay send |
+| F2 — ทำแล้วใน source | Worker readiness และการตรวจงานค้าง | alive/ready/stalled จาก heartbeat, restart ใน budget ไม่ replay send; ยังไม่ตรวจใน EXE ([Runtime](../architecture/runtime.md)) |
 | F3 — บางส่วน | ฐานข้อมูลและการอัปเกรด | WAL backup/integrity/transaction rollback ทำแล้ว; ยังต้อง clean Windows upgrade และ restore UX |
 | F4 | Diagnostics สำหรับเครื่องลูกค้า | เก็บหลักฐานครบเมื่อเริ่มโปรแกรมไม่ได้ export ได้และพิสูจน์การกรองข้อมูลส่วนตัว |
 | F5 | Packaging และ clean Windows | ติดตั้ง เปิด ทำงานต่อ อัปเกรด และถอนติดตั้งตามนโยบายข้อมูลที่ระบุไว้ได้ |
@@ -36,7 +36,7 @@ Source ที่ต้องแตะ: [API](../../backend/smartflow/api.py),
 - ทดสอบ error, ข้อมูลส่วนตัว, pagination, duplicate commands และ UI เดิมกับ API ใหม่แล้ว
 
 หลักฐาน: [Verification F1](../delivery/verification-f1.md)
-งานถัดไป F2 ให้เพิ่ม readiness/heartbeat และตรวจงานค้าง โดยแยกจากการที่ process ยังอยู่
+F2 heartbeat/stall ทำแล้วใน source; งานถัดไปคือ F3 ส่วนที่เหลือ (clean Windows upgrade และ restore UX)
 ไม่รัน full suite หรือสร้าง EXE ทุกครั้งที่แก้ชื่อ field หรือเอกสาร
 
 ## เงื่อนไขปิดงานแต่ละ F

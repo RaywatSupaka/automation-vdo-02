@@ -1,6 +1,6 @@
 # Storage
 
-ใช้ SQLite + SQLAlchemy 2 และ Alembic migration `0003`
+ใช้ SQLite + SQLAlchemy 2 และ Alembic migration `0004`
 ข้อมูลแยกจากโฟลเดอร์ติดตั้ง; ตำแหน่งตามโหมดอยู่ใน [Setup](../development/setup.md)
 
 | ตาราง | หน้าที่ |
@@ -16,6 +16,10 @@
 | draft_assets | เจ้าของ field, display name, checksum, ขนาดและสถานะสำเนาไฟล์ |
 | browser_pairings | hashes ของ nonce/token, expiry, state และ last_seen |
 | browser_events | audit การจับคู่/เพิกถอน ไม่มี credential |
+| story_revisions | snapshot config ของแบบร่างที่เริ่มงาน แก้แบบร่างภายหลังไม่เปลี่ยนงาน (หนึ่งต่อ job) |
+| story_operations | owner pairing/connection, lease epoch/expiry และ deadline ของงานจำลอง |
+| operation_receipts | request ID, สถานะ prepared→dispatching→accepted→completed/unknown, ผลและ sha256 |
+| browser_sessions | connection ปัจจุบันและ last_seen ต่อ pairing |
 
 ## Transaction และไฟล์
 

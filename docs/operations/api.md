@@ -30,16 +30,19 @@ Payload ตัวอย่างอยู่ [examples/create-job.json](../../ex
 | หน้าที่ | Route |
 |---|---|
 | ตัวตนและสิทธิ์ของ session | GET /api/session |
-| สถานะโปรแกรม | GET /api/health |
+| สถานะโปรแกรมและ worker (`worker_alive`, `worker_state`, `worker_heartbeat_age`) | GET /api/health |
 | สร้าง / ดูรายการงาน | POST /api/jobs, GET /api/jobs |
 | งานเดียว / เหตุการณ์ | GET /api/jobs/{job_id}, GET /api/jobs/{job_id}/events |
 | คำสั่งทำต่อ / ยกเลิก / ตรวจผลเดิม | POST /api/jobs/{job_id}/commands/{resume,cancel,reconcile} |
 | วินิจฉัย / ส่งออก | GET /api/jobs/{job_id}/diagnostics, GET /api/jobs/{job_id}/support-bundle |
-| โครงสร้าง / แถว DB | GET /api/diagnostics/database, GET /api/diagnostics/database/{table} |
+| โครงสร้าง / แถว DB | GET /api/diagnostics/database, GET /api/diagnostics/database/{table} (`jobs`, `receipts`, `events`, `story_operations`, `operation_receipts`; ไม่มีเนื้อหา/ผล) |
 | Log ล่าสุด | GET /api/diagnostics/logs |
 | Error catalog / schema | GET /api/errors, GET /api/openapi.json |
 | บันทึก/อ่านแบบร่าง Story | POST/GET /api/story-drafts, GET/PATCH /api/story-drafts/{id} |
 | วินิจฉัยแบบร่างโดยไม่อ่านเนื้อหา | GET /api/diagnostics/drafts, GET /api/diagnostics/drafts/{id}/events |
+| เริ่ม/ดูงาน Story จำลองจาก draft revision | POST /api/stories, GET /api/stories/{job_id} |
+| วินิจฉัยงาน Story โดยไม่อ่านผล | GET /api/diagnostics/stories/{job_id} |
+| Extension รับงาน (sync/grant/result/missing/blocked) | POST /api/browser/work (agent เท่านั้น) |
 
 Payload/revision/สิทธิ์และข้อจำกัด: [Draft API](../architecture/draft-api.md); PATCH เรียกด้วย HTTP client โดยตรงก่อน (CLI เดิมยังรองรับ GET/POST)
 

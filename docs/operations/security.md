@@ -33,7 +33,9 @@ Route ที่ไม่ได้ระบุ permission ถูกปฏิเ�
 
 Draft API เพิ่ม `stories:drafts:read` ให้ owner/operator/viewer และ `stories:drafts:write` ให้ owner/operator
 Support อ่านเฉพาะ draft diagnostics ที่ไม่มี config
-Extension ใช้ DPAPI-protected scoped credential; agent ได้เฉพาะ browser:status ไม่มี draft access
+Extension ใช้ DPAPI-protected scoped credential; agent ได้เฉพาะ browser:status และ browser:work ไม่มี draft/job/diagnostics access
+browser:work ใช้ได้กับ operation ที่ pairing นั้นถือ lease อยู่เท่านั้น; pairing ที่ถูก revoke ทำอะไรต่อไม่ได้
+งานที่ส่งไม่แน่ใจของ pairing ที่ถูก revoke ถูกปล่อยให้ pairing ใหม่ inspect ได้ แต่ไม่ได้ grant ส่งซ้ำ
 Pairing nonce/expiry/revoke และขอบเขต host: [Extension pairing](../architecture/extension-foundation.md)
 
 `SMARTFLOW_SESSION_ROLE` กำหนด role ฝั่ง server ของ API token หลัก (default owner)

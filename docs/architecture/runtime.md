@@ -34,8 +34,13 @@ Worker แต่ละตัวใช้ shutdown pipe ของตัวเอ�
 ไม่แชร์ synchronization lock กับ child ที่อาจถูก kill เพราะ lock อาจค้างหลัง process หาย
 เมื่อ parent หาย worker จะหยุด; ข้อมูลค้างกู้ตาม receipt ที่บันทึกไว้
 
-`worker_alive` ปัจจุบันหมายถึง process ยังอยู่ ไม่ยืนยัน readiness หรือความคืบหน้าของงาน
-แผนเพิ่ม heartbeat/stall detection อยู่ใน [foundation plan](../planning/foundation.md)
+Health แยกสัญญาณ: `worker_alive` = process ยังอยู่, `worker_state` = ความคืบหน้าของ loop จาก heartbeat
+Worker เขียน `worker.heartbeat` (pid + เวลา) ทุกรอบ loop ไม่เกินวินาทีละครั้ง แบบ atomic replace
+`ready` เมื่อ beat ของ pid ปัจจุบันไม่เกิน 5 วินาที, `late` เมื่อเกิน, `stalled` เมื่อไม่มี beat 30 วินาที
+Supervisor บันทึก `WORKER_STALLED` แล้ว terminate และเริ่มใหม่ภายในโควตา 3 ครั้งเดิม; recovery อ่าน receipt ไม่ส่งซ้ำ
+งานดูแล Story (`maintain`) ที่ล้มถูกบันทึก `STORY_MAINTENANCE_FAILED` และลองใหม่แบบ backoff 2–30 วินาที ไม่ทำให้ worker ตาย
+ยังไม่มี end-to-end test ที่ supervisor ฆ่า worker ที่ค้างจริง (ต้องรอ 30 วินาที); ตรวจด้วย unit test ของการตัดสินสถานะ
+Source: [heartbeat.py](../../backend/smartflow/heartbeat.py)
 
 เทส: [test_runtime.py](../../tests/test_runtime.py) / scope `runtime`
 รายละเอียดสถานะงาน: [Automation](automation.md)

@@ -1,6 +1,9 @@
 # Story Shorts: proposed data and API contracts
 
-**แผน ยังไม่มี tables/routes/permissions ต่อไปนี้ใน source**
+**ทำแล้วบางส่วน (P3):** `story_revisions`, `story_operations`, `operation_receipts`, `browser_sessions`,
+POST/GET `/api/stories`, GET `/api/diagnostics/stories/{job_id}` และ `browser:work`
+ข้อจำกัดของที่ทำแล้ว: หนึ่ง revision และหนึ่ง operation ต่อ job (unique job_id), ผลจำลองเก็บใน receipt
+**ยังเป็นแผน:** `story_scenes`, ตาราง `artifacts`, revisions/approve/regenerate endpoints และหลายฉากต่องาน
 เจ้าของ business rules คือ backend service; React และ Extension ไม่เปลี่ยน DB state โดยตรง
 ฐานปัจจุบัน: [Storage](../architecture/storage.md), [API](../operations/api.md), [Security](../operations/security.md)
 

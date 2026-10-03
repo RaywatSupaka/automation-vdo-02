@@ -1,6 +1,8 @@
 # Extension protocol: proposed dispatch and recovery contract
 
-**แผน ยังไม่มี browser-agent endpoints หรือ protocol นี้ใน source**
+**ทำแล้วแบบจำลอง (P3):** endpoint เดียว `POST /api/browser/work` ภายใต้ `browser:work`
+action: `sync` (claim/heartbeat), `grant` (สิทธิ์ส่งครั้งเดียว), `result`, `missing`, `blocked`
+ต่างจากแผนด้านล่าง: ยังไม่แยก browser:claim/events/artifacts, ยังไม่มี chunked artifact และ provider จริง
 สืบทอดข้อกำหนด [Automation](../architecture/automation.md); ไม่ลดระดับการป้องกัน accepted/unknown send
 Transport/pairing: [Browser extension](browser-extension.md)
 
