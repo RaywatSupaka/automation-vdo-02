@@ -27,7 +27,7 @@ F2 ใน source: health แยก worker alive/ready/stalled จาก heartbea
 Autosave ไม่ค้างเมื่อถูกปฏิเสธ และ draft รายงาน `FIELD_REQUIRED`/`DRAFT_ASSET_MISSING` จาก backend: [Draft API](../architecture/draft-api.md)
 P4 ใน source Dev: ปุ่มเริ่มงานจำลองจาก revision ที่บันทึกแล้ว, สถานะ/ผลพร้อมป้าย `SIMULATION`,
 คำสั่งตรวจผลเดิม/ยกเลิกตามสิทธิ์ และรุ่น Extension/helper ที่ API คาดหวัง; E2E fixture ผ่าน 12 เคส
-ดู [P4 verification](verification-p4.md) สำหรับหลักฐานแต่ละชั้นและข้อจำกัดการตรวจ Chrome จริง
+งานจำลองจากหน้าต่าง Dev ผ่าน Chrome profile ของเจ้าของเสร็จใน 20 วินาที ส่งครั้งเดียว; ดู [P4 verification](verification-p4.md)
 งานสำรอง B1–B5 แก้ขอบเขต scenario, การ migrate ตอนเริ่ม, pairing หมดอายุ, การอ่านตัวเลข และจำนวนไฟล์ใน UI แล้ว; ดู [P4 verification](verification-p4.md#งานสำรอง)
 
 ## ยังไม่ทำ

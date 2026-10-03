@@ -1,7 +1,7 @@
 # Story drafts + Extension: coordinated implementation plan
 
-สถานะ: P2 และ P3 ทำแล้วใน source Dev; P4 integration handoff ผ่าน source/fixture E2E และเปิด Dev window ใหม่แล้ว
-P4 ยังรอการกดงานจาก desktop ใน Chrome profile จริงของเจ้าของ; ดู [หลักฐาน P4](../delivery/verification-p4.md)
+สถานะ: P2, P3 และ P4 ทำแล้วใน source Dev; P4 ผ่าน fixture E2E และงานจำลองจริงจาก desktop ผ่าน Chrome profile ของเจ้าของ
+(ส่งครั้งเดียว, artifact ตรง checksum); ดู [หลักฐาน P4](../delivery/verification-p4.md)
 หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)
 ทำสองสายงานใน milestone เดียวกัน โดยใช้ contract ร่วม ไม่รอให้ Story workflow ครบก่อนเริ่ม Extension
 Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Extension ใช้ WXT/TypeScript/MV3 + React popup และ Python native host

@@ -36,12 +36,12 @@ Extension smoke 3.582 s. The smoke test used its owned Chromium profile.
 
 - **Source UI and fixture E2E:** The new E2E creates a draft, starts a job from the review step, pairs a simulated agent through the test API, persists `[SIMULATION ONLY]` output, and checks the second grant is denied. All 12 Playwright tests passed against temporary test data on port 8788.
 - **Dev desktop activation:** The existing `SmartFlow Next` window (PID 37748) closed through `CloseMainWindow()` and its process was absent after 20 seconds. `RUN_DEV.vbs` opened a new window (PID 26116). Its local page served `assets/index-BjdbwQOJ.js`, matching the final UI build. Native window content was not visually inspected by the available tools.
-- **Real Chrome:** Not run. The agent could not operate the native Dev window to enter a test draft; this runbook step waits for the owner to click **เริ่มงานจำลอง**. No user Chrome profile, registry or Extension was changed.
+- **Real Chrome (owner trial, 2026-10-03):** The owner clicked **เริ่มงานจำลอง** in the Dev window for draft revision 14. The paired 0.2.0 Extension in the owner's Chrome profile claimed it 19.0 s after the snapshot; events were `story.snapshot_created` → `story.claimed` (19.0 s) → `story.dispatch_marked` (19.6 s, exactly once) → `story.result_collected` → `story.artifact_persisted` (20.2 s). Job `completed`, receipt `completed`, lease epoch 1. The artifact file's SHA-256 matches the receipt and its text equals `[SIMULATION ONLY]` + the snapshot topic. Runtime and worker logs contain neither the topic nor the result text. Checked read-only from the Dev database.
 - **Packaged EXE / clean Windows / real provider:** Not tested or built. The Story result is simulation text, not real media.
 
 ## Remaining work
 
-Owner action: run the real Chrome trial from the Dev window and confirm a completed receipt for one new simulated job.
+Owner real-Chrome trial: done (see Evidence by layer).
 Provider adapters, real media, a packaged P4 EXE, clean-Windows validation, and an end-to-end stalled-worker restart test remain outside this handoff.
 
 Source: [Story UI](../../frontend/src/features/story-shorts/StoryShorts.tsx),
