@@ -2,6 +2,7 @@ import multiprocessing
 import threading
 import time
 from contextlib import contextmanager
+from typing import Literal, Protocol
 
 from filelock import FileLock
 
@@ -10,6 +11,33 @@ from smartflow.db import Database
 from smartflow.heartbeat import read, worker_state
 from smartflow.observability import create_logger, emit, safe_exception
 from smartflow.worker import run_worker
+
+
+class SupervisedProcess(Protocol):
+    def is_alive(self) -> bool: ...
+    def terminate(self) -> None: ...
+    def join(self, timeout: float | None = None) -> None: ...
+
+
+def supervise_step(
+    status: tuple[str, float | None], process: SupervisedProcess, restarts: int, logger
+) -> tuple[int, Literal["none", "restart", "exhausted"]]:
+    state, age = status
+    if state == "stalled":
+        # Recovery reads receipts, so a killed step is reconciled, never re-sent.
+        emit(logger, "worker.stalled", code="WORKER_STALLED", duration_ms=int((age or 0) * 1000))
+        process.terminate()
+        process.join(timeout=3)
+    elif process.is_alive():
+        return restarts, "none"
+    else:
+        process.join(timeout=0)
+    if restarts >= 3:
+        emit(logger, "worker.restart_exhausted", code="WORKER_UNAVAILABLE")
+        return restarts, "exhausted"
+    restarts += 1
+    emit(logger, "worker.restarting", attempt=restarts)
+    return restarts, "restart"
 
 
 def worker_entry(settings, receiver):
@@ -81,26 +109,11 @@ def runtime(settings, worker=True):
         def supervise():
             restarts = 0
             while not stop.wait(0.5):
-                state, age = status()
-                if state == "stalled":
-                    # Alive but no loop progress: restart within the same budget. Recovery reads
-                    # receipts, so a killed step is reconciled, never re-sent.
-                    emit(
-                        app.state.db.logger,
-                        "worker.stalled",
-                        code="WORKER_STALLED",
-                        duration_ms=int((age or 0) * 1000),
-                    )
-                    processes[-1].terminate()
-                    processes[-1].join(timeout=3)
-                elif processes[-1].is_alive():
+                restarts, action = supervise_step(status(), processes[-1], restarts, app.state.db.logger)
+                if action == "none":
                     continue
-                processes[-1].join(timeout=0)
-                if restarts >= 3:
-                    emit(app.state.db.logger, "worker.restart_exhausted", code="WORKER_UNAVAILABLE")
+                if action == "exhausted":
                     return
-                restarts += 1
-                emit(app.state.db.logger, "worker.restarting", attempt=restarts)
                 if stop.wait(min(restarts, 3)):
                     return
                 launch()
