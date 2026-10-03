@@ -5,6 +5,8 @@ Owner-authorized exception: reuse legacy brand assets/palette and form option la
 
 - Open `docs/index.md`, then only the topic needed for the task. Do not read all MD files or all source files.
 - Check Git status before editing. The owner requested development on `dev`; preserve existing changes.
+- When sessions or agents share a working tree, edit only files you own for the task, re-check each file's status before editing, and never revert, stash, mass-format or regenerate files that contain others' changes; hand findings in their files back instead. Prefer a separate worktree; see `docs/development/parallel-work.md`.
+- Never start the Dev desktop/API on real data while `migrations/versions/` has an uncommitted migration; use a sandbox `SMARTFLOW_DATA_DIR` or report the restart as pending.
 - Keep business rules in backend services, not React components or desktop window callbacks.
 - Every API route must authenticate and declare a server-enforced permission; missing policy denies access. Add allow/deny tests with each feature. Dev identity bypass never skips token/permission checks and is forbidden in prod/frozen builds; see `docs/operations/security.md`.
 - Every external operation needs a persisted receipt before dispatch. An uncertain or accepted send must never be replayed automatically.

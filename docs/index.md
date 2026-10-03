@@ -20,6 +20,7 @@
 | ออกแบบ bridge, สิทธิ์ agent และป้องกันส่งซ้ำ | [Extension protocol](planning/extension-protocol.md) |
 | เลือกเทสของ Story/Extension ที่จะเพิ่ม | [Story testing plan](planning/story-testing.md) |
 | ติดตั้งเครื่องมือ / เปิด Dev / ตั้งค่าเครื่อง | [Development setup](development/setup.md) |
+| ทำงานหลาย session/agent พร้อมกัน และ migration ที่ยังไม่ commit | [Parallel sessions](development/parallel-work.md) |
 | เลือกเทสและควบคุมเวลาทดสอบ | [Testing](development/testing.md) |
 | เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |
 | เข้าใจ frontend / API / worker / desktop | [Runtime boundaries](architecture/runtime.md) |

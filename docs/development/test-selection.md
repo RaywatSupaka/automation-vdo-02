@@ -29,6 +29,8 @@
 ## CI
 
 Push เปรียบเทียบกับ before SHA; PR เปรียบเทียบกับ base SHA; checkout ประวัติครบ
+ขั้น plan (`shell: pwsh`) ตรวจ base ด้วย `git cat-file -e <sha>^{commit}`; ว่างหรือหาไม่พบ (เช่นหลัง force-push) ใช้ `--scope all`
+Base เป็นศูนย์ทั้งหมด (push แรก) ยังผ่าน `--changed --base` ซึ่ง check.py ถือเป็น full gate
 MD-only ไม่เริ่ม CI ตาม paths-ignore; docs ที่ติดมากับโค้ดไม่เพิ่ม scope
 เลือกติดตั้ง Node เฉพาะ UI/TypeScript/Extension/build/browser และ Chromium เฉพาะ E2E/extension-smoke/full
 ติดตั้ง browser_extension dependencies ตาม needs_extension; ไม่เพิ่มขั้นนี้ให้ UI-only checks

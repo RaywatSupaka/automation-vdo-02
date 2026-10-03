@@ -46,13 +46,18 @@
 - ไฟล์นำเข้าเป็นสำเนาในเครื่องและเก็บ asset IDs ในแบบร่าง; ไม่ส่งบริการภายนอก ไม่บันทึก original path/log
 - สลับตัวเลือกหรือย้อนขั้นแล้วเก็บค่าที่กรอกไว้; หน้า review แสดงเฉพาะค่าที่อยู่ในเงื่อนไขปัจจุบัน
 - ตั้งค่าที่ขัดกันจะแสดงข้อสังเกต ไม่เปลี่ยน provider/เสียงโดยพลการ และยังไม่มีการ dispatch
-- แบบร่างและไฟล์หายเมื่อปิด/reload; เปลี่ยนเมนูยังเก็บไว้ตาม [wizard contract](step-wizard.md)
-- Backend ในอนาคตต้อง validate และบังคับ permissions เอง ไม่ใช้ UI validation เป็น security boundary
+- แบบร่าง ขั้นล่าสุด และไฟล์ที่ backend ACK แล้วกลับมาเมื่อปิด/reload ตาม [Autosave](draft-api.md); edits ที่ยังไม่มี ACK ไม่รับรอง
+- ช่องหลายไฟล์ (musicFiles, sfxFiles, greenFiles) เพิ่มไฟล์ใหม่ต่อจากเดิม ข้ามไฟล์ซ้ำที่ name/size/lastModified ตรงกัน
+- ช่องไฟล์เดียวแทนที่ไฟล์เดิม; เลือกไฟล์เดิมซ้ำหรือยกเลิก picker ไม่เปลี่ยนค่าและไม่ autosave
+- ไฟล์ที่กู้คืนหลัง reload ไม่มี lastModified จึงเลือกไฟล์เดียวกันซ้ำได้; ปุ่ม `เอาออก` เอาออกทีละไฟล์
+- Input ถูกล้างทุกครั้งเพื่อเลือกไฟล์ที่เพิ่งเอาออกได้อีก; กรีนสกรีนเกิน 3 ไฟล์แจ้งใน validation ไม่ตัดทิ้งเงียบ ๆ
+- Backend validate ค่า/สิทธิ์เองและคืน issues ตอนบันทึก; UI validation เป็น UX hint ไม่ใช่ security boundary
 
 ## Source และการตรวจ
 
 - [Field schema](../../frontend/src/features/story-shorts/fields.ts): หมวด ช่อง เงื่อนไข ค่าเริ่มต้น และข้อจำกัด
 - [Option catalog](../../frontend/src/features/story-shorts/catalog.ts): label/value ที่อ้างอิงจากฟอร์มเดิม
 - [Field renderer](../../frontend/src/features/story-shorts/StoryFields.tsx): input, required mark, ไฟล์และ review display
+- [File picks](../../frontend/src/features/story-shorts/file-picks.ts): `mergeFilePicks`/`applyFilePick`; เทส [file-picks.test.ts](../../frontend/src/features/story-shorts/file-picks.test.ts) scope `ui`
 - [Draft validation](../../frontend/src/features/story-shorts/draft.ts): feedback และ compatibility warnings
 - [ผลทดสอบ](../delivery/verification-story-details.md): focused unit/browser และข้อจำกัดการเปิดใช้งาน

@@ -19,12 +19,13 @@ Autosave/restore UI, assets import และ close flush ทำแล้ว; con
 Config เก็บทุกช่องรวมช่องที่ซ่อนไว้; selected file arrays เปลี่ยนเป็น asset IDs
 แยก drafts ที่แก้ได้จาก immutable story revisions เมื่อเริ่มงานจริง
 Backend ตรวจชนิด/ขนาด/schema ตอน save แต่ยอมรับช่องว่างและค่าระหว่างกรอก
-ค่าที่ไม่เข้ากันหรือกรอกไม่ครบคืน validation issues; ตรวจ required/capability อีกครั้งตอนเริ่มงาน
+ค่าที่ไม่เข้ากันหรือกรอกไม่ครบคืน validation issues; **ทำแล้ว** ตอน save ผ่าน `completeness()` แบบรายงานอย่างเดียว
+**วางแผน (P3):** job start ตรวจ completeness/capability อีกครั้ง; ปัจจุบันบล็อกเฉพาะ value issues และตรวจ assets แยก
 UI ไม่เชื่อ completed flags ที่บันทึกมาโดยตรง ต้องตรวจข้อมูลเมื่อโหลดกลับ
 
 Autosave ใช้ debounce และหนึ่ง write ที่กำลังส่งต่อ draft; รวมการแก้ล่าสุดระหว่างรอ
 ทุก write มี expected revision และ idempotency key; key เดิม payload เดิมได้ผลเดิม
-ถ้า timeout ให้ใช้ key เดิมตรวจ/ลองคำขอเดิมก่อนส่งการแก้รุ่นใหม่
+ถ้า timeout ให้ใช้ key เดิมตรวจ/ลองคำขอเดิมก่อนส่งการแก้รุ่นใหม่; ถูกปฏิเสธแบบไม่ commit ให้ส่ง snapshot ใหม่ด้วย key ใหม่
 Revision ไม่ตรงคืน conflict พร้อม revision ปัจจุบัน; ไม่ overwrite หรือ merge ทับข้อมูลเงียบ ๆ
 การเก็บ local pending state ต้องแยกตาม session/owner และไม่เปิดข้อมูลหลังสิทธิ์ถูกถอน
 ไม่เก็บ token หรือเนื้อหางานใน localStorage/log เพื่อแก้ปัญหา autosave
@@ -44,7 +45,7 @@ Owner/operator อ่านและแก้ได้; viewer อ่านไ�
 Support และ Extension agent ไม่มีสิทธิ์อ่าน draft content; diagnostics เป็น projection ที่ตัดเนื้อหาออก
 ทุก route มี token, policy และ allow/deny tests; dev bypass ไม่ข้าม permission
 API รับ asset IDs ไม่รับ arbitrary path; ไม่ส่ง path จริงกลับ client
-สิทธิ์สำหรับ draft เป็นข้อเสนอใหม่ ต้องเพิ่มใน role matrix/OpenAPI ก่อนเปิด UI
+สิทธิ์ draft อยู่ใน role matrix/OpenAPI แล้ว; UI mount editor เฉพาะ `stories:drafts:write` ตาม [Step wizard](../architecture/step-wizard.md)
 
 ## ไฟล์แนบและการปิดโปรแกรม
 
@@ -61,7 +62,7 @@ Save ล้มเหลวหรือ import ยังไม่ครบต้�
 ## Diagnostics และ gate
 
 Log: draft ID, revision, request/trace ID, stage, reason, elapsed; ไม่มีหัวข้อ ข้อความ filename/path หรือ bytes
-Codes ที่เสนอ: DRAFT_REVISION_CONFLICT, DRAFT_SAVE_FAILED, DRAFT_ASSET_INVALID, DRAFT_ASSET_MISSING
+Codes ที่ใช้แล้ว: DRAFT_REVISION_CONFLICT, DRAFT_SAVE_FAILED, DRAFT_ASSET_INVALID, DRAFT_ASSET_MISSING ดู [Draft API](../architecture/draft-api.md)
 แยก invalid input, permission denied, unavailable storage, conflict และ import incomplete
 ก่อน migration จริงต้องมี backup ที่รองรับ SQLite WAL, integrity verification และ recovery เมื่อ migration ล้มเหลว
 ใช้ฐาน fixture ตรวจ migration ก่อนแตะข้อมูลจริง; ห้าม reset DB เพื่อให้ schema ผ่าน

@@ -51,12 +51,26 @@ Validation นี้ให้ feedback ผู้ใช้; Story API ในอ�
 ยังไม่มี voice selector จริง; ไม่แสดงรายชื่อเสียงหรือ provider ว่าเชื่อมแล้ว
 แบบร่างมี Autosave/restore; wizard รับ initialStep และ onStepChange เพื่อเก็บขั้นล่าสุด
 ข้อมูลที่บันทึกสำเร็จคืนจาก API เมื่อเปิดใหม่; close guard รอ flush และไม่ปิดเมื่อ save ล้มเหลว
-ไม่ส่งเนื้อหาไป API/log/localStorage; session หมดอายุหรือสิทธิ์ถูกถอนจะ unmount และทิ้ง draft
-เมนูเปิดให้ session ที่มี jobs:create; ไม่มี route ใหม่และไม่เปลี่ยน auth/bypass policy
+ไม่ส่งเนื้อหาไป log/localStorage; session หมดอายุหรือสิทธิ์ถูกถอนจะ unmount และทิ้ง draft ใน memory
+Wizard ถอยขั้นที่ผ่านแล้วแต่ตอนนี้ไม่ผ่าน (เช่นไฟล์บังคับหาย) และแจ้ง onStepChange จึง autosave ได้โดยไม่มี edit
+ดังนั้น `storyAccess()` ให้เมนู Story แสดงเมื่อมี `stories:drafts:read` แต่ mount editor (StoryShorts/DraftStore) เฉพาะเมื่อมี `stories:drafts:write` ด้วย
+Viewer เห็น notice แบบ static และป้าย `อ่านอย่างเดียว` (`story-readonly-notice`/`story-readonly`) ไม่โหลด draft; support ไม่เห็นเมนู
+ทุก session ที่เขียนได้ mount editor ซึ่งตั้ง `window.smartflowFlush` จึงให้ close guard ถือว่าไม่มี flush = ไม่มีค่าค้างได้
+Server issues แสดงใต้สถานะบันทึกตาม [Draft API](draft-api.md); validation ใน wizard เป็น UX hint
+
+## App navigation
+
+Source: [navigation](../../frontend/src/navigation.ts); `canOpen(view, permissions)` เป็นจุดเดียวที่กำหนดเมนู/view และ fallback
+View ที่เลือกเก็บต่อ tab ใน sessionStorage key `smartflow-view` (ไม่ใช้ URL fragment ซึ่งเป็นของ `#token`); อ่านไม่ได้ใช้ `jobs`
+Poll แรกย้าย view ที่ไม่มีสิทธิ์ไปตามลำดับ jobs, database, logs, story, browser; ไม่มีสิทธิ์เลยคงที่ `jobs`; `#token` ใหม่รีเซ็ตเป็น `jobs`
+`/health` และ `/session` ทุก 1.5 วินาที; `/jobs` และ events เฉพาะ view jobs; diagnostics เฉพาะ view database/logs ที่เปิดอยู่
+View ที่ไม่มีสิทธิ์ redirect โดยไม่ fetch ข้อมูล และล้าง rows ของสิทธิ์ที่ถูกถอน; poll ที่ได้ข้อมูลเดิมไม่ re-render
+StoryShorts element ถูก memoise เพื่อไม่ให้ poll re-render wizard
 
 ## ตรวจเฉพาะส่วน
 
 - Unit navigation/validation: [state tests](../../frontend/src/components/step-wizard/state.test.ts), [draft tests](../../frontend/src/features/story-shorts/draft.test.ts)
+- สิทธิ์/view/poll ราย role: [navigation tests](../../frontend/src/navigation.test.ts); Vitest รวมเฉพาะ `src/**/*.test.ts` ไม่รวม `.test.tsx`
 - Browser behavior/layout/session: [wizard tests](../../frontend/e2e/story-wizard.spec.ts)
 - `python tools/check.py --scope ui build-ui` แล้ว `--scope e2e --match "Story wizard"`
 - ใช้ frontend mapping เดิมใน [selector](../../tools/check_selection.py); ไม่ต้องทดสอบ backend ทั้งหมด

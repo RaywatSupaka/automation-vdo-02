@@ -1,6 +1,7 @@
 # Browser extension: framework and boundaries
 
-**ทำแล้วเฉพาะโครง WXT/popup/native hello; ยังไม่ install/pair/dispatch หรือพิสูจน์ live ChatGPT DOM**
+**ทำแล้ว: โครง WXT/popup, native host, dev registration (HKCU) และ pairing/revoke**
+**ยังไม่ทำ: installer ลูกค้า, operation dispatch/claim, content adapter และพิสูจน์ live ChatGPT DOM**
 Source และขอบเขตปัจจุบัน: [Extension foundation](../architecture/extension-foundation.md)
 สร้างใหม่เพราะ source เก่ารวมหลาย provider/legacy scripts; ไม่ย้ายโค้ดเดิมมาครอบ framework
 
@@ -14,7 +15,8 @@ Source และขอบเขตปัจจุบัน: [Extension foundatio
 
 อ้างอิง: [WXT introduction](https://wxt.dev/guide/introduction.html),
 [WXT unit testing](https://wxt.dev/guide/essentials/unit-testing)
-Foundation ใช้ WXT 0.21.4 และล็อก dependencies แล้ว; modules/transport ที่เหลือด้านล่างยังเป็นแผน
+Foundation ใช้ WXT 0.21.4 และล็อก dependencies แล้ว; popup/protocol/native host/pairing ทำแล้ว
+content script, provider adapter, heartbeat และ dispatch ด้านล่างยังเป็นแผน
 
 ## Modules ที่เสนอ
 
@@ -32,8 +34,9 @@ Service worker อาจถูกหยุด/เริ่มใหม่; ห�
 Reconnect ต้องอ่าน durable operation state แล้ว inspect ก่อนพิจารณาการส่งใหม่
 อ้างอิง: [Chrome lifecycle](https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle)
 
-## Transport และการจับคู่ที่เสนอ
+## Transport และการจับคู่
 
+**ทำแล้ว** ตามรายการนี้ใน [Extension foundation](../architecture/extension-foundation.md); ยกเว้น installer และ background heartbeat
 ใช้ Chrome Native Messaging เป็น transport หลัก; E0 ต้องพิสูจน์ handshake/reconnect บน Windows ก่อนใช้จริง
 Native host ส่งต่อเข้าช่อง API เฉพาะ browser agent บน loopback พร้อม credential ที่จำกัดสิทธิ์
 จับคู่ผ่านหน้าจอแอปด้วย nonce อายุสั้น ใช้ครั้งเดียว และยืนยัน Extension ID ที่กำลังเชื่อม

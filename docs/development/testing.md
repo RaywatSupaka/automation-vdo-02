@@ -59,6 +59,9 @@ CI เครื่องใหม่จะ build เฉพาะเมื่อ�
 SETUP ติดตั้ง Chromium; E2E ใช้ temporary data ไม่ใช้ browser profile ของลูกค้า
 Trace เมื่อ fail และ screenshot อยู่ใน `frontend/test-results/` ซึ่งไม่เข้า Git
 TypeScript ตรวจผ่าน `npm run build`; Python ใช้ `python -m ruff check backend tests tools desktop_entry.py`
+Ruff ทั้ง repo (~0.2–0.3 วินาที) เป็นขั้นแรกของทุก run ที่เลือก Python scope ไม่ใช่เฉพาะ all; รันครั้งเดียวแม้รวมหลาย scopes
+Scope ที่ไม่ใช่ Python (ui, typecheck, extension-*, desktop) ไม่ lint; JSON report มี lint เป็น entry `{scope: 'lint', seconds, exit_code}`
+ลำดับขั้นมาจาก `selected_steps()` ใน check.py; เทสอยู่ [test_check_lint.py](../../tests/test_check_lint.py) ยังไม่อยู่ใน scope tooling ให้รัน pytest ตรง
 Starlette รุ่นปัจจุบันมี TestClient/httpx deprecation warning ที่บันทึกไว้ในรายงาน
 
 Source: [check.py](../../tools/check.py), [pytest config](../../pyproject.toml),

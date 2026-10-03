@@ -39,11 +39,14 @@ Transitions การจับคู่มี `browser_events` ใน transactio
 .venv\Scripts\python.exe tools/register_native_host.py --exe build/native/SmartFlowNextHost/SmartFlowNextHost.exe
 ```
 
-Registration ใช้ HKCU เฉพาะ host ใหม่ และปฏิเสธการทับ path ของ installation อื่น
+Registration ใช้ HKCU เฉพาะ host ใหม่; ค่าเริ่มต้นปฏิเสธการทับ manifest ของ installation อื่น (exit 2 พร้อมแนะนำ `--replace`) โดยไม่เขียนไฟล์/registry
+`--exe <exe> --replace` พิมพ์ path manifest เก่า -> ใหม่ แล้วทับเฉพาะ host-name key ของโปรเจกต์นี้
+`--unregister` ลบเฉพาะ key นั้น คงไฟล์ manifest/config ไว้; รันซ้ำแจ้ง not registered และ exit 0
+`--replace` ใช้คู่กับ `--unregister` ไม่ได้, `--unregister` ไม่รับ `--exe`, นอกนั้นต้องมี `--exe`; ตรวจก่อนแตะ registry
 Helper ใช้ stdio ตาม Chrome protocol; Chrome เป็นผู้เปิด process ไม่มี terminal ที่ลูกค้าต้องเปิดค้าง
 Config ข้าง EXE มี port/ID/path ของไฟล์ DPAPI; ไม่มี owner token หรือ provider credential
 โหลด `browser_extension/.output/chrome-mv3` ผ่าน Load unpacked ใน Chrome ที่ผู้ใช้เลือก
-ห้ามย้ายโฟลเดอร์ helper หลัง register โดยไม่ลงทะเบียน path ใหม่
+ย้ายโฟลเดอร์ helper แล้วต้องรัน `--exe <path ใหม่> --replace`; Chrome ไม่หา helper ที่ย้ายเอง
 ยังไม่ใช่ installer หรือชุด client-ready; ไม่แก้ identity/profile/Extension ของระบบเดิม
 
 ## หลักฐานและการทดสอบ
@@ -56,5 +59,6 @@ Config ข้าง EXE มี port/ID/path ของไฟล์ DPAPI; ไม�
 
 Source: [bridge](../../backend/smartflow/browser_bridge.py), [native client](../../backend/smartflow/native_client.py),
 [protocol](../../browser_extension/protocol/index.ts), [registration](../../tools/register_native_host.py)
-Tests: [pairing/assets](../../tests/test_assets_pairing.py), [native framing](../../tests/test_native_host.py)
+Tests: [pairing/assets](../../tests/test_assets_pairing.py), [native framing](../../tests/test_native_host.py),
+[registration](../../tests/unit/test_register_native_host.py) (fake registry, scope `unit`; ไม่แตะ HKCU จริง)
 หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)

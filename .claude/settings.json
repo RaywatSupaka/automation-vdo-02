@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "\"$CLAUDE_PROJECT_DIR/.venv/Scripts/python.exe\" \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_dev_start.py\"",
+            "timeout": 15,
+            "statusMessage": "Checking for uncommitted migrations"
+          }
+        ]
+      }
+    ]
+  }
+}
