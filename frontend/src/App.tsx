@@ -165,7 +165,7 @@ export function App() {
       </nav>
       <div className="sidebar-bottom"><ShieldCheck size={23}/><strong>ตรวจสอบได้ทุกขั้นตอน</strong>
         <p>สถานะงานและ checkpoint<br/>บันทึกไว้ในเครื่องของคุณ</p>
-        <div className="version">FOUNDATION <span>v{health?.version || '0.1.0'}</span></div>
+        <div className="version">FOUNDATION <span>{health?.version ? `v${health.version}` : '—'}</span></div>
       </div>
     </aside>
 

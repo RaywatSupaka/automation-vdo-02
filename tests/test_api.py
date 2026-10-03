@@ -39,6 +39,10 @@ def test_create_list_trace_and_idempotency(client):
     assert client.get(f"/api/jobs/{job['id']}/events").json()[0]["name"] == "job.created"
 
 
+def test_health_reports_release_version(client):
+    assert client.get("/api/health").json()["version"] == "0.2.0"
+
+
 def test_failure_scenarios_are_allowed_in_test_mode(client):
     for scenario in ("auth_required", "unknown_send", "save_failure", "transient", "pending"):
         response = client.post(
