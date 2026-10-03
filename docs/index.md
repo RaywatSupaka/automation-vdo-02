@@ -15,6 +15,7 @@
 | ใช้ API บันทึกแบบร่างที่ทำแล้ว | [Draft API](architecture/draft-api.md) |
 | จับคู่ Extension/helper และอ่านขอบเขตสิทธิ์ | [Extension foundation](architecture/extension-foundation.md) |
 | ดูผลตรวจ Autosave และการจับคู่จริง | [P2 verification](delivery/verification-autosave-pairing.md) |
+| ดูหลักฐาน P4 งานจำลอง สถานะ และ Dev activation | [P4 verification](delivery/verification-p4.md) |
 | ดูผลตรวจพื้นฐานแบบร่างและ Extension | [Foundation verification](delivery/verification-draft-extension-foundation.md) |
 | ดูแนวคิดที่เรียนรู้จาก source เดิม | [Story reference](planning/story-reference.md) |
 | ออกแบบข้อมูล/ฉาก/revision/API ของ Story | [Story data and API](planning/story-data-api.md) |

@@ -16,7 +16,7 @@ Source: [StepWizard](../../frontend/src/components/step-wizard/StepWizard.tsx),
 - กดกลับได้เฉพาะขั้นที่ผ่านแล้ว; ไปข้างหน้าต้อง validate ตามลำดับ
 - ตรวจขั้นก่อนหน้าด้วยก่อนยืนยัน; กลับไปดูข้อมูลโดยไม่แก้ไม่ล้างผลตรวจ
 - Confirmation เป็นสถานะตรวจรายละเอียดใน UI ไม่ใช่หลักฐาน API บันทึกหรือสร้างงานสำเร็จ
-- ไม่มีการยิง API หรือ persist ใน component; เมื่อเพิ่ม async submission ต้องมี pending/error/idempotency contract แยก
+- ไม่มีการยิง API หรือ persist ใน component; Story host จัดการ async start, pending/error และ idempotency แยกจาก wizard
 
 ## Layout และ accessibility
 
@@ -42,12 +42,12 @@ Source: [StoryShorts](../../frontend/src/features/story-shorts/StoryShorts.tsx),
 | 2 โทนและสไตล์ | ผู้พูด โครงเรื่อง โทน เปิด/จบ CTA และสไตล์ภาพ |
 | 3 ภาพและวิดีโอ | Provider/model, 6–15 ฉาก, Flow, motion, ปก อินโทร กรีนสกรีน โลโก้ |
 | 4 เสียงและซับ | เสียงพากย์ ซับ เพลง SFX ดนตรี AI และ automation |
-| 5 ตรวจรายละเอียด | สรุปข้อมูลและยืนยันการตรวจแบบร่าง |
+| 5 ตรวจรายละเอียด | สรุปข้อมูล ยืนยันการตรวจแบบร่าง และเริ่มงานจำลองเมื่อมีสิทธิ์ |
 
 ค่าเริ่มต้น 10 ฉาก/45 วินาที; ฉาก 6–15 ตามฟอร์มเดิม ส่วนเวลา 30–60 วินาทีเป็นเป้าหมายที่เว้นว่างได้
 รายการช่องและขอบเขตที่ยังเป็นแบบร่าง: [Story form details](story-form.md)
 ช่องบังคับแสดง `*` สีแดง; เมื่อเปิดตัวเลือกที่ต้องใช้ไฟล์ ช่องไฟล์นั้นจะบังคับตามเงื่อนไข
-Validation นี้ให้ feedback ผู้ใช้; Story API ในอนาคตต้อง enforce schema เอง
+Validation นี้ให้ feedback ผู้ใช้; Story API ตรวจ schema/issues และ revision ซ้ำก่อนสร้างงานจำลอง
 ยังไม่มี voice selector จริง; ไม่แสดงรายชื่อเสียงหรือ provider ว่าเชื่อมแล้ว
 แบบร่างมี Autosave/restore; wizard รับ initialStep และ onStepChange เพื่อเก็บขั้นล่าสุด
 ข้อมูลที่บันทึกสำเร็จคืนจาก API เมื่อเปิดใหม่; close guard รอ flush และไม่ปิดเมื่อ save ล้มเหลว
@@ -57,6 +57,9 @@ Wizard ถอยขั้นที่ผ่านแล้วแต่ตอน�
 Viewer เห็น notice แบบ static และป้าย `อ่านอย่างเดียว` (`story-readonly-notice`/`story-readonly`) ไม่โหลด draft; support ไม่เห็นเมนู
 ทุก session ที่เขียนได้ mount editor ซึ่งตั้ง `window.smartflowFlush` จึงให้ close guard ถือว่าไม่มี flush = ไม่มีค่าค้างได้
 Server issues แสดงใต้สถานะบันทึกตาม [Draft API](draft-api.md); validation ใน wizard เป็น UX hint
+ปุ่ม `เริ่มงานจำลอง` แสดงเฉพาะ `jobs:create` และปิดเมื่อมี server issues; host flush ก่อนส่ง, เก็บ key เดิมเมื่อ retry
+และ poll สถานะทุก 1.5 วินาทีจนจบหรือ unmount; ผลทุกชิ้นติดป้าย `SIMULATION` ไม่ใช่สื่อจริง
+`needs_review` แสดงตรวจผลเดิม/ยกเลิกเฉพาะ `jobs:command`; ข้อความ error code อื่นอ่านจาก `/api/errors`
 
 ## App navigation
 

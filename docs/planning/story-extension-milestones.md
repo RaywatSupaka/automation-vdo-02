@@ -1,7 +1,7 @@
 # Story drafts + Extension: coordinated implementation plan
 
-สถานะ: P2 ทำแล้วใน source Dev; P3 งานจำลองผ่าน Extension ทำแล้วใน source (ดูสถานะงานค้างด้านล่าง)
-Integration handoff P4 ยังต้องทำต่อ
+สถานะ: P2 และ P3 ทำแล้วใน source Dev; P4 integration handoff ผ่าน source/fixture E2E และเปิด Dev window ใหม่แล้ว
+P4 ยังรอการกดงานจาก desktop ใน Chrome profile จริงของเจ้าของ; ดู [หลักฐาน P4](../delivery/verification-p4.md)
 หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)
 ทำสองสายงานใน milestone เดียวกัน โดยใช้ contract ร่วม ไม่รอให้ Story workflow ครบก่อนเริ่ม Extension
 Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Extension ใช้ WXT/TypeScript/MV3 + React popup และ Python native host
@@ -33,6 +33,7 @@ Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Ext
 
 ตั้งใจคงไว้: งานที่ส่งไม่แน่ใจและยังไม่ reconcile บล็อกงานถัดไปของ browser เดียวกัน
 ยังค้าง: build/register helper และ reload Extension 0.2.0 แล้วตรวจกับ Chrome จริง; end-to-end test ของการ restart worker ที่ค้าง
+P4 เพิ่มเทส fake process สำหรับการตัดสินใจ restart เมื่อ stalled/down/ครบโควตา; ยังไม่ใช่ end-to-end stall test
 
 ## Dependencies ที่ต้องเคารพ
 

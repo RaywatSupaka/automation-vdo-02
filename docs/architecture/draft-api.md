@@ -1,7 +1,7 @@
 # Story draft persistence
 
-ทำแล้ว: schema 95 ช่อง, API, Autosave/restore, ไฟล์แนบ, close flush และ migration `0003`
-ยังไม่ทำ: snapshot ไปเป็นงาน, provider dispatch และระบบจัดการแบบร่างหลายรายการใน UI
+ทำแล้ว: schema 95 ช่อง, API, Autosave/restore, ไฟล์แนบ, close flush และ migration `0003`; เริ่มงานจำลองจาก revision ที่บันทึกแล้ว
+ยังไม่ทำ: provider จริง, การสร้างสื่อจริง และระบบจัดการแบบร่างหลายรายการใน UI
 เป้าหมายรอบถัดไป: [Persistence plan](../planning/draft-persistence.md)
 
 ## Contract
@@ -24,6 +24,9 @@ Config ที่ขาด field ใช้ default จาก registry; PATCH เ�
 ชนิดข้อมูลผิด/field ไม่รู้จัก/ข้อความเกินขนาดถูกปฏิเสธ; version 1 และขั้น 0–4 เท่านั้น
 คงค่าที่ซ่อนตามเงื่อนไขด้วย และไม่สร้าง jobs/receipts จากการบันทึกแบบร่าง
 UI เปิดแบบร่างล่าสุดจาก API เมื่อเปิดโปรแกรมใหม่ และตรวจขั้นที่ผ่านแล้วใหม่จากค่าจริง
+ขั้นตรวจรายละเอียดเรียก `flush()` ก่อนส่ง `POST /api/stories` พร้อม draft ID, expected revision, mode `simulation`
+และ Idempotency-Key เดิมเมื่อ retry; revision เปลี่ยนจึงใช้ key ใหม่ ถ้าบันทึกไม่สำเร็จจะไม่เรียก start API
+ปุ่มเริ่มงานปิดเมื่อ server issues ยังมีอยู่; backend ตรวจซ้ำและบังคับสิทธิ์ `jobs:create`
 
 ## Issues และไฟล์ใน config
 
@@ -34,7 +37,7 @@ Response ของ POST/PATCH/GET มี `issues` เรียงตาม: `iss
 `completeness()` รายงานช่องบังคับที่ active แต่ว่าง, batchTopics เกิน 10 บรรทัด, musicCount เกินจำนวน musicFiles
 และ coverScene นอก `auto`/1..min(15, scenes); รายงานอย่างเดียว ไม่บล็อกการบันทึก
 ตัวเลขใน completeness อ่านด้วย `number()` ตามกติกา JavaScript `Number()` ให้ตรง UI (ASCII, 0x/0o/0b, Infinity, ว่าง = 0)
-Job start ยังใช้เฉพาะ `issues()` และตรวจ assets แยก; completeness ยังไม่บล็อกงานจนกว่า P3 จะเพิ่ม
+Job start ตรวจ `issues()` และ `completeness()` รวมทั้ง assets ก่อนสร้าง snapshot งานจำลอง; แบบร่างที่ยังมี issue เริ่มงานไม่ได้
 ไฟล์ใน config เก็บเป็น asset ID; ID ซ้ำใน field เดียว, ไม่รู้จัก, ของ draft อื่น หรือนำเข้าให้ field อื่น คืน DRAFT_ASSET_INVALID (422)
 อ้างอิงไฟล์ที่หาย/เสียใหม่ คืน DRAFT_ASSET_MISSING (409); ไฟล์ที่ config เดิมอ้างอยู่แล้วหายไม่บล็อก edits อื่น แต่ขึ้นใน issues ฟิลด์ละครั้ง
 เอาไฟล์ที่หายออกแล้วใส่กลับถือเป็นการอ้างอิงใหม่และถูกปฏิเสธ; replay ยังคืน response เดิมแม้ไฟล์หายภายหลัง
