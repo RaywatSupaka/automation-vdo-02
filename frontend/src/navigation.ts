@@ -1,12 +1,12 @@
 import type { Permission, WorkerState } from './api';
 
 /** Fallback order matters: a disallowed view lands on the first allowed one, so polls never flip-flop. */
-export const views = ['jobs', 'database', 'logs', 'story', 'browser'] as const;
+export const views = ['jobs', 'database', 'logs', 'story', 'browser', 'queue'] as const;
 export type View = typeof views[number];
 export const VIEW_STORAGE_KEY = 'smartflow-view';
 const required: Record<View, Permission> = {
   jobs: 'jobs:read', database: 'diagnostics:read', logs: 'diagnostics:read',
-  story: 'stories:drafts:read', browser: 'browser:manage',
+  story: 'stories:drafts:read', browser: 'browser:manage', queue: 'jobs:read',
 };
 type ViewStorage = Pick<Storage, 'getItem' | 'setItem'>;
 

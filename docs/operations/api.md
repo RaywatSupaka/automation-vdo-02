@@ -43,6 +43,8 @@ Payload ตัวอย่างอยู่ [examples/create-job.json](../../ex
 | เริ่ม/ดูงาน Story จำลองจาก draft revision | POST /api/stories, GET /api/stories/{job_id} |
 | วินิจฉัยงาน Story โดยไม่อ่านผล | GET /api/diagnostics/stories/{job_id} |
 | Extension รับงาน (sync/grant/result/missing/blocked) | POST /api/browser/work (agent เท่านั้น) |
+| คิวงานรวมทุก feature ([Job queue](../architecture/job-queue.md)) | GET /api/queue |
+| แบบร่างฉบับถัดไปหลังเริ่มงาน (คงการตั้งค่า ล้างเนื้อเรื่อง) | POST /api/story-drafts/{id}/successor |
 
 Payload/revision/สิทธิ์และข้อจำกัด: [Draft API](../architecture/draft-api.md); PATCH เรียกด้วย HTTP client โดยตรงก่อน (CLI เดิมยังรองรับ GET/POST)
 

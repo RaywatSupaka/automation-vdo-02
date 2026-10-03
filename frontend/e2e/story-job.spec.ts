@@ -4,7 +4,7 @@ const owner = 'e2e-fixture-session-not-a-real-secret';
 const ownerHeaders = { Authorization: `Bearer ${owner}` };
 type Task = { connection_id: string; operation_id: string; request_id: string; lease_epoch: number; topic: string };
 
-test('story job starts from the review step and a simulated agent completes it once', async ({ page, request }) => {
+test('story job is queued, the wizard opens a new draft at step 1, and jobs run in FIFO order', async ({ page, request }) => {
   const draft = await request.post('/api/story-drafts', { headers: { ...ownerHeaders, 'Idempotency-Key': crypto.randomUUID() },
     data: { config: { topic: 'e2e story job' } } });
   expect(draft.status()).toBe(201);
@@ -16,8 +16,21 @@ test('story job starts from the review step and a simulated agent completes it o
   const start = page.getByRole('button', { name: 'เริ่มงานจำลอง', exact: true });
   await expect(start).toBeEnabled();
   await start.click();
-  await expect(page.getByRole('button', { name: 'เริ่มงานจำลองแล้ว', exact: true })).toBeDisabled();
-  await expect(page.getByRole('status').filter({ hasText: 'รอ Extension' })).toContainText('รอ Extension', { timeout: 10000 });
+  // Queued, then a new draft opens at step 1: settings kept, story content cleared.
+  await expect(page.locator('.story-queued-notice')).toContainText('e2e story job', { timeout: 10000 });
+  await expect(page.getByLabel('หัวข้อคลิป', { exact: true })).toHaveValue('');
+  await expect(page.getByRole('heading', { name: 'เรื่องราวของคุณ เริ่มจากอะไร?' })).toBeVisible();
+  const queue = page.getByRole('region', { name: 'คิวงาน' });
+  const firstRow = queue.locator('.queue-item').filter({ hasText: 'e2e story job' });
+  await expect(firstRow).toContainText('รอ Extension', { timeout: 10000 });
+
+  // A second job joins the same queue behind the first.
+  await page.getByLabel('หัวข้อคลิป', { exact: true }).fill('e2e second job');
+  for (let step = 0; step < 4; step++) await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();
+  await page.getByRole('button', { name: 'เริ่มงานจำลอง', exact: true }).click();
+  await expect(page.getByLabel('หัวข้อคลิป', { exact: true })).toHaveValue('', { timeout: 10000 });
+  const secondRow = queue.locator('.queue-item').filter({ hasText: 'e2e second job' });
+  await expect(secondRow).toBeVisible({ timeout: 10000 });
 
   const browser = await request.get('/api/browser', { headers: ownerHeaders });
   expect(browser.ok()).toBeTruthy();
@@ -44,6 +57,8 @@ test('story job starts from the review step and a simulated agent completes it o
     return task;
   }, { timeout: 10000 }).not.toBeNull();
   if (!task) throw new Error('The paired agent received no simulated Story task');
+  expect(task.topic).toBe('e2e story job');  // FIFO: the oldest job is claimed first.
+  await expect(secondRow).toContainText('รออีก 1 งาน', { timeout: 10000 });
   const command = { connection_id, operation_id: task.operation_id, request_id: task.request_id,
     lease_epoch: task.lease_epoch };
   const granted = await work({ action: 'grant', ...command });
@@ -56,8 +71,15 @@ test('story job starts from the review step and a simulated agent completes it o
   expect(result.ok()).toBeTruthy();
   expect((await result.json() as { persisted: boolean }).persisted).toBe(true);
 
-  await expect(page.getByRole('status').filter({ hasText: 'เสร็จ (จำลอง)' }))
-    .toContainText('เสร็จ (จำลอง)', { timeout: 10000 });
-  await expect(page.locator('.story-job-status')).toContainText('SIMULATION');
-  await expect(page.locator('.story-simulation-result')).toContainText('[SIMULATION ONLY]');
+  await expect(firstRow).toContainText('เสร็จ (จำลอง)', { timeout: 10000 });
+  await expect(secondRow).toContainText('ถัดไป', { timeout: 10000 });
+  await firstRow.locator('.queue-row').click();
+  await expect(firstRow.locator('.queue-detail')).toContainText('SIMULATION');
+  await expect(firstRow.locator('.queue-timeline')).toContainText('ส่งงาน (จำลอง) หนึ่งครั้ง');
+  await expect(firstRow.locator('.queue-result')).toContainText('[SIMULATION ONLY]');
+
+  // The shared queue menu shows the same work for every feature.
+  await page.getByRole('button', { name: 'คิวงาน', exact: true }).click();
+  const page_queue = page.locator('.content').getByRole('region', { name: 'คิวงาน' });
+  await expect(page_queue.locator('.queue-item').filter({ hasText: 'e2e second job' })).toContainText('เรื่องเล่า Shorts');
 });

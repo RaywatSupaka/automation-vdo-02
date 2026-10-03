@@ -30,6 +30,7 @@
 | เลือกเฉพาะเคส/ไฟล์ที่แก้ และเข้าใจ CI | [Test selection](development/test-selection.md) |
 | เข้าใจ frontend / API / worker / desktop | [Runtime boundaries](architecture/runtime.md) |
 | ใช้การ์ดกรอกทีละขั้น / แก้ฟอร์ม Story Shorts | [Shared step wizard](architecture/step-wizard.md) |
+| คิวงานรวม ลำดับงาน และแบบร่างฉบับถัดไปหลังเริ่มงาน | [Job queue](architecture/job-queue.md) |
 | ดูรายละเอียดฟอร์มเดิมที่นำมาออกแบบใหม่และช่องบังคับ | [Story form details](architecture/story-form.md) |
 | ใช้สี โลโก้ และไอคอนจากแบรนด์เดิม | [Branding](architecture/branding.md) |
 | ดูหลักฐานเทสและเปิดหน้าฟอร์มใหม่ใน Dev | [Verification Story wizard](delivery/verification-story-wizard.md) |

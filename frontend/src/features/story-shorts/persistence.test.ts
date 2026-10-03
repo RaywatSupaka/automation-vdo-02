@@ -350,3 +350,46 @@ it.each([
   expect(store.value.state).toBe('saved');
   await vi.advanceTimersByTimeAsync(60000); expect(patches()).toHaveLength(sent.length); store.stop();
 });
+
+const nextId = '7e1d5c3a-9a43-4c5e-8a43-2f0f1d6c9b10';
+/** A saved draft at revision 3 and step 4, with a server that also answers the successor endpoint. */
+async function savedStore(successor: (call: Call) => unknown) {
+  const api = server(call => {
+    if (call.path === '/story-drafts?limit=1') return [{ id }];
+    if (call.path === `/story-drafts/${id}`) return { id, revision: 3, active_step: 4, config: { ...createStoryDraft(), topic: 'old' }, issues: [] };
+    if (call.path.endsWith('/assets')) return [];
+    if (call.path === `/story-drafts/${id}/successor`) return successor(call);
+    throw new Error(`unexpected ${call.path}`);
+  });
+  const snapshots: number[] = [];
+  const store = new DraftStore(api.send, value => snapshots.push(value.step), () => {});
+  await store.load();
+  return { store, api, snapshots };
+}
+
+it('opens the next draft at step 1 after a job start, and a lost ACK replays the same key', async () => {
+  let lost = true;
+  const { store, api } = await savedStore(() => {
+    if (lost) { lost = false; throw new TypeError('ACK lost'); }
+    return { id: nextId, revision: 1, active_step: 0, config: { ...createStoryDraft(), topic: '', tone: 'ลึกลับ' }, issues: [] };
+  });
+  const generation = store.value.generation;
+  expect(await store.next('successor-job-1')).toBe(true);
+  const posts = api.calls.filter(call => call.path.endsWith('/successor'));
+  expect(posts).toHaveLength(2);
+  expect(posts.map(call => call.key)).toEqual(['successor-job-1', 'successor-job-1']);
+  expect(store.id).toBe(nextId);
+  expect(store.value.step).toBe(0);
+  expect(store.value.generation).toBe(generation + 1);  // The wizard remounts at step 1.
+  expect(store.value.draft.topic).toBe('');
+  expect(store.value.draft.tone).toBe('ลึกลับ');
+  expect(store.value.state).toBe('saved'); store.stop();
+});
+
+it('keeps the current draft open when the next draft is refused', async () => {
+  const { store } = await savedStore(() => { throw new ApiError('DRAFT_NOT_FOUND', 'missing', 'trace-1'); });
+  expect(await store.next('successor-job-2')).toBe(false);
+  expect(store.id).toBe(id);
+  expect(store.value.draft.topic).toBe('old');
+  expect(store.value.step).toBe(4); store.stop();
+});

@@ -62,21 +62,37 @@ export class DraftStore {
     try {
       const rows = await this.send<SavedDraft[]>('/story-drafts?limit=1');
       if (this.stopped) return;
-      if (rows.length) {
-        const saved = await this.send<SavedDraft>(`/story-drafts/${rows[0].id}`);
-        const assets = await this.send<StoredAsset[]>(`/story-drafts/${saved.id}/assets`);
-        if (this.stopped) return;
-        const draft = { ...createStoryDraft(), ...saved.config } as StoryDraft;
-        for (const field of fieldGroups.flatMap(g => g.fields).filter(f => f.kind === 'file')) {
-          draft[field.id] = (saved.config[field.id] as string[]).map(id => assets.find(asset => asset.id === id)
-            || { id, name: 'ไฟล์ที่ไม่พบ', size: 0, missing: true });
-        }
-        this.id = saved.id; this.revision = saved.revision;
-        this.publish({ draft, step: saved.active_step, generation: this.value.generation + 1, issues: saved.issues });
-      }
+      if (rows.length) await this.open(await this.send<SavedDraft>(`/story-drafts/${rows[0].id}`));
+      if (this.stopped) return;
       this.pending = undefined; this.version = this.acknowledged = 0;
       this.publish({ state: 'saved', error: '' });
     } catch (error) { this.fail(error); if (!this.stopped) this.publish({ state: 'load_error' }); }
+  }
+  private async open(saved: SavedDraft, step = saved.active_step) {
+    const assets = await this.send<StoredAsset[]>(`/story-drafts/${saved.id}/assets`);
+    if (this.stopped) return;
+    const draft = { ...createStoryDraft(), ...saved.config } as StoryDraft;
+    for (const field of fieldGroups.flatMap(g => g.fields).filter(f => f.kind === 'file')) {
+      draft[field.id] = (saved.config[field.id] as string[]).map(id => assets.find(asset => asset.id === id)
+        || { id, name: 'ไฟล์ที่ไม่พบ', size: 0, missing: true });
+    }
+    this.id = saved.id; this.revision = saved.revision;
+    this.publish({ draft, step, generation: this.value.generation + 1, issues: saved.issues });
+  }
+  /** After a job start the server creates the next draft (settings kept, story content reset); open it at step 1.
+   *  The same key replays the same draft after a lost ACK; a refused request leaves the current draft open. */
+  async next(key: string): Promise<boolean> {
+    if (this.stopped || !this.id || !await this.flush()) return false;
+    const source = this.id;
+    try {
+      const created = await this.attempt(() => this.send<SavedDraft>(`/story-drafts/${source}/successor`,
+        { method: 'POST', headers: { 'Idempotency-Key': key } }), error => !rejected(error));
+      await this.open(created, 0);
+      if (this.stopped) return false;
+      this.pending = undefined; this.version = this.acknowledged = 0;
+      this.publish({ state: 'saved', error: '' });
+      return true;
+    } catch (error) { this.fail(error); return false; }
   }
   update(draft: StoryDraft, step = this.value.step) {
     if (this.stopped || ['loading', 'load_error'].includes(this.value.state)) return;

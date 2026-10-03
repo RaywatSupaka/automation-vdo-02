@@ -45,3 +45,5 @@
 .story-job-status>.pill{display:inline-block;margin-bottom:8px}.story-job-status p{margin:4px 0}
 .story-simulation-result{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;border-radius:8px;background:var(--sf-panel);font:inherit}
 .story-job-commands{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.story-queued-notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 14px;margin-bottom:14px;border:1px solid var(--sf-line);border-radius:10px;font-size:13px}
+.story-queued-notice .pill{margin-left:0}

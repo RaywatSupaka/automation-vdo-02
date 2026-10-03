@@ -19,5 +19,6 @@ export function useDraft() {
   return { ...snapshot, update: (draft: Snapshot['draft'], step?: number) => ref.current?.update(draft, step),
     retry: () => ref.current?.value.state === 'load_error' ? ref.current.load() : ref.current?.flush(), reload: () => ref.current?.load(),
     flush: () => ref.current ? ref.current.flush() : Promise.resolve(false),
-    identity: () => ({ id: ref.current?.id, revision: ref.current?.revision ?? 0 }) };
+    identity: () => ({ id: ref.current?.id, revision: ref.current?.revision ?? 0 }),
+    next: (key: string) => ref.current ? ref.current.next(key) : Promise.resolve(false) };
 }

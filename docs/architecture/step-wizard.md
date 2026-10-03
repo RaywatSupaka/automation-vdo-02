@@ -59,7 +59,8 @@ Viewer เห็น notice แบบ static และป้าย `อ่าน�
 ทุก session ที่เขียนได้ mount editor ซึ่งตั้ง `window.smartflowFlush` จึงให้ close guard ถือว่าไม่มี flush = ไม่มีค่าค้างได้
 Server issues แสดงใต้สถานะบันทึกตาม [Draft API](draft-api.md); validation ใน wizard เป็น UX hint
 ปุ่ม `เริ่มงานจำลอง` อยู่ที่ footer ของ wizard (ไม่มีขั้นยืนยันซ้ำ) แสดงเฉพาะ `jobs:create` และปิดเมื่อมี server issues
-หรือเริ่มไปแล้วกับ revision นี้ (`เริ่มงานจำลองแล้ว`); host flush ก่อนส่ง, เก็บ key เดิมเมื่อ retry; ผู้ใช้ย้อนกลับไปดูขั้นก่อนหน้าได้เอง
+host flush ก่อนส่ง, ใช้ key เดียวต่อ draft revision เมื่อ retry; เริ่มสำเร็จแล้ว wizard เปิดแบบร่างฉบับถัดไปที่ขั้นที่ 1
+(คงการตั้งค่า ล้างเนื้อเรื่อง) และงานไปอยู่ในคิว ดู [Job queue](job-queue.md)
 และ poll สถานะทุก 1.5 วินาทีจนจบหรือ unmount; ผลทุกชิ้นติดป้าย `SIMULATION` ไม่ใช่สื่อจริง
 `needs_review` แสดงตรวจผลเดิม/ยกเลิกเฉพาะ `jobs:command`; ข้อความ error code อื่นอ่านจาก `/api/errors`
 

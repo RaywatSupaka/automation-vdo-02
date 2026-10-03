@@ -43,6 +43,9 @@ UI จำกัดจำนวนไฟล์ตาม `maxFiles` ใน registr
 อ้างอิงไฟล์ที่หาย/เสียใหม่ คืน DRAFT_ASSET_MISSING (409); ไฟล์ที่ config เดิมอ้างอยู่แล้วหายไม่บล็อก edits อื่น แต่ขึ้นใน issues ฟิลด์ละครั้ง
 เอาไฟล์ที่หายออกแล้วใส่กลับถือเป็นการอ้างอิงใหม่และถูกปฏิเสธ; replay ยังคืน response เดิมแม้ไฟล์หายภายหลัง
 
+`POST /story-drafts/{id}/successor` สร้างแบบร่างฉบับถัดไปหลังเริ่มงาน: คงการตั้งค่า ล้างช่อง `perStory`, clone ไฟล์การตั้งค่า
+idempotent ต่อ key (ID มาจาก command); รายละเอียดใน [Job queue](job-queue.md)
+
 ## Concurrency และข้อมูล
 
 แต่ละ write ใช้ transaction เดียวสำหรับ draft, command receipt และ event
