@@ -109,6 +109,10 @@ export function StoryShorts({ canStart = false, canCommand = false }: { canStart
     } finally { inFlight.current = false; setStarting(false); }
   }
   const draft = persistence.draft;
+  const startedThisRevision = jobRevision === persistence.identity().revision;
+  // The footer's last button starts the job directly; users can still step back to review.
+  const startAction = { label: starting ? 'กำลังเริ่มงานจำลอง…' : startedThisRevision ? 'เริ่มงานจำลองแล้ว' : 'เริ่มงานจำลอง',
+    disabled: starting || startedThisRevision || issueSummary(persistence.issues).length > 0, run: () => { void start(); } };
   const warnings = draftWarnings(draft);
   const serverIssues = issueNotice(persistence.state, persistence.issues);
   const steps: WizardStep[] = stepInfo.map(([id, label, title, description], index) => ({
@@ -137,9 +141,7 @@ export function StoryShorts({ canStart = false, canCommand = false }: { canStart
       </details>)}
       {warnings.length > 0 && <aside className="story-configuration-notes"><strong>ยังต้องตรวจความเข้ากันได้</strong><ul>{warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></aside>}
       <p className="story-draft-notice">แบบร่างและไฟล์บันทึกไว้ในเครื่อง งานที่เริ่มจากหน้านี้เป็นการจำลองเท่านั้น</p>
-      {canStart && <div className="story-start-actions"><button type="button" className="primary" onClick={() => void start()}
-        disabled={starting || jobRevision === persistence.identity().revision || issueSummary(persistence.issues).length > 0}>เริ่มงานจำลอง</button>
-        {starting && <span role="status">กำลังเริ่มงานจำลอง…</span>}
+      {canStart && <div className="story-start-actions">
         {startResult && !startResult.ok && <p role="alert">{startErrorText[startResult.code] || startResult.message || startResult.code}
           {startResult.traceId && <> · Trace: {startResult.traceId}</>}</p>}
         {job && <div className="story-job-status" aria-label="สถานะงานจำลอง"><span className="pill">SIMULATION</span>
@@ -162,6 +164,7 @@ export function StoryShorts({ canStart = false, canCommand = false }: { canStart
     {!['loading', 'load_error'].includes(persistence.state) && <StepWizard key={persistence.generation} steps={steps} initialStep={persistence.step}
       onStepChange={step => { if (step !== persistence.step) persistence.update(draft, step); }}
       finishLabel="ยืนยันรายละเอียดแบบร่าง" completionMessage="ตรวจรายละเอียดครบแล้ว · ยังไม่เริ่มสร้างสื่อ"
+      finishAction={canStart ? startAction : undefined}
       footerNote="บันทึกอัตโนมัติในเครื่อง · รอสถานะบันทึกแล้วก่อนปิดโปรแกรม"/>}
   </div>;
 }

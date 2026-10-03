@@ -16,6 +16,7 @@ test('story job starts from the review step and a simulated agent completes it o
   const start = page.getByRole('button', { name: 'เริ่มงานจำลอง', exact: true });
   await expect(start).toBeEnabled();
   await start.click();
+  await expect(page.getByRole('button', { name: 'เริ่มงานจำลองแล้ว', exact: true })).toBeDisabled();
   await expect(page.getByRole('status').filter({ hasText: 'รอ Extension' })).toContainText('รอ Extension', { timeout: 10000 });
 
   const browser = await request.get('/api/browser', { headers: ownerHeaders });

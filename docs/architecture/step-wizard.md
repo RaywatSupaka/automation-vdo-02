@@ -11,6 +11,7 @@ Source: [StepWizard](../../frontend/src/components/step-wizard/StepWizard.tsx),
 
 - รับ `steps` ที่มี stable id, label, title, description, render และ optional validate
 - รับ finishLabel, completionMessage, footerNote จากหน้าที่ใช้งาน ไม่ผูกชื่อ Story ใน component
+- `finishAction` (ไม่บังคับ) แทนการยืนยันที่ขั้นสุดท้าย: ตรวจทุกขั้นก่อน แล้วเรียก action ของ host; ใช้ label/disabled ของ host
 - เก็บเฉพาะ active/completed/confirmed; ข้อมูลฟอร์มและกติกาของ feature อยู่ที่ host
 - Host เรียก markChanged เมื่อแก้ข้อมูล เพื่อยกเลิก completion ของขั้นนั้นและขั้นถัดไป
 - กดกลับได้เฉพาะขั้นที่ผ่านแล้ว; ไปข้างหน้าต้อง validate ตามลำดับ
@@ -42,7 +43,7 @@ Source: [StoryShorts](../../frontend/src/features/story-shorts/StoryShorts.tsx),
 | 2 โทนและสไตล์ | ผู้พูด โครงเรื่อง โทน เปิด/จบ CTA และสไตล์ภาพ |
 | 3 ภาพและวิดีโอ | Provider/model, 6–15 ฉาก, Flow, motion, ปก อินโทร กรีนสกรีน โลโก้ |
 | 4 เสียงและซับ | เสียงพากย์ ซับ เพลง SFX ดนตรี AI และ automation |
-| 5 ตรวจรายละเอียด | สรุปข้อมูล ยืนยันการตรวจแบบร่าง และเริ่มงานจำลองเมื่อมีสิทธิ์ |
+| 5 ตรวจรายละเอียด | สรุปข้อมูล; ปุ่มขวาล่างเป็น `เริ่มงานจำลอง` เมื่อมีสิทธิ์ (ไม่มีสิทธิ์ = ยืนยันแบบร่างเหมือนเดิม) |
 
 ค่าเริ่มต้น 10 ฉาก/45 วินาที; ฉาก 6–15 ตามฟอร์มเดิม ส่วนเวลา 30–60 วินาทีเป็นเป้าหมายที่เว้นว่างได้
 รายการช่องและขอบเขตที่ยังเป็นแบบร่าง: [Story form details](story-form.md)
@@ -57,7 +58,8 @@ Wizard ถอยขั้นที่ผ่านแล้วแต่ตอน�
 Viewer เห็น notice แบบ static และป้าย `อ่านอย่างเดียว` (`story-readonly-notice`/`story-readonly`) ไม่โหลด draft; support ไม่เห็นเมนู
 ทุก session ที่เขียนได้ mount editor ซึ่งตั้ง `window.smartflowFlush` จึงให้ close guard ถือว่าไม่มี flush = ไม่มีค่าค้างได้
 Server issues แสดงใต้สถานะบันทึกตาม [Draft API](draft-api.md); validation ใน wizard เป็น UX hint
-ปุ่ม `เริ่มงานจำลอง` แสดงเฉพาะ `jobs:create` และปิดเมื่อมี server issues; host flush ก่อนส่ง, เก็บ key เดิมเมื่อ retry
+ปุ่ม `เริ่มงานจำลอง` อยู่ที่ footer ของ wizard (ไม่มีขั้นยืนยันซ้ำ) แสดงเฉพาะ `jobs:create` และปิดเมื่อมี server issues
+หรือเริ่มไปแล้วกับ revision นี้ (`เริ่มงานจำลองแล้ว`); host flush ก่อนส่ง, เก็บ key เดิมเมื่อ retry; ผู้ใช้ย้อนกลับไปดูขั้นก่อนหน้าได้เอง
 และ poll สถานะทุก 1.5 วินาทีจนจบหรือ unmount; ผลทุกชิ้นติดป้าย `SIMULATION` ไม่ใช่สื่อจริง
 `needs_review` แสดงตรวจผลเดิม/ยกเลิกเฉพาะ `jobs:command`; ข้อความ error code อื่นอ่านจาก `/api/errors`
 

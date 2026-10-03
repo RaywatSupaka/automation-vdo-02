@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, Check, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Play } from 'lucide-react';
 import { advance, initialWizardState, invalidate, visit } from './state';
 import './step-wizard.css';
 
@@ -12,11 +12,14 @@ export type WizardStep = {
   validate?: () => string | null;
 };
 
+/** Replaces "confirm" on the last step: after every step validates, the host runs its own action. */
+export type FinishAction = { label: string; disabled?: boolean; run: () => void };
+
 type Props = { steps: WizardStep[]; finishLabel: string; completionMessage: string; footerNote: string;
-  initialStep?: number; onStepChange?: (step: number) => void };
+  initialStep?: number; onStepChange?: (step: number) => void; finishAction?: FinishAction };
 
 /** Presentation/navigation only. Hosts own data, validation and persistence. Keep step IDs stable. */
-export function StepWizard({ steps, finishLabel, completionMessage, footerNote, initialStep = 0, onStepChange }: Props) {
+export function StepWizard({ steps, finishLabel, completionMessage, footerNote, initialStep = 0, onStepChange, finishAction }: Props) {
   const [state, setState] = useState(() => {
     let active = Math.min(initialStep, steps.length - 1);
     for (let i = 0; i < active; i++) if (steps[i].validate?.()) { active = i; break; }
@@ -53,8 +56,13 @@ export function StepWizard({ steps, finishLabel, completionMessage, footerNote, 
         setError(problem); return;
       }
     }
-    setError(''); setState(current => advance(current, steps.length));
+    setError('');
+    if (finishAction && state.active === steps.length - 1) { finishAction.run(); return; }
+    setState(current => advance(current, steps.length));
   }
+  const last = state.active === steps.length - 1;
+  const primaryLabel = !last ? 'ถัดไป' : finishAction ? finishAction.label : state.confirmed ? 'ตรวจรายละเอียดแล้ว' : finishLabel;
+  const primaryDisabled = last && (finishAction ? Boolean(finishAction.disabled) : state.confirmed);
 
   return <section className="step-wizard" aria-label="แบบฟอร์มทีละขั้น">
     <header className="wizard-progress">
@@ -87,9 +95,9 @@ export function StepWizard({ steps, finishLabel, completionMessage, footerNote, 
     </div>
     <footer className="wizard-footer"><p>{footerNote}</p><div className="wizard-actions">
       <button type="button" disabled={state.active === 0} onClick={() => go(state.active - 1)}><ArrowLeft size={17}/>ย้อนกลับ</button>
-      <button type="button" className="primary" disabled={state.confirmed && state.active === steps.length - 1} onClick={next}>
-        {state.active === steps.length - 1 ? (state.confirmed ? 'ตรวจรายละเอียดแล้ว' : finishLabel) : 'ถัดไป'}
-        {state.active === steps.length - 1 ? <Check size={17}/> : <ArrowRight size={17}/>}
+      <button type="button" className="primary" disabled={primaryDisabled} onClick={next}>
+        {primaryLabel}
+        {!last ? <ArrowRight size={17}/> : finishAction ? <Play size={17}/> : <Check size={17}/>}
       </button>
     </div></footer>
   </section>;
