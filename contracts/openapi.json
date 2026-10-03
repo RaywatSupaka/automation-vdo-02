@@ -4808,7 +4808,9 @@
             "type": "string",
             "enum": [
               "VALUE_OUT_OF_RANGE",
-              "OPTION_INVALID"
+              "OPTION_INVALID",
+              "DRAFT_ASSET_MISSING",
+              "FIELD_REQUIRED"
             ],
             "title": "Code"
           }

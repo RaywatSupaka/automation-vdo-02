@@ -1,6 +1,8 @@
 """Versioned backend draft schema; incomplete fields are valid saved work."""
 
 import json
+import math
+import re
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -49,7 +51,7 @@ class DraftUpdate(DraftInput):
 
 class DraftIssue(ClosedModel):
     field: str
-    code: Literal["VALUE_OUT_OF_RANGE", "OPTION_INVALID"]
+    code: Literal["VALUE_OUT_OF_RANGE", "OPTION_INVALID", "DRAFT_ASSET_MISSING", "FIELD_REQUIRED"]
 
 
 class DraftSummary(ClosedModel):
@@ -99,6 +101,78 @@ def issues(config):
                     code = "VALUE_OUT_OF_RANGE"
             except (ValueError, OverflowError):
                 code = "VALUE_OUT_OF_RANGE"
+        if code:
+            result.append({"field": field, "code": code})
+    return result
+
+
+def active(spec, config):
+    """A field's rules apply only while its controlling field has the registry's value (UI `when`)."""
+    condition = spec.get("when")
+    return condition is None or config.get(condition["field"]) == condition["equals"]
+
+
+def blank(value):
+    return not value if isinstance(value, list) else isinstance(value, str) and not value.strip()
+
+
+# JavaScript StringToNumber grammar, ASCII digits only, so cross-field limits use the number the UI sees.
+# Python float() differs: it accepts "1_0" and non-ASCII digits and rejects "0x8".
+JS_SPACE = "\t\n\v\f\r    -     　﻿"
+JS_TRIM = re.compile(f"^[{JS_SPACE}]+|[{JS_SPACE}]+$")
+JS_DECIMAL = re.compile(r"[+-]?(?:(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?|Infinity)", re.ASCII)
+JS_RADIX = re.compile(r"0(?:[xX][0-9a-fA-F]+|[oO][0-7]+|[bB][01]+)", re.ASCII)
+
+
+def number(value):
+    """`Number(value)` as the UI computes it (may be infinite); None where the UI gets NaN."""
+    if not isinstance(value, str):
+        return None
+    text = JS_TRIM.sub("", value)
+    if not text:
+        return 0.0
+    if JS_DECIMAL.fullmatch(text):
+        return float(text)
+    if JS_RADIX.fullmatch(text):
+        try:
+            return float(int(text, 0))
+        except OverflowError:
+            return math.inf
+    return None
+
+
+def completeness(config):
+    """Required and cross-field rules from the registry; reported only, so incomplete drafts stay saveable.
+
+    Single-value range and option checks stay in issues(); a field it already flags is not checked again.
+    """
+    flagged = {issue["field"] for issue in issues(config)}
+    result = []
+    for field, spec in REGISTRY.items():
+        value = config.get(field, spec["initial"])
+        if not active(spec, config):
+            continue
+        if spec.get("required") and blank(value):
+            result.append({"field": field, "code": "FIELD_REQUIRED"})
+            continue
+        if field in flagged or blank(value):
+            continue
+        code = None
+        if "maxLines" in spec:
+            lines = [line for line in re.split(r"\r?\n", value) if line.strip()]
+            if len(lines) > spec["maxLines"]:
+                code = "VALUE_OUT_OF_RANGE"
+        if "maxCountOf" in spec:
+            count = number(value)
+            if count is not None and count > len(config.get(spec["maxCountOf"]) or ()):
+                code = "VALUE_OUT_OF_RANGE"
+        if "optionsUpTo" in spec:
+            source = spec["optionsUpTo"]
+            # Mirrors the UI's `Math.max(0, Math.min(max, Number(source) || 0))` option count.
+            limit = number(config.get(source["field"])) or 0
+            limit = int(max(0, min(REGISTRY[source["field"]]["max"], limit)))
+            if value not in source["fixed"] and value not in {str(n) for n in range(1, limit + 1)}:
+                code = "OPTION_INVALID"
         if code:
             result.append({"field": field, "code": code})
     return result

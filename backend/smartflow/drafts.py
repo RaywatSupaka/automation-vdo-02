@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from sqlalchemy import select
 
-from smartflow.draft_contracts import REGISTRY, DraftInput, DraftUpdate, issues
+from smartflow.draft_contracts import REGISTRY, DraftInput, DraftUpdate, completeness, issues
 from smartflow.draft_models import DraftCommand, DraftEvent, StoryDraft
 from smartflow.errors import AppError
 from smartflow.observability import emit
@@ -28,9 +28,12 @@ def summary(row):
     }
 
 
-def response(row):
+def response(row, missing=()):
     config = json.loads(row.config)
-    return {**summary(row), "config": config, "issues": issues(config)}
+    # Value issues stay in draft_contracts.issues (job start uses it); completeness only reports, so an
+    # incomplete draft still saves; file state is storage-owned.
+    reported = [{"field": field, "code": "DRAFT_ASSET_MISSING"} for field in missing]
+    return {**summary(row), "config": config, "issues": [*issues(config), *completeness(config), *reported]}
 
 
 class Drafts:
@@ -60,7 +63,48 @@ class Drafts:
 
     def get(self, draft_id):
         with self.db.transaction() as session:
-            return response(self.owned(session, draft_id))
+            row = self.owned(session, draft_id)
+            return response(row, self.missing(session, json.loads(row.config)))
+
+    def missing(self, session, config):
+        """Map each file field to its referenced ids whose stored bytes are no longer intact."""
+        from smartflow.asset_models import DraftAsset
+        from smartflow.assets import metadata
+
+        result = {}
+        for field, spec in REGISTRY.items():
+            if spec["kind"] != "file":
+                continue
+            ids = set()
+            for asset_id in config.get(field, ()):
+                asset = session.get(DraftAsset, asset_id)
+                if asset is None or metadata(self.db, asset)["missing"]:
+                    ids.add(asset_id)
+            if ids:
+                result[field] = ids
+        return result
+
+    def checked_missing(self, session, row, config, previous):
+        """Reject invalid references and newly referenced missing files; return the rest.
+
+        A file the row already referenced can disappear from storage after it was saved.
+        Rejecting it would block every later unrelated edit, so it is reported instead.
+        """
+        from smartflow.asset_models import DraftAsset
+
+        for field, spec in REGISTRY.items():
+            if spec["kind"] != "file":
+                continue
+            if len(set(config[field])) != len(config[field]):
+                raise AppError("DRAFT_ASSET_INVALID")
+            for asset_id in config[field]:
+                asset = session.get(DraftAsset, asset_id)
+                if not asset or asset.draft_id != row.id or asset.field != field:
+                    raise AppError("DRAFT_ASSET_INVALID")
+        missing = self.missing(session, config)
+        if any(ids - set(previous.get(field, ())) for field, ids in missing.items()):
+            raise AppError("DRAFT_ASSET_MISSING")
+        return missing
 
     def save(self, data: DraftInput, key: str, trace_id: str, draft_id=None):
         payload = data.model_dump()
@@ -78,26 +122,17 @@ class Drafts:
                 row = self.owned(session, draft_id)
                 if not isinstance(data, DraftUpdate) or row.revision != data.expected_revision:
                     raise AppError("DRAFT_REVISION_CONFLICT")
+                previous = json.loads(row.config)
                 row.revision += 1
             else:
                 row = StoryDraft(id=str(uuid4()), owner_scope=self.scope, revision=1, created_at=self.clock())
+                previous = {}
                 session.add(row)
             row.schema_version, row.active_step = data.schema_version, data.active_step
             row.config, row.updated_at = encode(config), self.clock()
-            from smartflow.asset_models import DraftAsset
-            from smartflow.assets import metadata
-
-            for field, spec in REGISTRY.items():
-                if spec["kind"] != "file":
-                    continue
-                for asset_id in config[field]:
-                    asset = session.get(DraftAsset, asset_id)
-                    if not asset or asset.draft_id != row.id or asset.field != field:
-                        raise AppError("DRAFT_ASSET_INVALID")
-                    if metadata(self.db, asset)["missing"]:
-                        raise AppError("DRAFT_ASSET_MISSING")
+            missing = self.checked_missing(session, row, config, previous)
             session.flush()
-            result = response(row)
+            result = response(row, missing)
             session.add(
                 DraftCommand(id=command_id, draft_id=row.id, input_hash=input_hash, response=encode(result))
             )

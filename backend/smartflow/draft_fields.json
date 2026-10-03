@@ -11,12 +11,23 @@
   "topic": {
     "kind": "text",
     "maxLength": 2000,
-    "initial": ""
+    "initial": "",
+    "required": true,
+    "when": {
+      "field": "creationMode",
+      "equals": "single"
+    }
   },
   "batchTopics": {
     "kind": "textarea",
     "maxLength": 20000,
-    "initial": ""
+    "initial": "",
+    "required": true,
+    "when": {
+      "field": "creationMode",
+      "equals": "batch"
+    },
+    "maxLines": 10
   },
   "storyText": {
     "kind": "textarea",
@@ -130,7 +141,12 @@
   "visualCustom": {
     "kind": "textarea",
     "maxLength": 400,
-    "initial": ""
+    "initial": "",
+    "required": true,
+    "when": {
+      "field": "visualStyle",
+      "equals": "custom"
+    }
   },
   "notes": {
     "kind": "textarea",
@@ -144,7 +160,8 @@
       "chatgpt",
       "gemini"
     ],
-    "initial": "chatgpt"
+    "initial": "chatgpt",
+    "required": true
   },
   "chatgptModel": {
     "kind": "select",
@@ -177,7 +194,8 @@
       "google_flow",
       "meta_ai"
     ],
-    "initial": "image_motion"
+    "initial": "image_motion",
+    "required": true
   },
   "scenes": {
     "kind": "number",
@@ -185,7 +203,8 @@
     "min": 6,
     "max": 15,
     "step": 1,
-    "initial": "10"
+    "initial": "10",
+    "required": true
   },
   "seconds": {
     "kind": "number",
@@ -269,7 +288,17 @@
   "coverScene": {
     "kind": "select",
     "maxLength": 128,
-    "initial": "auto"
+    "initial": "auto",
+    "when": {
+      "field": "aiCover",
+      "equals": true
+    },
+    "optionsUpTo": {
+      "field": "scenes",
+      "fixed": [
+        "auto"
+      ]
+    }
   },
   "coverHeadline": {
     "kind": "text",
@@ -312,7 +341,12 @@
     "maxLength": 128,
     "maxFiles": 1,
     "accept": ".mp4,.mov,.mkv,.webm,.m4v,.avi",
-    "initial": []
+    "initial": [],
+    "required": true,
+    "when": {
+      "field": "introEnabled",
+      "equals": true
+    }
   },
   "greenEnabled": {
     "kind": "checkbox",
@@ -324,7 +358,12 @@
     "maxLength": 128,
     "maxFiles": 3,
     "accept": ".mp4,.mov,.mkv,.webm,.m4v,.avi",
-    "initial": []
+    "initial": [],
+    "required": true,
+    "when": {
+      "field": "greenEnabled",
+      "equals": true
+    }
   },
   "greenOpacity": {
     "kind": "range",
@@ -353,7 +392,12 @@
     "maxLength": 128,
     "maxFiles": 1,
     "accept": ".png,.jpg,.jpeg,.webp",
-    "initial": []
+    "initial": [],
+    "required": true,
+    "when": {
+      "field": "logoEnabled",
+      "equals": true
+    }
   },
   "logoOpacity": {
     "kind": "range",
@@ -654,7 +698,12 @@
     "maxLength": 128,
     "maxFiles": 100,
     "accept": ".mp3,.wav,.m4a,.aac,.ogg",
-    "initial": []
+    "initial": [],
+    "required": true,
+    "when": {
+      "field": "musicEnabled",
+      "equals": true
+    }
   },
   "musicCount": {
     "kind": "number",
@@ -662,7 +711,12 @@
     "min": 1,
     "max": 100,
     "step": 1,
-    "initial": "1"
+    "initial": "1",
+    "when": {
+      "field": "musicEnabled",
+      "equals": true
+    },
+    "maxCountOf": "musicFiles"
   },
   "musicVolume": {
     "kind": "range",
@@ -708,7 +762,12 @@
     "maxLength": 128,
     "maxFiles": 100,
     "accept": ".mp3,.wav,.m4a,.aac,.ogg",
-    "initial": []
+    "initial": [],
+    "required": true,
+    "when": {
+      "field": "sfxEnabled",
+      "equals": true
+    }
   },
   "sfxVolume": {
     "kind": "range",

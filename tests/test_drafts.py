@@ -25,7 +25,10 @@ def test_incomplete_draft_survives_new_api_process_and_does_not_create_job(tmp_p
         assert saved.status_code == 201, saved.text
         data = saved.json()
         assert len(data["config"]) == len(REGISTRY) == 95
-        assert data["issues"] == [{"field": "scenes", "code": "VALUE_OUT_OF_RANGE"}]
+        assert data["issues"] == [
+            {"field": "scenes", "code": "VALUE_OUT_OF_RANGE"},
+            {"field": "topic", "code": "FIELD_REQUIRED"},  # Reported, never blocks saving.
+        ]
         assert client.get("/api/jobs").json() == []
     with TestClient(create_app(settings), headers=headers) as restarted:
         assert restarted.get(f"/api/story-drafts/{data['id']}").json() == data
@@ -86,6 +89,119 @@ def test_asset_references_are_not_acknowledged_before_import_exists(client):
     result = client.post("/api/story-drafts", json={"config": {"mainImage": [str(uuid4())]}}, headers=KEY)
     assert result.status_code == 422
     assert result.json()["error"]["code"] == "DRAFT_ASSET_INVALID"
+
+
+MP3 = b"ID3" + bytes(40)
+
+
+def new_draft(client):
+    return client.post("/api/story-drafts", json={}, headers={"Idempotency-Key": str(uuid4())}).json()
+
+
+def imported(client, draft_id, field="musicFiles"):
+    result = client.post(
+        f"/api/story-drafts/{draft_id}/assets?field={field}",
+        content=MP3,
+        headers={
+            "Idempotency-Key": str(uuid4()),
+            "X-File-Name": "track.mp3",
+            "X-File-Size": str(len(MP3)),
+            "Content-Type": "application/octet-stream",
+        },
+    )
+    assert result.status_code == 200, result.text
+    return result.json()["id"]
+
+
+def patch(client, draft, key=None, **config):
+    return client.patch(
+        f"/api/story-drafts/{draft['id']}",
+        json={"expected_revision": draft["revision"], "config": {**draft["config"], **config}},
+        headers={"Idempotency-Key": key or str(uuid4())},
+    )
+
+
+def events(client, draft_id):
+    return client.get(f"/api/diagnostics/drafts/{draft_id}/events").json()
+
+
+def asset_issues(response):
+    return [issue for issue in response.json()["issues"] if issue["code"].startswith("DRAFT_ASSET")]
+
+
+def test_missing_asset_already_referenced_never_blocks_unrelated_edits(client):
+    from smartflow.assets import asset_path
+
+    draft = new_draft(client)
+    asset = imported(client, draft["id"])
+    saved = patch(client, draft, musicFiles=[asset])
+    assert saved.status_code == 200, saved.text
+    assert asset_issues(saved) == []
+    asset_path(client.app.state.db, asset).unlink()  # Storage loses the file after it was saved.
+    missing = [{"field": "musicFiles", "code": "DRAFT_ASSET_MISSING"}]
+    edited = patch(client, saved.json(), "unrelated-edit", topic="still editable")
+    assert edited.status_code == 200, edited.text
+    assert edited.json()["revision"] == 3 and edited.json()["config"]["musicFiles"] == [asset]
+    assert asset_issues(edited) == missing
+    assert client.get(f"/api/story-drafts/{draft['id']}").json() == edited.json()
+    # Duplicate delivery of the accepted edit replays the stored ACK without another revision.
+    assert patch(client, saved.json(), "unrelated-edit", topic="still editable").json() == edited.json()
+    assert [e["revision"] for e in events(client, draft["id"]) if e["name"] == "draft.saved"] == [1, 2, 3]
+    removed = patch(client, edited.json(), musicFiles=[])
+    assert removed.status_code == 200 and asset_issues(removed) == []
+    # Once removed, the missing file is a new reference again and cannot be re-added.
+    readded = patch(client, removed.json(), musicFiles=[asset])
+    assert readded.json()["error"]["code"] == "DRAFT_ASSET_MISSING"
+    assert client.get(f"/api/story-drafts/{draft['id']}").json()["revision"] == 4
+
+
+def test_newly_referenced_missing_asset_is_rejected_without_committing(client):
+    from smartflow.assets import asset_path
+
+    draft = new_draft(client)
+    kept, lost = imported(client, draft["id"]), imported(client, draft["id"])
+    draft = patch(client, draft, musicFiles=[kept]).json()
+    asset_path(client.app.state.db, lost).unlink()
+    before = events(client, draft["id"])
+    rejected = patch(client, draft, musicFiles=[kept, lost], topic="must not save")
+    assert rejected.status_code == 409
+    assert rejected.json()["error"]["code"] == "DRAFT_ASSET_MISSING"
+    current = client.get(f"/api/story-drafts/{draft['id']}").json()
+    assert current == draft and events(client, draft["id"]) == before
+    # A rejected command committed nothing, so a fresh snapshot with the same revision saves.
+    retried = patch(client, draft, topic="fixed")
+    assert retried.status_code == 200 and retried.json()["revision"] == draft["revision"] + 1
+
+
+def test_duplicate_and_foreign_asset_ids_are_rejected_as_invalid(client):
+    draft, other = new_draft(client), new_draft(client)
+    asset = imported(client, draft["id"])
+    saved = patch(client, draft, musicFiles=[asset]).json()
+    for config in (
+        {"musicFiles": [asset, asset]},  # Duplicate even though the id was already referenced.
+        {"musicFiles": [imported(client, other["id"])]},
+        {"sfxFiles": [asset]},  # Imported for a different field.
+    ):
+        result = patch(client, saved, **config)
+        assert result.status_code == 422, result.text
+        assert result.json()["error"]["code"] == "DRAFT_ASSET_INVALID"
+    assert client.get(f"/api/story-drafts/{draft['id']}").json() == saved
+
+
+def test_lost_ack_replay_returns_stored_response_after_asset_goes_missing(client):
+    from smartflow.assets import asset_path
+
+    draft = new_draft(client)
+    asset = imported(client, draft["id"])
+    accepted = patch(client, draft, "lost-ack", musicFiles=[asset])
+    assert accepted.status_code == 200, accepted.text
+    asset_path(client.app.state.db, asset).unlink()
+    before = events(client, draft["id"])
+    replay = patch(client, draft, "lost-ack", musicFiles=[asset])
+    assert replay.status_code == 200 and replay.json() == accepted.json()
+    assert events(client, draft["id"]) == before
+    assert client.get(f"/api/story-drafts/{draft['id']}").json()["revision"] == 2
+    assert patch(client, draft, "lost-ack", topic="other").json()["error"]["code"] == "IDEMPOTENCY_CONFLICT"
 
 
 def test_diagnostic_projection_and_logs_never_include_draft_content(client):

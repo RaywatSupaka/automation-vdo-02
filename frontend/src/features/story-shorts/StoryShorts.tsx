@@ -2,6 +2,7 @@ import { useDraft } from './useDraft';
 import { StepWizard, type WizardStep } from '../../components/step-wizard/StepWizard';
 import { batchTopics, draftWarnings, validateStoryStep } from './draft';
 import { fieldGroups, visible, type DraftValue } from './fields';
+import type { DraftIssue, SaveState } from './persistence';
 import { fieldDisplay, RequiredMark, StoryFields } from './StoryFields';
 import './story-shorts.css';
 
@@ -18,10 +19,34 @@ const examples: Record<string, string> = {
   visual: 'เล่าด้วยสีหน้า การกระทำ และรายละเอียดในภาพ โดยไม่ใช้บทพูด',
 };
 
+const issueText: Record<string, string> = {
+  FIELD_REQUIRED: 'ยังไม่ได้ระบุ',
+  VALUE_OUT_OF_RANGE: 'ค่าเกินช่วงที่รองรับ',
+  OPTION_INVALID: 'ตัวเลือกไม่ตรงกับที่มี',
+  DRAFT_ASSET_MISSING: 'ไฟล์ที่บันทึกไว้หาย กรุณาเลือกไฟล์ใหม่แทน',
+};
+const labels = new Map(fieldGroups.flatMap(group => group.fields.map(field => [field.id, field.label] as const)));
+/** Short Thai lines from the server's issues, one per code; the draft is saved either way. */
+export function issueSummary(issues: readonly DraftIssue[] = []): string[] {
+  const byCode = new Map<string, string[]>();
+  for (const { field, code } of issues) {
+    const names = byCode.get(code) || [], label = labels.get(field) || field;
+    if (!names.includes(label)) names.push(label);
+    byCode.set(code, names);
+  }
+  return [...byCode].map(([code, names]) => `${issueText[code] || 'ต้องตรวจอีกครั้ง'}: ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` และอีก ${names.length - 3} รายการ` : ''}`);
+}
+/** The server judged the last acknowledged save, so outside 'saved' its lines are labelled as possibly out of date. */
+export function issueNotice(state: SaveState, issues?: readonly DraftIssue[]): { lines: string[]; stale: string } {
+  const lines = issueSummary(issues);
+  return { lines, stale: lines.length > 0 && state !== 'saved' ? 'ผลตรวจจากการบันทึกครั้งล่าสุด ยังไม่รวมการแก้ไขที่ยังไม่บันทึก' : '' };
+}
+
 export function StoryShorts() {
   const persistence = useDraft();
   const draft = persistence.draft;
   const warnings = draftWarnings(draft);
+  const serverIssues = issueNotice(persistence.state, persistence.issues);
   const steps: WizardStep[] = stepInfo.map(([id, label, title, description], index) => ({
     id, label, title, description, validate: () => validateStoryStep(draft, index),
     render: dirty => {
@@ -50,7 +75,10 @@ export function StoryShorts() {
       <p className="story-draft-notice">บันทึกแบบร่างและไฟล์ไว้ในเครื่อง ยังไม่ส่งให้ AI หรือสร้างสื่อ</p>
     </div> });
   return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1>
-    <div className="draft-save-status" role="status">{{ loading: 'กำลังเปิดแบบร่าง…', load_error: 'เปิดแบบร่างไม่สำเร็จ', saved: 'บันทึกแล้วในเครื่อง', saving: 'กำลังบันทึก…', error: 'บันทึกไม่สำเร็จ', conflict: 'พบข้อมูลจากอีกหน้าต่าง' }[persistence.state]}</div></div>
+    <div className="draft-save-status" role="status">{{ loading: 'กำลังเปิดแบบร่าง…', load_error: 'เปิดแบบร่างไม่สำเร็จ', saved: 'บันทึกแล้วในเครื่อง', saving: 'กำลังบันทึก…', error: 'บันทึกไม่สำเร็จ', conflict: 'พบข้อมูลจากอีกหน้าต่าง' }[persistence.state]}</div>
+      {serverIssues.lines.length > 0 && <ul className="draft-issue-summary" aria-label="สิ่งที่ต้องตรวจก่อนสร้าง" style={{ listStyle: 'none', margin: '4px 0 0', padding: 0, opacity: serverIssues.stale ? 0.7 : 1 }}>
+        {serverIssues.stale && <li><em>{serverIssues.stale}</em></li>}
+        {serverIssues.lines.map(line => <li key={line}>{line}</li>)}</ul>}</div>
     {persistence.error && <div role="alert" className="story-configuration-notes">{persistence.error}
       {persistence.state === 'conflict' ? <button onClick={() => { if (confirm('แทนข้อมูลในหน้านี้ด้วยแบบร่างล่าสุดที่บันทึกไว้?')) void persistence.reload(); }}>โหลดแบบร่างล่าสุดแทนหน้านี้</button>
         : <button onClick={() => void persistence.retry()}>ลองบันทึกอีกครั้ง</button>}</div>}
