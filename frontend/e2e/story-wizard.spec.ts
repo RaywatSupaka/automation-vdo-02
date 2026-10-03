@@ -33,9 +33,9 @@ test('Story wizard validates, preserves draft and requires review again after ed
   await expect(page.locator('.story-review')).toContainText('จำนวนฉาก');
   await expect(page.locator('.story-review')).toContainText('8');
   await expect(progress).toHaveAttribute('aria-valuenow', '4');
-  await page.getByRole('button', { name: 'ยืนยันรายละเอียดแบบร่าง', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'ตรวจรายละเอียดครบแล้ว' })).toContainText('ยังไม่เริ่มสร้างสื่อ');
-  await expect(progress).toHaveAttribute('aria-valuenow', '5');
+  // With jobs:create the last footer button starts the job directly; there is no separate confirm step.
+  await expect(page.getByRole('button', { name: 'ยืนยันรายละเอียดแบบร่าง' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'เริ่มงานจำลอง', exact: true })).toBeEnabled();
   // Merely viewing an earlier step must not trap navigation after confirmation.
   await page.getByRole('button', { name: '1. เรื่องที่จะเล่า · ผ่านแล้ว' }).click();
   await expect(page.getByLabel('หัวข้อคลิป')).toHaveValue('แมวจรที่รอรถไฟกับเด็กน้อย');
@@ -91,7 +91,7 @@ test('Story wizard fits desktop and narrow screens with visible footer and inter
   await page.getByLabel('หัวข้อคลิป').fill('เรื่องราวที่มีรายละเอียด\n'.repeat(80));
   for (let index = 0; index < 4; index++) await page.getByRole('button', { name: 'ถัดไป', exact: true }).click();
   expect(await page.locator('.wizard-body').evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
-  await expect(page.getByRole('button', { name: 'ยืนยันรายละเอียดแบบร่าง' })).toBeInViewport();
+  await expect(page.getByRole('button', { name: 'เริ่มงานจำลอง', exact: true })).toBeInViewport();
 });
 
 test('Story wizard is unavailable to a support session and clears on session expiry', async ({ page }) => {

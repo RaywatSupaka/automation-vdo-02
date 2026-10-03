@@ -1,0 +1,21 @@
+.queue-panel{border:1px solid rgba(128,140,160,.35);border-radius:12px;padding:16px 18px;margin-bottom:18px;line-height:1.6}
+.queue-panel header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.queue-panel header span,.queue-panel h3{font-size:12px;opacity:.75;font-weight:500}
+.queue-panel h3{margin:14px 0 6px}
+.queue-list,.queue-timeline{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.queue-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;text-align:left;background:transparent;color:inherit;border:1px solid rgba(128,140,160,.25);font-weight:500}
+.queue-row:hover{background:rgba(128,140,160,.12)}
+.queue-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue-kind{font-size:11px;opacity:.7}
+.queue-state{font-size:12px;opacity:.9}
+.is-running .queue-state{color:#6fa3e8}.is-completed .queue-state{color:#5fb08a}.is-failed .queue-state{color:#e0857c}
+.is-needs_review .queue-state,.is-waiting .queue-state{color:#d6a560}
+.queue-detail{padding:10px 12px 4px;display:grid;gap:8px}
+.queue-detail .pill{margin-left:0;justify-self:start}
+.queue-timeline li{display:flex;justify-content:space-between;gap:12px;font-size:12px}
+.queue-timeline small{opacity:.7;white-space:nowrap}
+.queue-result{margin:0;padding:10px;border-radius:8px;background:rgba(128,140,160,.12);white-space:pre-wrap;font-size:12px}
+.queue-actions{display:flex;gap:8px;flex-wrap:wrap}
+.queue-empty{opacity:.7;font-size:13px}
+.queue-error{color:#e0857c;font-size:12px}
+.queue-panel.is-compact{padding:12px 14px}

@@ -20,6 +20,34 @@ from smartflow.story_models import BrowserSession, OperationReceipt, StoryOperat
 
 LEASE_SECONDS = 90
 MAX_ATTEMPTS = 3
+DEADLINE_SECONDS = 900
+ACTIVE = ("queued", "waiting", "running", "needs_review")
+
+
+def browser_online(session, now):
+    """A paired browser synced within the lease window; queued work will be claimed."""
+    rows = session.execute(
+        select(BrowserSession.last_seen)
+        .join(Pairing, Pairing.id == BrowserSession.pair_id)
+        .where(Pairing.state == "paired")
+    )
+    return any(last_seen + LEASE_SECONDS > now for (last_seen,) in rows)
+
+
+def waiting_state(online):
+    # Never-claimed work waits in FIFO order; only a missing browser is an error to show.
+    return ("queued", None) if online else ("waiting", "EXTENSION_DISCONNECTED")
+
+
+def queue_positions(session):
+    """FIFO order of unfinished Story jobs; 0 is the one the browser works on next."""
+    rows = session.scalars(
+        select(Job.id)
+        .join(StoryOperation, StoryOperation.job_id == Job.id)
+        .where(Job.status.in_(ACTIVE))
+        .order_by(Job.created_at, Job.id)
+    )
+    return {job_id: index for index, job_id in enumerate(rows)}
 
 
 def operation_receipt(session, job):
@@ -81,15 +109,16 @@ class StoryWorkflow:
                         if verified is None or asset_id not in verified:
                             raise AppError("DRAFT_REVISION_CONFLICT")  # Changed after hashing.
             now = self.clock()
+            status, code = waiting_state(browser_online(session, now))
             job = Job(
                 id=str(uuid4()),
                 command_key=command_key,
                 input_hash=fingerprint,
                 title=config["topic"].strip()[:120],
                 scenario="story_simulated",
-                status="waiting",
+                status=status,
                 stage="prepare",
-                error_code="EXTENSION_DISCONNECTED",
+                error_code=code,
                 trace_id=trace,
                 attempts=0,
                 save_attempts=0,
@@ -115,7 +144,7 @@ class StoryWorkflow:
                 revision_id=revision.id,
                 lease_epoch=0,
                 lease_until=0,
-                deadline=now + 900,
+                deadline=now + DEADLINE_SECONDS,  # Restarted at the first claim: queueing never expires.
             )
             session.add(op)
             session.flush()
@@ -143,6 +172,7 @@ class StoryWorkflow:
             rev = session.get(StoryRevision, op.revision_id)
             receipt = session.get(OperationReceipt, op.id)
             return dict(
+                queue_position=queue_positions(session).get(job.id),
                 job_id=job.id,
                 revision_id=rev.id,
                 draft_id=rev.draft_id,
@@ -204,7 +234,8 @@ class StoryWorkflow:
                     continue
                 if job.status == "failed":
                     continue
-                if job.observations >= MAX_ATTEMPTS or now >= op.deadline:
+                unclaimed = op.lease_epoch == 0
+                if job.observations >= MAX_ATTEMPTS or (not unclaimed and now >= op.deadline):
                     # Only an unresolved possible send blocks this browser until reconciliation.
                     if op.pair_id == pair.id and receipt.state != "prepared":
                         return {"task": None}
@@ -214,6 +245,8 @@ class StoryWorkflow:
                         job.status, job.error_code = "failed", "BROWSER_RETRY_EXHAUSTED"
                         record(session, job, "story.retry_exhausted", now, job.error_code, operation_id=op.id)
                         continue
+                    if op.lease_epoch == 0:
+                        op.deadline = now + DEADLINE_SECONDS
                     op.lease_epoch += 1
                     op.pair_id, op.connection_id = pair.id, connection
                     if receipt.state == "prepared":
@@ -392,6 +425,7 @@ class StoryWorkflow:
     def maintain(self):
         now, saves = self.clock(), []
         with self.db.transaction(write=True) as session:
+            online = browser_online(session, now)
             for op in session.scalars(select(StoryOperation).join(Job).where(Job.status != "completed")):
                 job, receipt = session.get(Job, op.job_id), session.get(OperationReceipt, op.id)
                 if receipt.result is not None and receipt.state != "completed":
@@ -408,6 +442,12 @@ class StoryWorkflow:
                     continue
                 if receipt.state == "unknown" and job.observations >= MAX_ATTEMPTS:
                     continue  # Preserve the exact blocking reason until explicit reconciliation.
+                if receipt.state == "prepared" and op.lease_epoch == 0:
+                    status, code = waiting_state(online)
+                    if (job.status, job.error_code) != (status, code):
+                        job.status, job.error_code, job.updated_at = status, code, now
+                        record(session, job, "story.queue_state", now, code, operation_id=op.id)
+                    continue
                 expired = op.lease_until <= now or not pair or pair.state != "paired"
                 if not expired and now < op.deadline:
                     continue

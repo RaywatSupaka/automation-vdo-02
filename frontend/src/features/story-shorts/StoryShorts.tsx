@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { ApiError } from '../../api';
+import { useRef, useState } from 'react';
 import { useDraft } from './useDraft';
 import { StepWizard, type WizardStep } from '../../components/step-wizard/StepWizard';
 import { batchTopics, draftWarnings, validateStoryStep } from './draft';
@@ -7,7 +6,7 @@ import { fieldGroups, visible, type DraftValue } from './fields';
 import { transport, type DraftIssue, type SaveState } from './persistence';
 import { fieldDisplay, RequiredMark, StoryFields } from './StoryFields';
 import { startStoryJob, type StartResult, type StoryJob } from './story-job';
-import { statusText, watchStoryJob, type ErrorCatalog, type StoryView } from './story-status';
+import { QueuePanel } from '../queue/QueuePanel';
 import './story-shorts.css';
 
 const stepInfo = [
@@ -57,58 +56,42 @@ const startErrorText: Record<string, string> = {
   CONNECTION_FAILED: 'เชื่อมต่อไม่สำเร็จ กรุณาลองใหม่',
 };
 
-export function StoryShorts({ canStart = false, canCommand = false }: { canStart?: boolean; canCommand?: boolean }) {
+type Queued = { jobId: string; title: string; opened: boolean };
+
+export function StoryShorts({ canStart = false, canCommand = false, canQueue = false }:
+  { canStart?: boolean; canCommand?: boolean; canQueue?: boolean }) {
   const persistence = useDraft();
   const [starting, setStarting] = useState(false);
   const [startResult, setStartResult] = useState<StartResult | null>(null);
-  const [job, setJob] = useState<StoryJob | null>(null);
-  const [jobRevision, setJobRevision] = useState<number | null>(null);
-  const [jobView, setJobView] = useState<StoryView | null>(null);
-  const [catalog, setCatalog] = useState<ErrorCatalog>({});
-  const [catalogError, setCatalogError] = useState(false);
-  const [statusError, setStatusError] = useState('');
-  const [commandBusy, setCommandBusy] = useState(false);
-  const startKey = useRef<{ revision: number; value: string } | null>(null);
+  const [queued, setQueued] = useState<Queued | null>(null);
+  const startKey = useRef<{ draft: string; value: string } | null>(null);
   const inFlight = useRef(false);
-  useEffect(() => {
-    let mounted = true;
-    void transport()<ErrorCatalog>('/errors').then(value => { if (mounted) setCatalog(value); })
-      .catch(() => { if (mounted) setCatalogError(true); });
-    return () => { mounted = false; };
-  }, []);
-  useEffect(() => {
-    if (!job) return;
-    setStatusError('');
-    return watchStoryJob(job.id, transport(), setJobView, error => setStatusError(error instanceof ApiError
-      ? `${error.code} · Trace: ${error.traceId}` : 'เชื่อมต่อเพื่อตรวจสถานะไม่สำเร็จ'));
-  }, [job]);
-  async function command(action: 'reconcile' | 'cancel') {
-    if (!job || commandBusy) return;
-    setCommandBusy(true); setStatusError('');
-    try {
-      await transport()(`/jobs/${job.id}/commands/${action}`, { method: 'POST' });
-      const latest = await transport()<StoryView>(`/stories/${job.id}`);
-      setJobView(latest);
-    } catch (error) {
-      setStatusError(error instanceof ApiError ? `${error.code} · ${error.message} · Trace: ${error.traceId}`
-        : 'ส่งคำสั่งไม่สำเร็จ กรุณาตรวจสถานะงานเดิม');
-    } finally { setCommandBusy(false); }
+  /** The job is queued; continue on a new draft (settings kept, story content reset) at step 1. */
+  async function openNext(job: StoryJob, title: string) {
+    const opened = await persistence.next(`successor-${job.id}`);
+    setQueued({ jobId: job.id, title, opened });
+    if (opened) setStartResult(null);
   }
   async function start() {
     if (inFlight.current) return;
     inFlight.current = true; setStarting(true); setStartResult(null);
+    const title = String(persistence.draft.topic || '').trim();
     try {
       const result = await startStoryJob({ flush: persistence.flush, identity: persistence.identity, send: transport(),
         key: () => {
-          const revision = persistence.identity().revision;
-          if (startKey.current?.revision !== revision) startKey.current = { revision, value: crypto.randomUUID() };
+          // One key per draft revision: retrying the same revision returns the same job, never a duplicate.
+          const { id, revision } = persistence.identity(), draftKey = `${id}:${revision}`;
+          if (startKey.current?.draft !== draftKey) startKey.current = { draft: draftKey, value: crypto.randomUUID() };
           return startKey.current.value;
         } });
       setStartResult(result);
-      if (result.ok) { setJobView(null); setJobRevision(persistence.identity().revision); setJob(result.job); }
+      if (result.ok) await openNext(result.job, title);
     } finally { inFlight.current = false; setStarting(false); }
   }
   const draft = persistence.draft;
+  // The footer's last button starts the job directly; users can still step back to review.
+  const startAction = { label: starting ? 'กำลังเริ่มงานจำลอง…' : 'เริ่มงานจำลอง',
+    disabled: starting || issueSummary(persistence.issues).length > 0, run: () => { void start(); } };
   const warnings = draftWarnings(draft);
   const serverIssues = issueNotice(persistence.state, persistence.issues);
   const steps: WizardStep[] = stepInfo.map(([id, label, title, description], index) => ({
@@ -137,31 +120,27 @@ export function StoryShorts({ canStart = false, canCommand = false }: { canStart
       </details>)}
       {warnings.length > 0 && <aside className="story-configuration-notes"><strong>ยังต้องตรวจความเข้ากันได้</strong><ul>{warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></aside>}
       <p className="story-draft-notice">แบบร่างและไฟล์บันทึกไว้ในเครื่อง งานที่เริ่มจากหน้านี้เป็นการจำลองเท่านั้น</p>
-      {canStart && <div className="story-start-actions"><button type="button" className="primary" onClick={() => void start()}
-        disabled={starting || jobRevision === persistence.identity().revision || issueSummary(persistence.issues).length > 0}>เริ่มงานจำลอง</button>
-        {starting && <span role="status">กำลังเริ่มงานจำลอง…</span>}
-        {startResult && !startResult.ok && <p role="alert">{startErrorText[startResult.code] || startResult.message || startResult.code}
-          {startResult.traceId && <> · Trace: {startResult.traceId}</>}</p>}
-        {job && <div className="story-job-status" aria-label="สถานะงานจำลอง"><span className="pill">SIMULATION</span>
-          <p>รหัสงาน {job.id}</p><p role="status">{jobView ? statusText(jobView, catalog) : 'กำลังตรวจสถานะงานจำลอง'}</p>
-          {catalogError && jobView?.error_code && <small>อ่านคำอธิบายรหัสจากระบบไม่สำเร็จ แสดงรหัสแทน</small>}
-          {jobView?.status === 'completed' && jobView.result && <pre className="story-simulation-result">{jobView.result}</pre>}
-          {jobView?.status === 'needs_review' && canCommand && <div className="story-job-commands">
-            <button type="button" disabled={commandBusy} onClick={() => void command('reconcile')}>ตรวจผลเดิม</button>
-            <button type="button" disabled={commandBusy} onClick={() => void command('cancel')}>ยกเลิก</button></div>}
-          {statusError && <p role="alert">{statusError}</p>}</div>}</div>}
+      {canStart && startResult && !startResult.ok && <div className="story-start-actions">
+        <p role="alert">{startErrorText[startResult.code] || startResult.message || startResult.code}
+          {startResult.traceId && <> · Trace: {startResult.traceId}</>}</p></div>}
     </div> });
   return <div className="story-workspace"><div className="story-page-heading"><h1>เรื่องเล่า short</h1>
     <div className="draft-save-status" role="status">{{ loading: 'กำลังเปิดแบบร่าง…', load_error: 'เปิดแบบร่างไม่สำเร็จ', saved: 'บันทึกแล้วในเครื่อง', saving: 'กำลังบันทึก…', error: 'บันทึกไม่สำเร็จ', conflict: 'พบข้อมูลจากอีกหน้าต่าง' }[persistence.state]}</div>
       {serverIssues.lines.length > 0 && <ul className="draft-issue-summary" aria-label="สิ่งที่ต้องตรวจก่อนสร้าง" style={{ listStyle: 'none', margin: '4px 0 0', padding: 0, opacity: serverIssues.stale ? 0.7 : 1 }}>
         {serverIssues.stale && <li><em>{serverIssues.stale}</em></li>}
         {serverIssues.lines.map(line => <li key={line}>{line}</li>)}</ul>}</div>
+    {queued && <div className="story-queued-notice" role="status">
+      <span className="pill">SIMULATION</span> เพิ่ม “{queued.title || queued.jobId.slice(0, 8)}” เข้าคิวแล้ว · ดูความคืบหน้าในคิวงาน
+      {!queued.opened && <> · ยังเปิดแบบร่างใหม่ไม่สำเร็จ <button type="button"
+        onClick={() => void openNext({ id: queued.jobId }, queued.title)}>เปิดแบบร่างใหม่</button></>}</div>}
+    {canQueue && <QueuePanel kind="story" compact canCommand={canCommand}/>}
     {persistence.error && <div role="alert" className="story-configuration-notes">{persistence.error}
       {persistence.state === 'conflict' ? <button onClick={() => { if (confirm('แทนข้อมูลในหน้านี้ด้วยแบบร่างล่าสุดที่บันทึกไว้?')) void persistence.reload(); }}>โหลดแบบร่างล่าสุดแทนหน้านี้</button>
         : <button onClick={() => void persistence.retry()}>ลองบันทึกอีกครั้ง</button>}</div>}
     {!['loading', 'load_error'].includes(persistence.state) && <StepWizard key={persistence.generation} steps={steps} initialStep={persistence.step}
       onStepChange={step => { if (step !== persistence.step) persistence.update(draft, step); }}
       finishLabel="ยืนยันรายละเอียดแบบร่าง" completionMessage="ตรวจรายละเอียดครบแล้ว · ยังไม่เริ่มสร้างสื่อ"
+      finishAction={canStart ? startAction : undefined}
       footerNote="บันทึกอัตโนมัติในเครื่อง · รอสถานะบันทึกแล้วก่อนปิดโปรแกรม"/>}
   </div>;
 }

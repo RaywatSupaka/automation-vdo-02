@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, ArrowRight, Box, CheckCircle2, ChevronRight, CircleDot, Database,
-  Download, FileText, Layers3, Plus, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
+  Download, FileText, Layers3, ListOrdered, Plus, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
+import { QueuePanel } from './features/queue/QueuePanel';
 import { api, ApiError, downloadBundle, takeToken, type Health, type Job, type JobEvent,
   type Permission, type Session } from './api';
 import { actions, statusLabels } from './status';
@@ -50,8 +51,9 @@ export function App() {
   // One element instance: polls that re-render the shell do not re-render the autosaving wizard.
   const canStartStory = can('jobs:create');
   const canCommandStory = can('jobs:command');
-  const storyShorts = useMemo(() => <StoryShorts canStart={canStartStory} canCommand={canCommandStory}/>,
-    [canStartStory, canCommandStory]);
+  const canReadQueue = can('jobs:read');
+  const storyShorts = useMemo(() => <StoryShorts canStart={canStartStory} canCommand={canCommandStory} canQueue={canReadQueue}/>,
+    [canStartStory, canCommandStory, canReadQueue]);
 
   function showError(error: unknown) {
     if (error instanceof ApiError && error.code === 'UNAUTHORIZED') {
@@ -162,6 +164,7 @@ export function App() {
           </button>;
         })}
         {story.visible && <button aria-label="เรื่องเล่า Shorts" title="เรื่องเล่า Shorts" className={view === 'story' ? 'active' : ''} onClick={() => setView('story')}><BrandIcon name="story" size={19}/>เรื่องเล่า Shorts{view === 'story' && <span className="nav-dot"/>}</button>}
+        {canOpen('queue', permissions) && <button aria-label="คิวงาน" title="คิวงาน" className={view === 'queue' ? 'active' : ''} onClick={() => setView('queue')}><ListOrdered size={19}/>คิวงาน{view === 'queue' && <span className="nav-dot"/>}</button>}
       </nav>
       <div className="sidebar-bottom"><ShieldCheck size={23}/><strong>ตรวจสอบได้ทุกขั้นตอน</strong>
         <p>สถานะงานและ checkpoint<br/>บันทึกไว้ในเครื่องของคุณ</p>
@@ -170,7 +173,7 @@ export function App() {
     </aside>
 
     <main className={`main ${view === 'story' ? 'story-main' : ''}`}>
-      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}
+      <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'queue' ? 'คิวงาน' : view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}
         {view === 'story' && story.readOnly && <span className="readonly-badge" role="note" data-testid="story-readonly">อ่านอย่างเดียว</span>}</span>
         <span className="connection-status" data-worker-state={health?.worker_state ?? 'down'}><i className={worker.online ? 'online' : ''}/>{worker.text}</span>
       </header>
@@ -181,7 +184,8 @@ export function App() {
           <div><strong>บัญชีนี้มีสิทธิ์อ่านแบบร่างเท่านั้น</strong>
             <span>ยังเปิดตัวแก้ไขแบบร่างไม่ได้ · การดูและแก้ไขแบบร่างต้องใช้สิทธิ์เขียนแบบร่าง กรุณาติดต่อเจ้าของพื้นที่ทำงาน</span></div></div></div>}</div>
       {view === 'browser' && canOpen('browser', permissions) && <div className="content"><BrowserPairing/></div>}
-      <div className="content" hidden={view === 'story' || view === 'browser'}>
+      {view === 'queue' && canOpen('queue', permissions) && <div className="content"><QueuePanel canCommand={can('jobs:command')}/></div>}
+      <div className="content" hidden={view === 'story' || view === 'browser' || view === 'queue'}>
         <div className="page-heading"><div><p className="eyebrow">YOUR AUTOMATION, IN FOCUS</p>
           <h1>{view === 'jobs' ? 'ทุกงาน อยู่ในสายตา' : view === 'database' ? 'ตรวจสอบข้อมูลของระบบ' : 'ลำดับเหตุการณ์ของระบบ'}</h1>
           <p className="subtitle">{view === 'jobs' ? 'สร้างงาน ติดตามผล และทำต่อจากจุดที่บันทึกไว้' : 'ข้อมูลสำหรับวิเคราะห์ปัญหา พร้อมรหัสอ้างอิงที่ติดตามได้'}</p></div>

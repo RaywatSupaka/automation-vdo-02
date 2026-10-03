@@ -60,9 +60,9 @@ describe('view access', () => {
   });
   it('gates each nav view on its own permission', () => {
     const open = (permissions: Permission[]) => views.filter(view => canOpen(view, permissions));
-    expect(open(owner)).toEqual(['jobs', 'database', 'logs', 'story', 'browser']);
-    expect(open(operator)).toEqual(['jobs', 'story']);
-    expect(open(viewer)).toEqual(['jobs', 'story']);
+    expect(open(owner)).toEqual(['jobs', 'database', 'logs', 'story', 'browser', 'queue']);
+    expect(open(operator)).toEqual(['jobs', 'story', 'queue']);
+    expect(open(viewer)).toEqual(['jobs', 'story', 'queue']);  // Queue is read-only: jobs:read.
     expect(open(support)).toEqual(['database', 'logs']);
     expect(open([])).toEqual([]);
   });

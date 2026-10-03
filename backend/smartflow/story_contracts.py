@@ -69,6 +69,7 @@ class WorkReply(Closed):
 
 
 class StoryView(Closed):
+    queue_position: int | None = None
     job_id: str
     revision_id: str
     draft_id: str
