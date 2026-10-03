@@ -8,6 +8,7 @@ import { issueNotice, issueSummary } from './StoryShorts';
 
 type Spec = {
   kind: string; initial: unknown; maxLength?: number; options?: string[]; min?: number; max?: number; step?: number;
+  maxFiles?: number;
   required?: boolean; when?: { field: string; equals: string | boolean }; maxLines?: number; maxCountOf?: string;
   optionsUpTo?: { field: string; fixed: string[] };
 };
@@ -27,6 +28,7 @@ it('draft persistence contract covers every UI field without dropping hidden set
     expect(registry[field.id].kind).toBe(field.kind);
     expect(registry[field.id].initial).toEqual(field.initial);
     if (field.maxLength) expect(registry[field.id].maxLength).toBe(field.maxLength);
+    if (field.kind === 'file') expect(field.maxFiles, field.id).toBe(registry[field.id].maxFiles);
   }
 });
 

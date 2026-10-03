@@ -18,7 +18,7 @@ const select = (id: string, label: string, choices: Field['options'], initial: s
 const text = (id: string, label: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'text', initial: '', maxLength: 1000, ...extra });
 const toggle = (id: string, label: string, initial = false): Field => ({ id, label, kind: 'checkbox', initial });
 const number = (id: string, label: string, initial: string, min: number, max: number, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'number', initial, min, max, step: 1, ...extra });
-const file = (id: string, label: string, accept: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'file', initial: [], accept, help: 'นำเข้าสำเนาไว้ในเครื่องพร้อมแบบร่าง · ไม่ส่งไฟล์ไปบริการภายนอก', ...extra });
+const file = (id: string, label: string, accept: string, extra: Partial<Field> = {}): Field => ({ id, label, kind: 'file', initial: [], accept, maxFiles: 1, help: 'นำเข้าสำเนาไว้ในเครื่องพร้อมแบบร่าง · ไม่ส่งไฟล์ไปบริการภายนอก', ...extra });
 const imageTypes = '.png,.jpg,.jpeg,.webp';
 const videoTypes = '.mp4,.mov,.mkv,.webm,.m4v,.avi';
 const audioTypes = '.mp3,.wav,.m4a,.aac,.ogg';
@@ -127,7 +127,7 @@ export const fieldGroups: FieldGroup[] = [
   ] },
   { id: 'music', step: 3, title: 'เพลงพื้นหลัง', fields: [
     toggle('musicEnabled', 'ใส่เพลงพื้นหลัง'),
-    file('musicFiles', 'เลือกเพลงที่จะสุ่มลงคลิป', audioTypes, { when: on('musicEnabled'), required: true, multiple: true }),
+    file('musicFiles', 'เลือกเพลงที่จะสุ่มลงคลิป', audioTypes, { when: on('musicEnabled'), required: true, multiple: true, maxFiles: 100 }),
     number('musicCount', 'จำนวนเพลงต่อคลิป', '1', 1, 100, { when: on('musicEnabled'), help: 'ไม่เกินจำนวนไฟล์ที่เลือก' }),
     number('musicVolume', 'ระดับเพลง (%)', '15', 3, 35, { kind: 'range', when: on('musicEnabled') }),
     number('musicSegment', 'ท่อนเพลงยาวไม่เกิน (วินาที)', '10', 8, 12, { when: on('musicEnabled') }),
@@ -136,7 +136,7 @@ export const fieldGroups: FieldGroup[] = [
   { id: 'sfx', step: 3, title: 'เอฟเฟกต์เสียงเน้นข้อความ', fields: [
     toggle('sfxEnabled', 'ใส่เอฟเฟกต์เสียง'),
     select('sfxMode', 'รูปแบบเอฟเฟกต์เสียง', options('อัตโนมัติ • เว้นจังหวะ', 'สุ่มเสียงทุกจุด', 'เลือกเสียงเดียว'), 'อัตโนมัติ • เว้นจังหวะ', { when: on('sfxEnabled') }),
-    file('sfxFiles', 'ไฟล์เอฟเฟกต์เสียง', audioTypes, { when: on('sfxEnabled'), required: true, multiple: true }),
+    file('sfxFiles', 'ไฟล์เอฟเฟกต์เสียง', audioTypes, { when: on('sfxEnabled'), required: true, multiple: true, maxFiles: 100 }),
     number('sfxVolume', 'ระดับเอฟเฟกต์เสียง (%)', '25', 5, 60, { kind: 'range', when: on('sfxEnabled') }),
     number('sfxInterval', 'เว้นเอฟเฟกต์อย่างน้อย (วินาที)', '6', 4, 15, { when: on('sfxEnabled') }),
     number('sfxCount', 'จำนวนเอฟเฟกต์สูงสุด', '6', 1, 12, { when: on('sfxEnabled') }),

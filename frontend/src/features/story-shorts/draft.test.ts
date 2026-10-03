@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createStoryDraft, validateStoryStep } from './draft';
 
+it('limits single-file and music/SFX picks to the backend counts', () => {
+  const image = () => new File(['x'], 'reference.png');
+  expect(validateStoryStep({ ...createStoryDraft(), topic: 'ready', mainImage: [image(), image()] }, 0)).toContain('1 ไฟล์');
+  const audio = Array.from({ length: 101 }, (_, index) => new File(['x'], `${index}.mp3`));
+  expect(validateStoryStep({ ...createStoryDraft(), musicEnabled: true, musicFiles: audio }, 3)).toContain('100 ไฟล์');
+  expect(validateStoryStep({ ...createStoryDraft(), sfxEnabled: true, sfxFiles: audio }, 3)).toContain('100 ไฟล์');
+});
+
 describe('Story draft feedback', () => {
   it('requires a real idea and bounds its size', () => {
     const draft = createStoryDraft();
