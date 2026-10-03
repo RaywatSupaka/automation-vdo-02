@@ -5,7 +5,7 @@ from fnmatch import fnmatchcase
 
 PYTHON_SCOPES = {
     "story-workflow": ["tests/test_story_workflow.py"],
-    "story-api": ["tests/test_drafts.py", "tests/test_assets_pairing.py"],
+    "story-api": ["tests/test_drafts.py", "tests/test_assets_pairing.py", "tests/test_asset_clock.py"],
     "pairing": ["tests/test_assets_pairing.py", "tests/test_native_host.py"],
     "migration": ["tests/test_migration_safety.py", "tests/test_contracts.py", "tests/test_offline.py"],
     "bridge-contract": ["tests/test_native_host.py"],
@@ -20,7 +20,7 @@ PYTHON_SCOPES = {
     "workflow": ["tests/test_workflow.py"],
     "runtime": ["tests/test_runtime.py"],
     "offline": ["tests/test_offline.py"],
-    "tooling": ["tests/test_check_tools.py"],
+    "tooling": ["tests/test_check_tools.py", "tests/test_check_lint.py"],
     "backend": ["tests"],
 }
 ALL_SCOPES = [
@@ -37,6 +37,7 @@ ALL_SCOPES = [
 ]
 RULES = [
     ("*.md", []),
+    (".claude/*", []),  # Claude Code settings and hooks; no runtime boundary.
     ("backend/smartflow/story_*", ["story-workflow", "auth", "bridge-contract"]),
     ("tests/test_story_workflow.py", ["story-workflow"]),
     ("tests/test_assets_pairing.py", ["pairing", "story-api"]),
@@ -46,8 +47,11 @@ RULES = [
     ("backend/smartflow/protected_store.py", ["pairing"]),
     ("backend/smartflow/desktop_close.py", ["unit-close"]),
     ("tests/test_drafts.py", ["story-api"]),
+    ("tests/test_asset_clock.py", ["story-api"]),
     ("tests/test_migration_safety.py", ["migration"]),
     ("tests/test_native_host.py", ["bridge-contract"]),
+    ("backend/smartflow/draft_fields.json", ["story-api", "unit", "ui"]),
+    ("backend/smartflow/draft_contracts.py", ["story-api", "auth", "unit"]),
     ("backend/smartflow/draft*", ["story-api", "auth"]),
     ("backend/smartflow/migration*", ["migration", "story-api"]),
     ("backend/smartflow/native_host.py", ["bridge-contract", "extension-unit"]),
@@ -60,6 +64,8 @@ RULES = [
     ("tests/test_runtime.py", ["runtime"]),
     ("tests/test_offline.py", ["offline"]),
     ("tests/test_check_tools.py", ["tooling"]),
+    ("tests/test_check_lint.py", ["tooling"]),
+    ("tools/register_native_host.py", ["unit"]),
     ("tests/conftest.py", ["backend"]),
     ("tools/check*.py", ["tooling"]),
     ("backend/smartflow/auth.py", ["unit-auth", "api"]),
