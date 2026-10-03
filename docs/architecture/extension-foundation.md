@@ -58,7 +58,9 @@ Config ข้าง EXE มี port/ID/path ของไฟล์ DPAPI; ไม�
 `python tools/pairing_smoke.py` ใช้ compiled helper, temporary backend/profile และ unique HKCU host
 `--story` เพิ่มการรันงานจำลองผ่าน runner จริงใน Extension: snapshot, ส่งครั้งเดียว, result ACK และ privacy
 ผลล่าสุด (2026-10-03, helper 0.2.0 จาก commit 943e7b6): pairing ผ่านใน 11.3 วินาที, `--story` ผ่านใน 13.9 วินาที
-ทั้งสองรันใน Playwright Chromium profile แยก; ยังไม่ใช่หลักฐานใน Chrome profile ของผู้ใช้
+ทั้งสองรันใน Playwright Chromium profile แยก
+ตรวจใน Chrome profile ของผู้ใช้ (2026-10-03): โหลด 0.2.0 แบบ unpacked, จับคู่กับ Dev DB จริงสำเร็จ,
+background sync เข้ามาทุก 30.0 วินาทีขณะปิด popup (สังเกต 75 วินาที); ยังไม่ได้รันงาน Story จำลองใน profile นี้
 ตรวจ Chrome native exchange, credential ข้าม helper process และ revocation แล้วลบเฉพาะ registry key ของเทส
 เทสนี้ไม่ติดตั้ง Extension ใน Chrome profile ของผู้ใช้ และไม่ใช่หลักฐาน provider output
 
