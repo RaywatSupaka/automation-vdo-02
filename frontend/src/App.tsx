@@ -7,7 +7,7 @@ import { actions, statusLabels } from './status';
 import { BrandIcon } from './components/BrandIcon';
 import { StoryShorts } from './features/story-shorts/StoryShorts';
 import { BrowserPairing } from './features/BrowserPairing';
-import { canOpen, keepIfEqual, pollPlan, rememberView, restoreView, storyAccess, viewStorage, type View } from './navigation';
+import { canOpen, keepIfEqual, pollPlan, rememberView, restoreView, stableHealth, storyAccess, viewStorage, workerLabel, type View } from './navigation';
 
 const scenarios = [
   ['success', 'ทำงานสำเร็จ', 'สร้างและบันทึก checkpoint'],
@@ -27,7 +27,7 @@ export function App() {
   const [authEpoch, setAuthEpoch] = useState(0);
   const [token, setToken] = useState('');
   const [view, setView] = useState<View>(() => restoreView(viewStorage()));
-  const [health, setHealth] = useState<Health | null>(null);
+  const [health, setHealth] = useState<Omit<Health, 'worker_heartbeat_age'> | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -46,6 +46,7 @@ export function App() {
   const permissions = session?.permissions ?? [];
   const can = (permission: Permission) => permissions.includes(permission);
   const story = storyAccess(permissions);
+  const worker = workerLabel(health?.worker_state);
   // One element instance: polls that re-render the shell do not re-render the autosaving wizard.
   const storyShorts = useMemo(() => <StoryShorts/>, []);
 
@@ -94,7 +95,7 @@ export function App() {
           : plan.diagnostics === 'logs' ? await api<unknown[]>('/diagnostics/logs') : [];
         if (!stopped && requestToken === takeToken()) {
           setSession(current => keepIfEqual(current, nextSession));
-          setHealth(current => keepIfEqual(current, nextHealth));
+          setHealth(current => keepIfEqual(current, stableHealth(nextHealth)));
           if (plan.view !== view) setView(plan.view);
           if (plan.clearJobs) { setJobs(current => keepIfEqual(current, [])); setEvents(current => keepIfEqual(current, [])); }
           else if (plan.jobs) { setJobs(current => keepIfEqual(current, nextJobs)); setEvents(current => keepIfEqual(current, nextEvents)); }
@@ -168,7 +169,7 @@ export function App() {
     <main className={`main ${view === 'story' ? 'story-main' : ''}`}>
       <header className="topbar"><span>พื้นที่ทำงาน <ChevronRight size={14}/> {view === 'browser' ? 'เชื่อมต่อ Extension' : view === 'story' ? 'เรื่องเล่า Shorts' : view === 'jobs' ? 'งานอัตโนมัติ' : view === 'database' ? 'ฐานข้อมูล' : 'บันทึกระบบ'}
         {view === 'story' && story.readOnly && <span className="readonly-badge" role="note" data-testid="story-readonly">อ่านอย่างเดียว</span>}</span>
-        <span className="connection-status"><i className={health?.worker_alive ? 'online' : ''}/>{health?.worker_alive ? 'ตัวประมวลผลพร้อม' : 'ยังไม่พบตัวประมวลผล'}</span>
+        <span className="connection-status" data-worker-state={health?.worker_state ?? 'down'}><i className={worker.online ? 'online' : ''}/>{worker.text}</span>
       </header>
       {/* Mounted (hidden) for every session that may write drafts: it registers window.smartflowFlush for the
           desktop close guard. Read-only sessions never mount the autosaving store (see storyAccess). */}
@@ -224,7 +225,7 @@ export function App() {
             </section>
           </div>
         </> : <section className="panel inspect-panel"><div className="panel-heading"><h2>{view === 'database' ? 'ข้อมูลสถานะ · อ่านอย่างเดียว' : 'Structured log · ล่าสุด'}</h2>
-          {view === 'database' && <select aria-label="ตารางฐานข้อมูล" value={table} onChange={e => setTable(e.target.value)}><option>jobs</option><option>receipts</option><option>events</option></select>}</div>
+          {view === 'database' && <select aria-label="ตารางฐานข้อมูล" value={table} onChange={e => setTable(e.target.value)}><option>jobs</option><option>receipts</option><option>events</option><option>story_operations</option><option>operation_receipts</option></select>}</div>
           <p className="inspect-note">แสดงเฉพาะข้อมูลสำหรับวิเคราะห์ ไม่แสดง token เนื้อหาคำขอ หรือผลลัพธ์ส่วนตัว</p>
           <pre>{JSON.stringify(view === 'database' ? database : logs, null, 2)}</pre></section>}
         <div className="bottom-note"><ShieldCheck size={15}/> บันทึกในเครื่อง · ตรวจสอบย้อนกลับได้ · ทำต่อจาก checkpoint</div>

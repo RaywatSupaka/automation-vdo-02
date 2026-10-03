@@ -9,7 +9,7 @@ from smartflow.draft_contracts import DraftConfig, DraftInput, DraftUpdate
 from smartflow.drafts import Drafts
 from smartflow.errors import AppError
 from smartflow.jobs import Jobs
-from smartflow.models import Job
+from smartflow.models import Event, Job
 from smartflow.story_contracts import Grant, Missing, Result, StoryStart, Sync
 from smartflow.story_models import OperationReceipt, StoryRevision
 from smartflow.story_workflow import StoryWorkflow
@@ -220,3 +220,118 @@ def test_agent_storage_failure_is_persisted_and_stops_automatic_dispatch(system,
     if after_grant:
         with pytest.raises(AppError, match="SEND_ACCEPTANCE_UNKNOWN"):
             service.command(job["id"], "resume", "trace")
+
+
+def job_row(db, job_id):
+    with db.transaction() as session:
+        row = session.get(Job, job_id)
+        return row.status, row.error_code
+
+
+def test_heartbeat_sync_inside_lease_hands_off_inspect_without_flipping_status(system):
+    service, actor, sync, job, *_ = setup(system)
+    task = service.sync(actor, sync)["task"]
+    assert service.grant(actor, command(task))["granted"]
+    system[3].advance(5)  # Same connection, lease still valid: the run ended without a result.
+    again = service.sync(actor, sync)["task"]
+    assert again["mode"] == "inspect" and again["lease_epoch"] == task["lease_epoch"]
+    assert job_row(system[0], job["id"]) == ("running", None)
+    assert not service.grant(actor, command(again))["granted"]  # Inspect never re-grants a send.
+    service.missing(actor, command(again, Missing))
+    assert job_row(system[0], job["id"]) == ("needs_review", "SEND_ACCEPTANCE_UNKNOWN")
+
+
+def repair(system):
+    db, clock = system[0], system[3]
+    bridge = Bridge(db, AuthMode.LOCAL_SESSION, clock)
+    pair = bridge.create(PairRequest(extension_id=COMPAT["extension_id"]), "pair-trace")
+    token = secrets.token_urlsafe(32)
+    bridge.exchange(
+        bridge.authenticate(pair["code"]),
+        PairExchange(
+            extension_id=COMPAT["extension_id"],
+            extension_version="0.2.0",
+            helper_version="0.2.0",
+            agent_token=token,
+        ),
+        "pair-trace",
+    )
+    return bridge.authenticate(token)
+
+
+def test_uncertain_operation_of_revoked_pairing_is_released_for_inspect_only(system):
+    service, actor, sync, job, *_ = setup(system)
+    task = service.sync(actor, sync)["task"]
+    assert service.grant(actor, command(task))["granted"]
+    new_actor = repair(system)  # Re-pairing the same Extension revokes the old pairing.
+    service.maintain()
+    service.maintain()  # A duplicate maintenance pass changes nothing.
+    with system[0].transaction() as session:
+        names = [e.name for e in session.scalars(select(Event).where(Event.job_id == job["id"]))]
+    assert names.count("story.ownership_released") == 1
+    new_sync = sync.model_copy(update={"connection_id": uuid4()})
+    recovered = service.sync(new_actor, new_sync)["task"]
+    assert recovered and recovered["job_id"] == job["id"] and recovered["mode"] == "inspect"
+    assert not service.grant(new_actor, command(recovered))["granted"]
+    with pytest.raises(AppError):
+        service.grant(actor, command(task))  # The revoked agent can never act again.
+
+
+def test_create_rejects_draft_with_missing_required_fields(system):
+    db, _, _, clock, _ = system
+    config = DraftConfig(topic="PRIVATE", visualStyle="custom", visualCustom="")
+    draft = Drafts(db, clock).save(DraftInput(config=config), "draft", "trace")
+    start = StoryStart(draft_id=draft["id"], expected_revision=draft["revision"], mode="simulation")
+    with pytest.raises(AppError, match="STORY_DRAFT_INVALID"):
+        StoryWorkflow(db, clock).create(start, "incomplete", "trace")
+    with db.transaction() as session:
+        assert list(session.scalars(select(Job))) == []
+
+
+def test_create_hashes_assets_without_holding_the_writer_lock(system, monkeypatch):
+    import asyncio
+    import sqlite3
+
+    from smartflow.assets import Assets
+
+    db, _, _, clock, _ = system
+    draft = Drafts(db, clock).save(DraftInput(config=DraftConfig(topic="PRIVATE")), "draft", "trace")
+
+    async def stream():
+        yield b"\x89PNG\r\n\x1a\n" + bytes(40)
+
+    asset = asyncio.run(
+        Assets(db, clock).import_file(draft["id"], "mainImage", "a.png", 48, "asset", stream(), "t")
+    )
+    update = DraftUpdate(expected_revision=1, config=DraftConfig(topic="PRIVATE", mainImage=[asset["id"]]))
+    saved = Drafts(db, clock).save(update, "draft-2", "trace", draft["id"])
+    original, writes = Assets.verified_path, []
+
+    def probing(self, draft_id, asset_id):
+        # Another writer must get the lock while a (possibly 500 MB) file is being hashed.
+        other = sqlite3.connect(db.path, timeout=0.05)
+        try:
+            other.execute("BEGIN IMMEDIATE")
+            other.rollback()
+            writes.append("ok")
+        finally:
+            other.close()
+        return original(self, draft_id, asset_id)
+
+    monkeypatch.setattr(Assets, "verified_path", probing)
+    start = StoryStart(draft_id=draft["id"], expected_revision=saved["revision"], mode="simulation")
+    assert StoryWorkflow(db, clock).create(start, "with-asset", "trace")["status"] == "waiting"
+    assert writes == ["ok"]
+
+
+def test_diagnostic_projection_of_story_tables_is_content_free(system):
+    from smartflow.diagnostics import table_rows
+
+    service, actor, sync, job, *_ = setup(system)
+    task = service.sync(actor, sync)["task"]
+    service.grant(actor, command(task))
+    service.result(actor, command(task, Result, result="[SIMULATION ONLY]\nPRIVATE STORY"))
+    ops = table_rows(system[0], "story_operations", 10)
+    receipts = table_rows(system[0], "operation_receipts", 10)
+    assert ops[0]["job_id"] == job["id"] and receipts[0]["state"] == "completed"
+    assert "PRIVATE STORY" not in json.dumps([ops, receipts]) and "result" not in receipts[0]

@@ -112,6 +112,9 @@ class HealthResponse(Contract):
     schema_revision: str
     mode: Literal["dev", "prod", "test"]
     worker_alive: bool
+    # alive = process exists; ready = loop beat within 5 s; stalled = no beat for 30 s.
+    worker_state: Literal["down", "starting", "ready", "late", "stalled"]
+    worker_heartbeat_age: float | None
 
 
 class NoActiveError(Contract):
@@ -155,6 +158,25 @@ class ReceiptRow(Contract):
     job_id: str
     request_id: str
     state: ReceiptState
+    updated_at: float
+
+
+class StoryOperationRow(Contract):
+    id: str
+    job_id: str
+    revision_id: str
+    pair_id: str | None
+    lease_epoch: int
+    lease_until: float
+    deadline: float
+
+
+class OperationReceiptRow(Contract):
+    # No result text: diagnostics stay content-free.
+    operation_id: str
+    request_id: str
+    state: str
+    sha256: str | None
     updated_at: float
 
 

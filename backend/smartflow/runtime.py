@@ -7,6 +7,7 @@ from filelock import FileLock
 
 from smartflow.api import create_app
 from smartflow.db import Database
+from smartflow.heartbeat import read, worker_state
 from smartflow.observability import create_logger, emit, safe_exception
 from smartflow.worker import run_worker
 
@@ -51,6 +52,7 @@ def runtime(settings, worker=True):
         stop = threading.Event()
         processes = []
         senders = []
+        started = []
 
         def launch():
             receiver, sender = context.Pipe(duplex=False)
@@ -59,16 +61,39 @@ def runtime(settings, worker=True):
             receiver.close()
             senders.append(sender)
             processes.append(process)
+            started.append(time.time())
 
         if worker:
             launch()
         app.state.worker_alive = lambda: bool(processes and processes[-1].is_alive())
         app.state.worker_process = lambda: processes[-1] if processes else None
 
+        def status():
+            if not processes:
+                return "down", None
+            current = processes[-1]
+            return worker_state(
+                current.is_alive(), current.pid, read(settings.data_dir), time.time(), started[-1]
+            )
+
+        app.state.worker_status = status
+
         def supervise():
             restarts = 0
             while not stop.wait(0.5):
-                if processes[-1].is_alive():
+                state, age = status()
+                if state == "stalled":
+                    # Alive but no loop progress: restart within the same budget. Recovery reads
+                    # receipts, so a killed step is reconciled, never re-sent.
+                    emit(
+                        app.state.db.logger,
+                        "worker.stalled",
+                        code="WORKER_STALLED",
+                        duration_ms=int((age or 0) * 1000),
+                    )
+                    processes[-1].terminate()
+                    processes[-1].join(timeout=3)
+                elif processes[-1].is_alive():
                     continue
                 processes[-1].join(timeout=0)
                 if restarts >= 3:

@@ -1729,7 +1729,9 @@
               "enum": [
                 "jobs",
                 "receipts",
-                "events"
+                "events",
+                "story_operations",
+                "operation_receipts"
               ],
               "type": "string",
               "title": "Table"
@@ -1776,6 +1778,12 @@
                       },
                       {
                         "$ref": "#/components/schemas/EventRow"
+                      },
+                      {
+                        "$ref": "#/components/schemas/StoryOperationRow"
+                      },
+                      {
+                        "$ref": "#/components/schemas/OperationReceiptRow"
                       }
                     ]
                   },
@@ -6023,6 +6031,28 @@
           "worker_alive": {
             "type": "boolean",
             "title": "Worker Alive"
+          },
+          "worker_state": {
+            "type": "string",
+            "enum": [
+              "down",
+              "starting",
+              "ready",
+              "late",
+              "stalled"
+            ],
+            "title": "Worker State"
+          },
+          "worker_heartbeat_age": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Heartbeat Age"
           }
         },
         "additionalProperties": false,
@@ -6036,7 +6066,9 @@
           "events",
           "schema_revision",
           "mode",
-          "worker_alive"
+          "worker_alive",
+          "worker_state",
+          "worker_heartbeat_age"
         ],
         "title": "HealthResponse"
       },
@@ -6636,6 +6668,47 @@
         ],
         "title": "OpenAPIDocument"
       },
+      "OperationReceiptRow": {
+        "properties": {
+          "operation_id": {
+            "type": "string",
+            "title": "Operation Id"
+          },
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "updated_at": {
+            "type": "number",
+            "title": "Updated At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "operation_id",
+          "request_id",
+          "state",
+          "sha256",
+          "updated_at"
+        ],
+        "title": "OperationReceiptRow"
+      },
       "PairCode": {
         "properties": {
           "id": {
@@ -7045,6 +7118,57 @@
           "function"
         ],
         "title": "StackFrame"
+      },
+      "StoryOperationRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "job_id": {
+            "type": "string",
+            "title": "Job Id"
+          },
+          "revision_id": {
+            "type": "string",
+            "title": "Revision Id"
+          },
+          "pair_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pair Id"
+          },
+          "lease_epoch": {
+            "type": "integer",
+            "title": "Lease Epoch"
+          },
+          "lease_until": {
+            "type": "number",
+            "title": "Lease Until"
+          },
+          "deadline": {
+            "type": "number",
+            "title": "Deadline"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "job_id",
+          "revision_id",
+          "pair_id",
+          "lease_epoch",
+          "lease_until",
+          "deadline"
+        ],
+        "title": "StoryOperationRow"
       },
       "StoryStart": {
         "properties": {

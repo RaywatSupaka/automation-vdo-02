@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Permission } from './api';
-import { canOpen, keepIfEqual, permittedView, pollPlan, rememberView, restoreView, storyAccess, VIEW_STORAGE_KEY, viewStorage,
+import { canOpen, keepIfEqual, permittedView, pollPlan, rememberView, restoreView, stableHealth, storyAccess, VIEW_STORAGE_KEY, viewStorage, workerLabel,
   views } from './navigation';
 
 const owner: Permission[] = ['session:read', 'jobs:read', 'jobs:create', 'jobs:command', 'diagnostics:read',
@@ -112,5 +112,19 @@ describe('poll results', () => {
     const empty: unknown[] = [];
     expect(keepIfEqual(empty, [])).toBe(empty);
     expect(keepIfEqual<object | null>(null, current)).toBe(current);
+  });
+});
+
+describe('worker status', () => {
+  it('separates a live process from a loop that makes progress', () => {
+    expect(workerLabel('ready')).toEqual({ text: 'ตัวประมวลผลพร้อม', online: true });
+    for (const state of ['starting', 'late', 'stalled', 'down', undefined] as const) expect(workerLabel(state).online).toBe(false);
+    expect(workerLabel('stalled').text).toContain('ไม่ตอบสนอง');
+  });
+  it('drops the per-poll heartbeat age so an unchanged state keeps its reference', () => {
+    const first = stableHealth({ worker_state: 'ready', worker_heartbeat_age: 0.2 });
+    const second = stableHealth({ worker_state: 'ready', worker_heartbeat_age: 1.4 });
+    expect(keepIfEqual(first, second)).toBe(first);
+    expect(keepIfEqual(first, stableHealth({ worker_state: 'late', worker_heartbeat_age: 6 }))).not.toBe(first);
   });
 });

@@ -33,3 +33,17 @@ def test_real_worker_process_recovers_after_termination_without_resend(tmp_path)
         receipt = jobs.get(job["id"])["receipt"]
         with app.state.db.transaction() as session:
             assert session.get(SimulatedRequest, receipt["request_id"]).sends == 1
+
+
+def test_real_worker_reports_ready_from_heartbeat_not_only_process(tmp_path):
+    with runtime(Settings(tmp_path, "runtime-test-session-not-secret", "test")) as app:
+        until(lambda: app.state.worker_status()[0] == "ready")
+        state, age = app.state.worker_status()
+        assert app.state.worker_alive() and age is not None and age <= 5
+        original = app.state.worker_process()
+        original.terminate()
+        original.join(timeout=3)
+        # The old beat belongs to a dead pid: never reported ready for the replacement.
+        until(lambda: app.state.worker_process().pid != original.pid)
+        assert app.state.worker_status()[0] in {"starting", "ready", "down"}
+        until(lambda: app.state.worker_status()[0] == "ready")

@@ -1,4 +1,4 @@
-import type { Permission } from './api';
+import type { Permission, WorkerState } from './api';
 
 /** Fallback order matters: a disallowed view lands on the first allowed one, so polls never flip-flop. */
 export const views = ['jobs', 'database', 'logs', 'story', 'browser'] as const;
@@ -68,6 +68,23 @@ export function pollPlan(view: View, permissions: readonly Permission[], selecte
   return { view: target, jobs, events: jobs && !!selected,
     diagnostics: settled && inspectable && (view === 'database' || view === 'logs') ? view : null,
     clearJobs: !readable, clearDiagnostics: !inspectable };
+}
+
+/** Topbar label for the worker: process alive is not the same as a loop that is making progress. */
+export function workerLabel(state: WorkerState | undefined): { text: string; online: boolean } {
+  switch (state) {
+    case 'ready': return { text: 'ตัวประมวลผลพร้อม', online: true };
+    case 'starting': return { text: 'ตัวประมวลผลกำลังเริ่ม', online: false };
+    case 'late': return { text: 'ตัวประมวลผลตอบช้า', online: false };
+    case 'stalled': return { text: 'ตัวประมวลผลไม่ตอบสนอง กำลังเริ่มใหม่', online: false };
+    default: return { text: 'ยังไม่พบตัวประมวลผล', online: false };
+  }
+}
+
+/** Health without the per-poll heartbeat age, so an unchanged state does not re-render every poll. */
+export function stableHealth<T extends { worker_heartbeat_age?: unknown }>(health: T): Omit<T, 'worker_heartbeat_age'> {
+  const { worker_heartbeat_age: _age, ...rest } = health;
+  return rest;
 }
 
 /** Keep the previous reference when a poll returns identical data, so React skips the re-render. */

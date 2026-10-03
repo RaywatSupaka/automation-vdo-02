@@ -11,6 +11,9 @@ class ErrorSpec:
 ERRORS = {
     "EXTENSION_STORAGE_FAILED": ErrorSpec("Extension storage failed", "inspect_extension_storage"),
     "ARTIFACT_WRITE_FAILED": ErrorSpec("Cannot persist the collected artifact", "retry_local_save"),
+    "STORY_MAINTENANCE_FAILED": ErrorSpec(
+        "ตรวจสถานะงาน Story ไม่สำเร็จ ระบบจะลองใหม่อัตโนมัติ", "retry_automatically", 503
+    ),
     "STORY_CAPABILITY_UNAVAILABLE": ErrorSpec("รอบนี้รองรับงานจำลองแบบคลิปเดียว", "select_single_simulation", 422),
     "STORY_DRAFT_INVALID": ErrorSpec("ระบุหัวข้อและตรวจค่าของแบบร่างก่อนเริ่ม", "correct_draft", 422),
     "STORY_RESULT_INVALID": ErrorSpec("ผลจำลองไม่ตรงกับคำขอของงานนี้", "inspect_existing_result", 422),
@@ -48,6 +51,7 @@ ERRORS = {
     "RESULT_PENDING": ErrorSpec("ยังไม่ได้ผลลัพธ์จากคำขอเดิม", "bounded_observation"),
     "MEDIA_SAVE_FAILED": ErrorSpec("ได้ผลลัพธ์แล้ว แต่บันทึกไฟล์ไม่สำเร็จ", "retry_save"),
     "WORKER_INTERRUPTED": ErrorSpec("ตัวประมวลผลหยุดก่อนจบขั้นตอน", "resume_checkpoint"),
+    "WORKER_STALLED": ErrorSpec("ตัวประมวลผลไม่ตอบสนอง กำลังเริ่มใหม่", "wait_for_worker_restart", 503),
     "WORKER_UNAVAILABLE": ErrorSpec("ตัวประมวลผลไม่พร้อมหลังพยายามกู้คืน", "inspect_worker_log", 503),
     "INTERNAL_ERROR": ErrorSpec("เกิดข้อผิดพลาดภายในโปรแกรม", "inspect_trace", 500),
 }

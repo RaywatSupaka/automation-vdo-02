@@ -26,8 +26,10 @@ from smartflow.contracts import (
     JobRow,
     LogResponse,
     OpenAPIDocument,
+    OperationReceiptRow,
     ReceiptRow,
     SessionResponse,
+    StoryOperationRow,
     error_responses,
 )
 from smartflow.db import Database
@@ -218,6 +220,12 @@ def create_app(settings: Settings | None = None):
             **overview(db),
             "mode": settings.mode,
             "worker_alive": getattr(app.state, "worker_alive", lambda: False)(),
+            **dict(
+                zip(
+                    ("worker_state", "worker_heartbeat_age"),
+                    getattr(app.state, "worker_status", lambda: ("down", None))(),
+                )
+            ),
         }
 
     @router.get("/openapi.json", response_model=OpenAPIDocument, openapi_extra=policy(Permission.SCHEMA_READ))
@@ -297,6 +305,7 @@ def create_app(settings: Settings | None = None):
         )
         if jobs.get(job_id)["scenario"] == "story_simulated":
             from smartflow.story_workflow import StoryWorkflow
+
             return StoryWorkflow(db).command(job_id, action, request.state.trace_id)
         if action == "reconcile":
             engine.reconcile(job_id, command_trace_id=request.state.trace_id)
@@ -366,11 +375,11 @@ def create_app(settings: Settings | None = None):
 
     @router.get(
         "/diagnostics/database/{table}",
-        response_model=list[JobRow | ReceiptRow | EventRow],
+        response_model=list[JobRow | ReceiptRow | EventRow | StoryOperationRow | OperationReceiptRow],
         openapi_extra=policy(Permission.DIAGNOSTICS_READ),
     )
     def rows(
-        table: Literal["jobs", "receipts", "events"],
+        table: Literal["jobs", "receipts", "events", "story_operations", "operation_receipts"],
         limit: Annotated[int, Query(ge=1, le=200)] = 50,
         offset: Annotated[int, Query(ge=0)] = 0,
     ):
@@ -384,6 +393,7 @@ def create_app(settings: Settings | None = None):
 
     app.include_router(bridge_router(bridge))
     from smartflow.story_routes import story_router
+
     app.include_router(story_router(db))
     root = web_root()
     if (root / "assets").exists():

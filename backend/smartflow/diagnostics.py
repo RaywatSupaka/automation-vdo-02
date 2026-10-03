@@ -7,6 +7,7 @@ from sqlalchemy import func, inspect, select
 from smartflow import __version__
 from smartflow.jobs import Jobs
 from smartflow.models import Event, Job, Receipt
+from smartflow.story_models import OperationReceipt, StoryOperation
 
 
 def overview(db):
@@ -80,11 +81,29 @@ def table_rows(db, table, limit, offset=0):
         "jobs": (Job.id, Job.status, Job.stage, Job.error_code, Job.trace_id, Job.updated_at),
         "receipts": (Receipt.job_id, Receipt.request_id, Receipt.state, Receipt.updated_at),
         "events": (Event.id, Event.job_id, Event.trace_id, Event.at, Event.name, Event.stage, Event.code),
+        "story_operations": (
+            StoryOperation.id,
+            StoryOperation.job_id,
+            StoryOperation.revision_id,
+            StoryOperation.pair_id,
+            StoryOperation.lease_epoch,
+            StoryOperation.lease_until,
+            StoryOperation.deadline,
+        ),
+        "operation_receipts": (
+            OperationReceipt.operation_id,
+            OperationReceipt.request_id,
+            OperationReceipt.state,
+            OperationReceipt.sha256,
+            OperationReceipt.updated_at,
+        ),
     }[table]
     order = {
         "jobs": (Job.created_at.desc(), Job.id.desc()),
         "receipts": (Receipt.updated_at.desc(), Receipt.job_id.desc()),
         "events": (Event.id.desc(),),
+        "story_operations": (StoryOperation.deadline.desc(), StoryOperation.id.desc()),
+        "operation_receipts": (OperationReceipt.updated_at.desc(), OperationReceipt.operation_id.desc()),
     }[table]
     with db.transaction() as session:
         return [

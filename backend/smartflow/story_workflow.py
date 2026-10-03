@@ -11,7 +11,7 @@ from sqlalchemy import or_, select
 
 from smartflow.auth import Role
 from smartflow.browser_bridge import COMPAT, Pairing
-from smartflow.draft_contracts import REGISTRY, issues
+from smartflow.draft_contracts import REGISTRY, completeness, issues
 from smartflow.drafts import Drafts, digest
 from smartflow.errors import AppError
 from smartflow.jobs import job_view, record
@@ -35,9 +35,27 @@ class StoryWorkflow:
     def __init__(self, db, clock=time.time):
         self.db, self.clock = db, clock
 
+    def verify_assets(self, data):
+        """Hash files before BEGIN IMMEDIATE so large assets never hold the writer lock."""
+        from smartflow.assets import Assets
+
+        with self.db.transaction() as session:
+            draft = Drafts(self.db).owned(session, str(data.draft_id))
+            if draft.revision != data.expected_revision:
+                return None  # The write transaction reports the conflict.
+            config = json.loads(draft.config)
+        assets = Assets(self.db)
+        return {
+            asset_id: assets.verified_path(str(data.draft_id), asset_id)
+            for field, spec in REGISTRY.items()
+            if spec["kind"] == "file"
+            for asset_id in config.get(field, [])
+        }
+
     def create(self, data, key, trace):
         command_key = "story:" + hashlib.sha256(key.encode()).hexdigest()
         fingerprint = digest(data.model_dump(mode="json"))
+        verified = self.verify_assets(data)
         with self.db.transaction(write=True) as session:
             existing = session.scalar(select(Job).where(Job.command_key == command_key))
             if existing:
@@ -50,18 +68,18 @@ class StoryWorkflow:
             config = json.loads(draft.config)
             if config["creationMode"] != "single":
                 raise AppError("STORY_CAPABILITY_UNAVAILABLE")
-            if not config["topic"].strip() or issues(config):
+            if not config["topic"].strip() or issues(config) or completeness(config):
                 raise AppError("STORY_DRAFT_INVALID")
             from smartflow.asset_models import DraftAsset
-            from smartflow.assets import Assets
 
             for field, spec in REGISTRY.items():
                 if spec["kind"] == "file":
                     for asset_id in config[field]:
                         asset = session.get(DraftAsset, asset_id)
-                        if not asset or asset.field != field:
+                        if not asset or asset.field != field or asset.draft_id != draft.id:
                             raise AppError("DRAFT_ASSET_INVALID")
-                        Assets(self.db).verified_path(draft.id, asset_id)
+                        if verified is None or asset_id not in verified:
+                            raise AppError("DRAFT_REVISION_CONFLICT")  # Changed after hashing.
             now = self.clock()
             job = Job(
                 id=str(uuid4()),
@@ -187,7 +205,8 @@ class StoryWorkflow:
                 if job.status == "failed":
                     continue
                 if job.observations >= MAX_ATTEMPTS or now >= op.deadline:
-                    if op.pair_id == pair.id:
+                    # Only an unresolved possible send blocks this browser until reconciliation.
+                    if op.pair_id == pair.id and receipt.state != "prepared":
                         return {"task": None}
                     continue
                 if op.connection_id != connection or op.lease_until <= now:
@@ -203,8 +222,6 @@ class StoryWorkflow:
                 op.lease_until = now + LEASE_SECONDS
                 if receipt.state == "prepared":
                     job.status, job.error_code = "running", None
-                elif job.status != "cancelled":
-                    job.status = "needs_review"
                 job.updated_at = now
                 rev = session.get(StoryRevision, op.revision_id)
                 return {
@@ -381,11 +398,16 @@ class StoryWorkflow:
                     if job.save_attempts < MAX_ATTEMPTS and job.next_run_at <= now:
                         saves.append(op.id)
                     continue
+                pair = session.get(Pairing, op.pair_id) if op.pair_id else None
+                if op.pair_id and (not pair or pair.state != "paired") and receipt.state != "prepared":
+                    # A revoked owner can never finish inspection. Release for inspect-only reclaim;
+                    # receipt.state stays non-prepared, so grant() never issues a send again.
+                    op.pair_id, op.connection_id, op.lease_until = None, None, 0
+                    record(session, job, "story.ownership_released", now, operation_id=op.id)
                 if job.status in {"cancelled", "failed"} or receipt.state == "completed":
                     continue
                 if receipt.state == "unknown" and job.observations >= MAX_ATTEMPTS:
                     continue  # Preserve the exact blocking reason until explicit reconciliation.
-                pair = session.get(Pairing, op.pair_id) if op.pair_id else None
                 expired = op.lease_until <= now or not pair or pair.state != "paired"
                 if not expired and now < op.deadline:
                     continue
