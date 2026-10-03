@@ -44,6 +44,7 @@
 | แก้ authentication, origin และขอบเขตข้อมูล | [Security](operations/security.md) |
 | บิลด์และตรวจชุดสำหรับเครื่องลูกค้า | [Packaging](delivery/packaging.md) |
 | ดูหลักฐานทดสอบของ foundation 0.1.0 | [Verification 0.1.0](delivery/verification-0.1.0.md) |
+| ดูหลักฐานชุด portable 0.2.0 และการอัปเกรด | [Verification 0.2.0](delivery/verification-0.2.0.md) |
 | ดูหลักฐาน API/error/trace และตัวเปิดไม่มี console | [Verification F1](delivery/verification-f1.md) |
 | ดูหลักฐาน authentication/permissions และ dev bypass | [Verification auth](delivery/verification-auth.md) |
 

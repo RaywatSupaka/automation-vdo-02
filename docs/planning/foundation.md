@@ -14,7 +14,7 @@
 | F2 — ทำแล้วใน source | Worker readiness และการตรวจงานค้าง | alive/ready/stalled จาก heartbeat, restart ใน budget ไม่ replay send; ยังไม่ตรวจใน EXE ([Runtime](../architecture/runtime.md)) |
 | F3 — บางส่วน | ฐานข้อมูลและการอัปเกรด | WAL backup/integrity/transaction rollback ทำแล้ว; ยังต้อง clean Windows upgrade และ restore UX |
 | F4 | Diagnostics สำหรับเครื่องลูกค้า | เก็บหลักฐานครบเมื่อเริ่มโปรแกรมไม่ได้ export ได้และพิสูจน์การกรองข้อมูลส่วนตัว |
-| F5 | Packaging และ clean Windows | ติดตั้ง เปิด ทำงานต่อ อัปเกรด และถอนติดตั้งตามนโยบายข้อมูลที่ระบุไว้ได้ |
+| F5 — บางส่วน (F5a) | Packaging และ clean Windows | ชุด portable 0.2.0, smoke และอัปเกรดใน sandbox ผ่าน; installer, signing, clean Windows และนโยบายข้อมูลตอนถอนติดตั้งยังต้องตัดสินใจ |
 | F6 | Provider pilot หนึ่งราย | งานหนึ่งขั้นตอนจบจริง ผ่าน retry/crash/duplicate cases และตรวจผลที่บันทึก |
 
 Story domain/API และ Extension mock bridge เริ่มพัฒนาแยกขั้นได้ตาม [Story Shorts](story-shorts.md)
