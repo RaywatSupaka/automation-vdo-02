@@ -32,6 +32,7 @@ Popup probe มี deadline 7 วินาที; polling ทุก 5 วิน�
 Desktop แสดง connected เมื่อมีการยืนยันใน 90 วินาทีล่าสุด; ไม่ใช่ readiness ของ ChatGPT
 Background ใช้ alarm ทุก 30 วินาทีเรียก sync แม้ปิด popup
 Transitions การจับคู่มี `browser_events` ใน transaction; logs มี trace/event โดยไม่มีรหัสหรือ credential
+เมื่ออ่านสถานะหรือสร้าง pairing ใหม่ pending ที่เลยเวลาเปลี่ยนเป็น `expired` พร้อม `browser.expired` ใน transaction เดียวกัน; revoke ซ้ำไม่เพิ่ม `browser.revoked`
 
 ## Build และติดตั้ง Dev
 

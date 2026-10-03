@@ -50,6 +50,7 @@ Payload/revision/สิทธิ์และข้อจำกัด: [Draft API
 อ่าน permission ที่ต้องใช้จาก `x-required-permission` ของแต่ละ route ใน OpenAPI
 Server ตรวจ permission แม้ใช้ dev_bypass; token ผิดคืน 401, สิทธิ์ไม่พอคืน 403
 POST /api/jobs ต้องมี Idempotency-Key; การ retry ต้องใช้ key เดิมกับ input เดิม
+Scenario จำลองความผิดพลาดใช้ได้เฉพาะโหมด dev/test; ใน prod ยอมรับเฉพาะ `success` และคืน `SCENARIO_NOT_ALLOWED` สำหรับค่าอื่น
 แต่ละ HTTP response มี X-Trace-ID สำหรับตาม request
 Error envelope และการกู้คืนอยู่ใน [Errors](errors.md)
 

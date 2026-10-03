@@ -50,3 +50,31 @@ Source: [Story UI](../../frontend/src/features/story-shorts/StoryShorts.tsx),
 Tests: [Story E2E](../../frontend/e2e/story-job.spec.ts),
 [status unit](../../frontend/src/features/story-shorts/story-status.test.ts),
 [supervisor unit](../../tests/unit/test_supervisor.py).
+
+## งานสำรอง
+
+ทำ B1–B5 ตามลำดับ โดยเพิ่มเทสให้เห็นความล้มเหลวกับโค้ดเดิมก่อนแก้แต่ละข้อ แล้ว commit แยกเรื่อง:
+
+| งาน | Commit | ผล |
+|---|---|---|
+| B1 | `71a5721` | โหมด prod ปฏิเสธ scenario จำลองความผิดพลาดด้วย `SCENARIO_NOT_ALLOWED`; test mode ยังใช้ได้ |
+| B2 | `3f85574` | `create_app()` และ runtime ใช้ migration guard เดียว; startup migrate ครั้งเดียว ทั้ง desktop และ CLI/API |
+| B3 | `cde86e5` | pending pairing ที่หมดอายุกลายเป็น expired พร้อม event ใน transaction; revoke ซ้ำไม่มี event ซ้ำ |
+| B4 | `f7a6cbe` | `issues()` ใช้ตัวอ่านเลขเดียวกับ `completeness()`/UI รวมรูปแบบเลขพิเศษ |
+| B5 | `c3ce845` | UI จำกัด `maxFiles` ตาม registry และ persistence contract ตรวจค่าเหล่านี้ |
+
+หลักฐาน red/green: B1 201 แทน 409 ก่อนแก้ (1.733 s), focused ผ่านหลังแก้ (1.628 s); B2 migrate 2 ครั้งแทน 1 (1.896 s), ผ่าน (1.942 s); B3 expiry ยัง pending (1.469 s) และ revoke log ซ้ำ (1.943 s), ผ่านแยกเคส (1.347/1.781 s); B4 ตัวเลข 3 เคสไม่ตรง UI (3.069 s), ผ่าน 5 เคส (2.129 s); B5 UI ยอมรับไฟล์เกินกำหนด (20.860 s) และ contract ขาด `maxFiles` (3.094 s), ผ่าน (1.969/2.590 s).
+
+| คำสั่งตาม runbook | ผล | เวลาจริง |
+|---|---|---:|
+| `tools/check.py --scope workflow api` | 54 passed | 11.719 s |
+| `tools/check.py --scope contracts migration runtime api-core` | 31 passed | 12.398 s |
+| `tools/check.py --scope pairing auth` | 43 passed | 7.192 s |
+| `tools/check.py --scope unit story-api story-workflow` | 119 passed | 20.437 s |
+| `tools/check.py --scope ui typecheck` | UI 96 passed; typecheck passed | UI 3.271 s; typecheck 53.413 s |
+| `tools/check.py --scope build-ui e2e` | build passed; E2E 12 passed | build 22.541 s; E2E 41.745 s |
+| `tools/check.py --scope all` หลัง B1–B5, ครั้งเดียว | lint ผ่าน; backend 246, UI 96, E2E 12, Extension unit 13 ผ่าน; build/typecheck/smoke ผ่าน | 136.611 s รวมเวลารายขั้น |
+
+`--scope all` รายขั้น: lint 0.160 s; backend 33.414 s; UI 3.237 s; UI build 6.632 s; E2E 33.415 s; Extension unit 39.889 s; Extension typecheck 13.967 s; Extension build 3.436 s; Extension smoke 2.461 s. Smoke ใช้ Chromium profile ของเทสเอง.
+
+หลัง B5 ปิดหน้าต่าง Dev เดิม PID 26116 ด้วย `CloseMainWindow()` และตรวจว่าหายไปหลัง 20.272 s; เปิด `RUN_DEV.vbs` entry เดิมแล้วได้หน้าต่าง SmartFlow Next PID 42752 หลัง 15.328 s. หน้า local เสิร์ฟ `assets/index-B5ZB2nA7.js` ตรงกับ build ล่าสุด. ยังไม่ได้ตรวจภาพภายในหน้าต่างด้วยเครื่องมือ native UI. Real Chrome trial จากหน้าต่าง Dev ยังรอเจ้าของกด; ไม่มีการแก้ profile, registry หรือ Extension เดิม. ไม่ได้ build/test main EXE, clean Windows หรือ provider จริง และผล Story ทุกชิ้นยังเป็น `SIMULATION`.

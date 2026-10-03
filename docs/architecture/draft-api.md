@@ -36,9 +36,10 @@ Response ของ POST/PATCH/GET มี `issues` เรียงตาม: `iss
 กติกา required/conditional อยู่ใน registry: `required`, `when` {field, equals}, `maxLines`, `maxCountOf`, `optionsUpTo`
 `completeness()` รายงานช่องบังคับที่ active แต่ว่าง, batchTopics เกิน 10 บรรทัด, musicCount เกินจำนวน musicFiles
 และ coverScene นอก `auto`/1..min(15, scenes); รายงานอย่างเดียว ไม่บล็อกการบันทึก
-ตัวเลขใน completeness อ่านด้วย `number()` ตามกติกา JavaScript `Number()` ให้ตรง UI (ASCII, 0x/0o/0b, Infinity, ว่าง = 0)
+ตัวเลขใน `issues()` และ `completeness()` อ่านด้วย `number()` ตามกติกา JavaScript `Number()` ให้ตรง UI (ASCII, 0x/0o/0b, Infinity, ว่าง = 0)
 Job start ตรวจ `issues()` และ `completeness()` รวมทั้ง assets ก่อนสร้าง snapshot งานจำลอง; แบบร่างที่ยังมี issue เริ่มงานไม่ได้
 ไฟล์ใน config เก็บเป็น asset ID; ID ซ้ำใน field เดียว, ไม่รู้จัก, ของ draft อื่น หรือนำเข้าให้ field อื่น คืน DRAFT_ASSET_INVALID (422)
+UI จำกัดจำนวนไฟล์ตาม `maxFiles` ใน registry เดียวกับ backend: ช่องไฟล์เดียว 1, greenFiles 3, musicFiles/sfxFiles 100
 อ้างอิงไฟล์ที่หาย/เสียใหม่ คืน DRAFT_ASSET_MISSING (409); ไฟล์ที่ config เดิมอ้างอยู่แล้วหายไม่บล็อก edits อื่น แต่ขึ้นใน issues ฟิลด์ละครั้ง
 เอาไฟล์ที่หายออกแล้วใส่กลับถือเป็นการอ้างอิงใหม่และถูกปฏิเสธ; replay ยังคืน response เดิมแม้ไฟล์หายภายหลัง
 

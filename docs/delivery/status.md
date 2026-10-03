@@ -28,6 +28,7 @@ Autosave ไม่ค้างเมื่อถูกปฏิเสธ แล�
 P4 ใน source Dev: ปุ่มเริ่มงานจำลองจาก revision ที่บันทึกแล้ว, สถานะ/ผลพร้อมป้าย `SIMULATION`,
 คำสั่งตรวจผลเดิม/ยกเลิกตามสิทธิ์ และรุ่น Extension/helper ที่ API คาดหวัง; E2E fixture ผ่าน 12 เคส
 ดู [P4 verification](verification-p4.md) สำหรับหลักฐานแต่ละชั้นและข้อจำกัดการตรวจ Chrome จริง
+งานสำรอง B1–B5 แก้ขอบเขต scenario, การ migrate ตอนเริ่ม, pairing หมดอายุ, การอ่านตัวเลข และจำนวนไฟล์ใน UI แล้ว; ดู [P4 verification](verification-p4.md#งานสำรอง)
 
 ## ยังไม่ทำ
 
@@ -37,14 +38,13 @@ installer, code signing, automatic update และ remote support
 
 ## ข้อจำกัดที่ทราบ (ยังไม่แก้)
 
-- `jobs.py` รับ scenario จำลองความผิดพลาดในทุกโหมดรวม prod; cancel ยังถูก resume กลับเข้าคิวได้
-- `/api` ที่ไม่มี route/method ผิด/JSON เสีย ตอบ 404/405/422 ก่อนตรวจ token; `migrate()` ถูกเรียกสองครั้งตอนเริ่ม
+- งานที่ cancel แล้วยังถูก resume กลับเข้าคิวได้
+- `/api` ที่ไม่มี route/method ผิด/JSON เสีย ตอบ 404/405/422 ก่อนตรวจ token
 - Reconcile เรียก provider inspect ใน API process โดยไม่มี timeout ต้องย้ายก่อนต่อ provider จริง
-- Pairing ที่หมดอายุไม่ถูกเปลี่ยนเป็น expired; native helper รวมทุกความล้มเหลวเป็น `unavailable` และไม่มี log
-- `issues()` อ่านตัวเลขด้วย Python `float()` ไม่ตรง `Number()` ของ UI; `maxFiles` ฝั่ง UI จำกัดเฉพาะ greenFiles
+- Native helper รวมทุกความล้มเหลวเป็น `unavailable` และไม่มี log
 - ผู้ใช้สิทธิ์อ่านอย่างเดียวยังดูแบบร่างไม่ได้ (ต้องมีโหมดไม่เขียนใน DraftStore)
 - Native helper ไม่อยู่ใน `tools/build.py`; main EXE ใน `dist/` ยังเป็น build จาก 5847f79
-- `--scope all` ใช้ราว 174 วินาที (2026-10-03) เกินเป้า 60 วินาทีใน [Testing](../development/testing.md)
+- `--scope all` ใช้ 136.611 วินาทีในการตรวจงานสำรอง (2026-10-03) เกินเป้า 60 วินาทีใน [Testing](../development/testing.md)
 สถานะงานค้างของ P3 อยู่ใน [Coordinated milestones](../planning/story-extension-milestones.md)
 
 ## เปิดอ่านต่อเฉพาะงาน
