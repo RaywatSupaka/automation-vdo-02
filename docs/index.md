@@ -11,6 +11,7 @@
 | ทำระบบบันทึกแบบร่างและ Extension ควบคู่กัน | [Coordinated milestones](planning/story-extension-milestones.md) |
 | ทำ P4 ต่อ: ปุ่มเริ่มงานจำลอง สถานะ เวอร์ชัน และหลักฐาน | [P4 execution plan](planning/p4-integration.md) |
 | คำสั่งตรงตัวของ P4 และวิธีแก้เมื่อเจอ error | [P4 runbook](planning/p4-runbook.md), [P4 troubleshooting](planning/p4-troubleshooting.md) |
+| ทำ F5a: ชุด portable 0.2.0 พร้อม helper/Extension, smoke และอัปเกรด | [F5a plan](planning/f5-packaging.md), [F5a runbook](planning/f5-runbook.md), [F5a troubleshooting](planning/f5-troubleshooting.md) |
 | ออกแบบ autosave กู้คืนแบบร่าง และไฟล์แนบ | [Draft persistence](planning/draft-persistence.md) |
 | ใช้ API บันทึกแบบร่างที่ทำแล้ว | [Draft API](architecture/draft-api.md) |
 | จับคู่ Extension/helper และอ่านขอบเขตสิทธิ์ | [Extension foundation](architecture/extension-foundation.md) |
