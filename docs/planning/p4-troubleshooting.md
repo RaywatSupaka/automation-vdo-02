@@ -35,7 +35,7 @@
 | อาการ | ทำอย่างไร |
 |---|---|
 | `port 8788 is already used` | `PS> Get-NetTCPConnection -LocalPort 8788 \| Select OwningProcess` แล้วดู CommandLine; ถ้าเป็น `smartflow.cli serve --port 8788` จากโปรเจกต์นี้ที่ค้าง ปิดได้ อย่างอื่นห้ามปิด → รายงาน |
-| หาปุ่ม/ข้อความไม่เจอ | UI ยังไม่ build ใหม่ → รัน `--scope build-ui e2e` เสมอ; ดู trace ใน `frontend/test-results/` |
+| หาปุ่ม/ข้อความไม่เจอ | ถ้าแก้ `frontend/src` หลัง build ครั้งล่าสุด → `--scope build-ui` แล้ว `--scope e2e --match "<เคสที่ล้ม>"`; ดู trace ใน `frontend/test-results/` |
 | ข้อความไม่ตรงทั้งหมด (`toHaveText`) | มีข้อความอื่นปนใน element เดียวกัน → ใช้ `toContainText` หรือแยก element ไม่ยัดหลายอย่างใน `role="status"` |
 | `/api/browser/pair` ได้ 401 | ใช้ code ผิด/หมดอายุ (120 วินาที) → ขอ code ใหม่ทุกเทส |
 | `/api/browser/pair` ได้ 422 | `agent_token` สั้นกว่า 43 หรือมีอักขระนอก `[A-Za-z0-9_-]` |

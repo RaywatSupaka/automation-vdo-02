@@ -20,8 +20,18 @@ git log --oneline -3        # จดเลข commit ตั้งต้นลง
 | `backend/smartflow/runtime.py` หรือ `tests/unit` | `.venv/Scripts/python.exe tools/check.py --scope unit runtime` |
 | Python ทุกครั้ง | `.venv/Scripts/python.exe -m ruff check backend tests tools` และ `ruff format <ไฟล์ที่แก้>` |
 | ไม่แน่ใจว่าต้องรันอะไร | `.venv/Scripts/python.exe tools/check.py --changed --dry-run` แล้วรันตาม scopes ที่ได้ |
-| E2E (ต้อง build UI ก่อน) | `.venv/Scripts/python.exe tools/check.py --scope build-ui e2e` |
+| E2E หลังแก้ `frontend/src` (build ใหม่ + E2E ทุกเคส) | `.venv/Scripts/python.exe tools/check.py --scope build-ui e2e` |
+| E2E หลังแก้เฉพาะไฟล์ใน `frontend/e2e` (ไม่ต้อง build) | `.venv/Scripts/python.exe tools/check.py --scope e2e --match "<ชื่อเคส>"` |
 | E2E เคสเดียว | `.venv/Scripts/python.exe tools/check.py --scope e2e --match "story job"` |
+
+## รันซ้ำเท่าที่จำเป็น (สำคัญ)
+
+- แก้ error เล็ก ๆ แล้ว: รัน**เฉพาะเคสที่ล้ม**ด้วย `--match` ก่อน ผ่านแล้วจึงรัน scope ของไฟล์ที่แก้ ไม่รันทั้งระบบ
+- ไม่ต้องเปิด server เอง: pytest/Vitest ไม่ใช้ server และ Playwright เปิด server ทดสอบให้เอง (port 8788) แล้วปิดเองทุกครั้ง
+- `--scope all` รัน**ครั้งเดียว**ตอนปิดงาน; ถ้าล้ม แก้แล้วรันซ้ำเฉพาะ scope/เคสที่ล้ม ไม่เริ่ม all ใหม่ทั้งหมด
+  ยกเว้นการแก้นั้นกระทบหลายระบบ (เช่น แก้ API contract) ให้รัน scope ที่ `--changed --dry-run` เลือกให้
+- แก้แค่เอกสาร: ไม่รันเทส runtime เลย ตรวจลิงก์และ `git diff --check` อย่างเดียว
+- build UI เฉพาะเมื่อแก้ `frontend/src` และต้องรัน E2E หรือปิดเปิด desktop; build ซ้ำโดยไม่มีการแก้ไม่จำเป็น
 
 ทุกคำสั่ง check.py พิมพ์ `{"scope": ..., "seconds": ..., "exit_code": ...}` ให้จด seconds ลง commit message
 exit_code ไม่เป็น 0 = ไม่ผ่าน ไปดู [troubleshooting](p4-troubleshooting.md)
@@ -44,7 +54,8 @@ Token owner: `e2e-fixture-session-not-a-real-secret` (ดู `frontend/playwrigh
    - `{ action:'grant', connection_id, operation_id, request_id, lease_epoch }` จาก task → `granted: true`
    - `{ action:'result', ...เหมือน grant, result: '[SIMULATION ONLY]\n' + task.topic }` → `persisted: true`
 5. คาดหวัง UI แสดง "เสร็จ (จำลอง)" และป้าย `SIMULATION` ภายใน 10 วินาที; ตรวจว่า grant ครั้งที่สองได้ `granted: false`
-6. รัน `--scope build-ui e2e`; ต้องผ่านครบ 12 เคส (11 เดิม + ใหม่)
+6. ระหว่างเขียนเทสรัน `--scope e2e --match "story job"` (build-ui เฉพาะเมื่อแก้ `frontend/src` หลัง build ครั้งล่าสุด)
+   เมื่อเคสใหม่ผ่านแล้ว รัน `--scope e2e` หนึ่งครั้ง ต้องผ่านครบ 12 เคส (11 เดิม + ใหม่)
 
 ## ปิดเปิด desktop หลังแก้ UI (ทำครั้งเดียวตอนท้าย)
 
@@ -77,7 +88,7 @@ curl -s http://127.0.0.1:8766/ | grep -o 'assets/index-[^"]*\.js'   # ต้อ�
 ## ปิดงาน
 
 ```bash
-.venv/Scripts/python.exe tools/check.py --scope all   # ต้อง exit 0 ทุก scope; จดเวลาแต่ละ scope
+.venv/Scripts/python.exe tools/check.py --scope all   # ครั้งเดียวตอนจบ; ล้มแล้วแก้ ให้รันเฉพาะส่วนที่ล้มซ้ำ
 git diff --check
 git add <ไฟล์ที่แก้ทีละไฟล์>   # ห้าม git add -A
 git commit -m "<type>: <สรุป>" -m "Checks: <คำสั่ง> <ผล> (<วินาที> s)"
