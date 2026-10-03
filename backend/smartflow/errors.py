@@ -9,6 +9,9 @@ class ErrorSpec:
 
 
 ERRORS = {
+    "SCENARIO_NOT_ALLOWED": ErrorSpec(
+        "สถานการณ์จำลองความผิดพลาดใช้ได้เฉพาะโหมดพัฒนาและทดสอบ", "use_success_scenario"
+    ),
     "EXTENSION_STORAGE_FAILED": ErrorSpec("Extension storage failed", "inspect_extension_storage"),
     "ARTIFACT_WRITE_FAILED": ErrorSpec("Cannot persist the collected artifact", "retry_local_save"),
     "STORY_MAINTENANCE_FAILED": ErrorSpec(

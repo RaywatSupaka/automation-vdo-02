@@ -105,7 +105,7 @@ def create_app(settings: Settings | None = None):
         dependencies=[Depends(authorized)],
     )
     app.state.db = db
-    jobs = Jobs(db)
+    jobs = Jobs(db, mode=settings.mode)
     engine = Engine(db, Simulator(db), settings.data_dir)
 
     def failure(code, trace_id, stage=None):

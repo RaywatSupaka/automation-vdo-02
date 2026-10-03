@@ -47,7 +47,11 @@ def record(session, job, name, now, code=None, **details):
             "status": job.status,
             "event_id": event.id,
             "command_trace_id": details.get("command_trace_id"),
-            **{key: details[key] for key in ("operation_id", "request_id", "revision_id", "lease_epoch") if key in details},
+            **{
+                key: details[key]
+                for key in ("operation_id", "request_id", "revision_id", "lease_epoch")
+                if key in details
+            },
         }
     )
 
@@ -81,10 +85,12 @@ def job_view(job, receipt=None, private=True):
 
 
 class Jobs:
-    def __init__(self, db, clock=time.time):
-        self.db, self.clock = db, clock
+    def __init__(self, db, clock=time.time, mode="dev"):
+        self.db, self.clock, self.mode = db, clock, mode
 
     def create(self, data: CreateJob, command_key: str, trace_id: str):
+        if self.mode == "prod" and data.scenario != "success":
+            raise AppError("SCENARIO_NOT_ALLOWED")
         fingerprint = hashlib.sha256(data.model_dump_json().encode()).hexdigest()
         with self.db.transaction(write=True) as session:
             existing = session.scalar(select(Job).where(Job.command_key == command_key))
@@ -116,6 +122,7 @@ class Jobs:
 
     def receipt(self, session, job):
         from smartflow.story_workflow import operation_receipt
+
         return operation_receipt(session, job)
 
     def list(self, limit=100, offset=0):

@@ -39,6 +39,42 @@ def test_create_list_trace_and_idempotency(client):
     assert client.get(f"/api/jobs/{job['id']}/events").json()[0]["name"] == "job.created"
 
 
+def test_failure_scenarios_are_allowed_in_test_mode(client):
+    for scenario in ("auth_required", "unknown_send", "save_failure", "transient", "pending"):
+        response = client.post(
+            "/api/jobs",
+            json={"title": "Simulation", "scenario": scenario},
+            headers={"Idempotency-Key": f"test-{scenario}"},
+        )
+        assert response.status_code == 201
+        assert response.json()["scenario"] == scenario
+
+
+def test_failure_scenarios_are_denied_in_prod_mode(tmp_path):
+    from fastapi.testclient import TestClient
+    from smartflow.api import create_app
+    from smartflow.config import Settings
+
+    token = "prod-simulation-test-token"
+    app = create_app(Settings(tmp_path, token, "prod"))
+    with TestClient(app, headers={"Authorization": f"Bearer {token}"}) as prod:
+        for scenario in ("auth_required", "unknown_send", "save_failure", "transient", "pending"):
+            response = prod.post(
+                "/api/jobs",
+                json={"title": "Simulation", "scenario": scenario},
+                headers={"Idempotency-Key": f"prod-{scenario}"},
+            )
+            assert response.status_code == 409
+            assert response.json()["error"]["code"] == "SCENARIO_NOT_ALLOWED"
+        success = prod.post(
+            "/api/jobs",
+            json={"title": "Allowed", "scenario": "success"},
+            headers={"Idempotency-Key": "prod-success"},
+        )
+        assert success.status_code == 201
+        assert len(prod.get("/api/jobs").json()) == 1
+
+
 def test_auth_origin_and_schema_are_protected(client):
     for path in ["/api/jobs", "/api/openapi.json", "/api/diagnostics/database", "/api/diagnostics/logs"]:
         assert client.get(path, headers={"Authorization": "Bearer wrong"}).status_code == 401
