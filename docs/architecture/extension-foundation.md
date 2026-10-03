@@ -1,13 +1,15 @@
 # Extension pairing: implemented boundary
 
-WXT 0.21.4 + TypeScript + React + Manifest V3; Extension/helper **0.1.1**, protocol **1**
-ทำแล้ว: sender guard, native framing, Windows registration, pairing, DPAPI credential, probe และ revoke
-ยังไม่ทำ: provider content adapter, operation dispatch/claim หรือการสร้างบท/ภาพจริง
+WXT 0.21.4 + TypeScript + React + Manifest V3; Extension/helper **0.2.0**, protocol **1**
+ทำแล้ว: sender guard, native framing, Windows registration, pairing, DPAPI credential, probe, revoke
+และ P3 งานจำลองผ่าน `StoryRunner` (claim/grant/result/inspect) ทาง `POST /api/browser/work`
+ยังไม่ทำ: provider content adapter หรือการสร้างบท/ภาพจริง
 แผนถัดไป: [Coordinated plan](../planning/story-extension-milestones.md)
 
 ## Identity และ permission
 
-- Permission มี `nativeMessaging` อย่างเดียว ไม่มี host access/content scripts/clipboard/debugger
+- Permission มี `nativeMessaging`, `storage` (ledger ของงานจำลอง) และ `alarms` (heartbeat ทุก 30 วินาที)
+  ไม่มี host access/content scripts/clipboard/debugger
 - Host `com.smartflow.next.dev`; Extension ID `fdohildaocnlmoaecommlohgpcdhknmb`
 - Public manifest key ใช้กำหนด ID คงที่; ไม่มี private signing key ใน repo
 - Background รับ probe/pair เฉพาะ popup URL และ ID ของตัวเอง
@@ -23,12 +25,12 @@ WXT 0.21.4 + TypeScript + React + Manifest V3; Extension/helper **0.1.1**, proto
 5. Pairing ใหม่สำเร็จเพิกถอนอันเก่าของ ID เดียวกัน; owner กดยกเลิกได้ทันที
 6. Agent token ได้เฉพาะ `/api/browser/agent`; อ่าน draft/jobs/logs/DB หรือจัดการ pairing ไม่ได้
 
-Owner ใช้ `browser:manage`; code ใช้ `browser:pair`; agent ใช้ `browser:status`
+Owner ใช้ `browser:manage`; code ใช้ `browser:pair`; agent ใช้ `browser:status` และ `browser:work`
 Role สองชนิดหลังเป็น internal identity และตั้งเป็น desktop role ไม่ได้
 Native host ยึด loopback port ใน config, timeout 4 วินาที, ไม่ใช้ proxy/redirect และไม่รับ arbitrary URL/shell
 Popup probe มี deadline 7 วินาที; polling ทุก 5 วินาทีเฉพาะตอน popup เปิด
-Desktop แสดง connected เมื่อมีการยืนยันใน 15 วินาทีล่าสุด; ไม่ใช่ readiness ของ ChatGPT
-ยังไม่มี background heartbeat ขณะปิด popup; อยู่ใน P3
+Desktop แสดง connected เมื่อมีการยืนยันใน 90 วินาทีล่าสุด; ไม่ใช่ readiness ของ ChatGPT
+Background ใช้ alarm ทุก 30 วินาทีเรียก sync แม้ปิด popup
 Transitions การจับคู่มี `browser_events` ใน transaction; logs มี trace/event โดยไม่มีรหัสหรือ credential
 
 ## Build และติดตั้ง Dev
@@ -54,6 +56,9 @@ Config ข้าง EXE มี port/ID/path ของไฟล์ DPAPI; ไม�
 `pairing`, `auth`, `extension-unit`, `build-extension` ตรวจ contract และสิทธิ์
 `extension-smoke` เปิด popup ใน Chromium profile แยก; ไม่ลงทะเบียน host
 `python tools/pairing_smoke.py` ใช้ compiled helper, temporary backend/profile และ unique HKCU host
+`--story` เพิ่มการรันงานจำลองผ่าน runner จริงใน Extension: snapshot, ส่งครั้งเดียว, result ACK และ privacy
+ผลล่าสุด (2026-10-03, helper 0.2.0 จาก commit 943e7b6): pairing ผ่านใน 11.3 วินาที, `--story` ผ่านใน 13.9 วินาที
+ทั้งสองรันใน Playwright Chromium profile แยก; ยังไม่ใช่หลักฐานใน Chrome profile ของผู้ใช้
 ตรวจ Chrome native exchange, credential ข้าม helper process และ revocation แล้วลบเฉพาะ registry key ของเทส
 เทสนี้ไม่ติดตั้ง Extension ใน Chrome profile ของผู้ใช้ และไม่ใช่หลักฐาน provider output
 

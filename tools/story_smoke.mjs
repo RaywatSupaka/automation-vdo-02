@@ -59,7 +59,7 @@ try {
   const sends = Object.entries(ledger).filter(([key]) => key.startsWith('simulation:'));
   if (sends.length !== 1 || sends[0][1].sends !== 1) throw Error('Simulation send count');
   const diagnostic = await api(`/diagnostics/stories/${job.id}`);
-  const logs = await api('/logs');
+  const logs = await api('/diagnostics/logs');
   if (JSON.stringify({ diagnostic, logs }).includes('Owned frozen simulation')) throw Error('Private data in diagnostic');
   const events = await api(`/jobs/${job.id}/events`);
   if (events.filter(event => event.name === 'story.artifact_persisted').length !== 1) throw Error('Artifact ACK count');
