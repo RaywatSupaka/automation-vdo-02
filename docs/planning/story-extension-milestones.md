@@ -1,7 +1,7 @@
 # Story drafts + Extension: coordinated implementation plan
 
-สถานะ: P2 Autosave/assets/restore/close flush และ native pairing ทำแล้วใน source Dev
-Operation envelope/dispatch/recovery ของ P3 และ integration handoff P4 ยังต้องทำต่อ
+สถานะ: P2 ทำแล้วใน source Dev; P3 งานจำลองผ่าน Extension อยู่ใน source แล้ว (commit cc717a8) แต่ยังมีงานค้างด้านล่าง
+Integration handoff P4 ยังต้องทำต่อ
 หลักฐาน: [P2 verification](../delivery/verification-autosave-pairing.md)
 ทำสองสายงานใน milestone เดียวกัน โดยใช้ contract ร่วม ไม่รอให้ Story workflow ครบก่อนเริ่ม Extension
 Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Extension ใช้ WXT/TypeScript/MV3 + React popup และ Python native host
@@ -19,6 +19,22 @@ Framework ตามแผนเดิม: React/TypeScript + FastAPI/SQLite; Ext
 
 แต่ละรอบแยก commit ของ contract/backend/UI/Extension เท่าที่ review ได้ ไม่รวมทุกอย่างเป็นก้อนเดียว
 ไม่จำเป็นต้องเปลี่ยน UI ทุก commit; เมื่อเปลี่ยน UX/UI ต้อง build และปิด–เปิด desktop ตาม [Setup](../development/setup.md)
+
+## งานค้างของ P3
+
+ต้องปิดก่อนนับ P3 ว่าผ่านเกณฑ์ "crash/ACK หายไม่ส่งซ้ำ" และก่อนเริ่ม P4
+
+- Worker: `stories.maintain()` ไม่มี error handling; SQLite busy ครั้งเดียวทำ worker ตายและกินโควตา restart 3 ครั้ง
+- `sync()` ซ้ำจาก connection เดิมระหว่าง lease ยังไม่หมด เปลี่ยนงานปกติเป็น `needs_review` โดยไม่มี error code
+- งานที่ส่งไม่แน่ใจและผูกกับ pairing ที่ถูก revoke จะค้างถาวร; ให้ย้ายเจ้าของเพื่อ inspect เท่านั้น ห้ามให้ grant ใหม่
+- `create()` hash ไฟล์แนบ (สูงสุด 500MB) ขณะถือ `BEGIN IMMEDIATE`; autosave อาจรอจน busy timeout
+- งานที่เกิน deadline/observation ใน `sync()` บล็อกงานถัดไปของ pairing เดียวกัน
+- Alarm ของ Extension ทุก 30 วินาที แต่ช่วง connected มี 15 วินาที สถานะจึงกะพริบ
+- `create()` ควรปฏิเสธเมื่อ `completeness()` ไม่ว่าง ไม่ใช่ตรวจแค่ `issues()` และ topic
+- Readiness/heartbeat ของ worker (F2) ยังไม่มี; `worker_alive` ยังหมายถึง process อยู่เท่านั้น
+- Diagnostics read-only ยังไม่ project ตาราง `story_operations`/`operation_receipts`
+- เอกสาร [Story data/API](story-data-api.md), [Extension protocol](extension-protocol.md),
+  [Storage](../architecture/storage.md), [API](../operations/api.md) และ [Security](../operations/security.md) ยังไม่ตรงกับ P3 ที่ implement
 
 ## Dependencies ที่ต้องเคารพ
 

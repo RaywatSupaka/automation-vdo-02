@@ -1,6 +1,6 @@
 # Current project status
 
-Desktop foundation: **0.1.0** · Extension/helper: **0.1.1** · schema: **0003** · branch: **dev**
+Desktop foundation: **0.1.0** · Extension/helper: **0.2.0** · schema: **0004** · branch: **dev**
 
 ## ทำแล้ว
 
@@ -21,12 +21,27 @@ UI ใช้สี/โลโก้/ไอคอนเดิม และ stepper
 [Draft API + Autosave](../architecture/draft-api.md) มี import/restore/close flush และ migration backup/rollback
 [Extension pairing](../architecture/extension-foundation.md) มี nonce/DPAPI/scoped token/revoke และ compiled native helper
 ตรวจ real Chrome/native/API ด้วย profile แยกแล้ว; ดู [P2 verification](verification-autosave-pairing.md)
+P3 ใน source: สร้างงาน `story_simulated` จาก draft revision ที่ snapshot แล้ว ให้ Extension ที่จับคู่รับงานผ่าน `POST /api/browser/work`
+ผลเป็นข้อความจำลองเท่านั้น; ผ่าน `--scope all` แต่ helper 0.2.0 ต้อง build/register ใหม่ก่อนใช้กับ Chrome จริง
+Autosave ไม่ค้างเมื่อถูกปฏิเสธ และ draft รายงาน `FIELD_REQUIRED`/`DRAFT_ASSET_MISSING` จาก backend: [Draft API](../architecture/draft-api.md)
 
 ## ยังไม่ทำ
 
-Provider adapter/dispatch ผ่าน Extension, การสร้างวิดีโอ, Story/Product/Drama ครบฟีเจอร์,
+Provider จริงผ่าน Extension (ตอนนี้ dispatch แบบจำลองเท่านั้น), การสร้างวิดีโอ, Story/Product/Drama ครบฟีเจอร์,
 installer, code signing, automatic update และ remote support
 รุ่นนี้เป็นฐานพัฒนาใหม่ ยังไม่แทนโปรแกรมผลิตสื่อเดิม
+
+## ข้อจำกัดที่ทราบ (ยังไม่แก้)
+
+- `jobs.py` รับ scenario จำลองความผิดพลาดในทุกโหมดรวม prod; cancel ยังถูก resume กลับเข้าคิวได้
+- `/api` ที่ไม่มี route/method ผิด/JSON เสีย ตอบ 404/405/422 ก่อนตรวจ token; `migrate()` ถูกเรียกสองครั้งตอนเริ่ม
+- Reconcile เรียก provider inspect ใน API process โดยไม่มี timeout ต้องย้ายก่อนต่อ provider จริง
+- Pairing ที่หมดอายุไม่ถูกเปลี่ยนเป็น expired; native helper รวมทุกความล้มเหลวเป็น `unavailable` และไม่มี log
+- `issues()` อ่านตัวเลขด้วย Python `float()` ไม่ตรง `Number()` ของ UI; `maxFiles` ฝั่ง UI จำกัดเฉพาะ greenFiles
+- ผู้ใช้สิทธิ์อ่านอย่างเดียวยังดูแบบร่างไม่ได้ (ต้องมีโหมดไม่เขียนใน DraftStore)
+- Native helper ไม่อยู่ใน `tools/build.py`; main EXE ใน `dist/` ยังเป็น build จาก 5847f79
+- `--scope all` ใช้ราว 158 วินาที (2026-10-03) เกินเป้า 60 วินาทีใน [Testing](../development/testing.md)
+งานค้างเฉพาะ P3 อยู่ใน [Coordinated milestones](../planning/story-extension-milestones.md)
 
 ## เปิดอ่านต่อเฉพาะงาน
 
