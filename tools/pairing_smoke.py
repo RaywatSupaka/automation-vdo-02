@@ -1,5 +1,6 @@
 """Real Chrome/native EXE pairing in a private backend/profile/host registration."""
 
+import argparse
 import json
 import os
 import shutil
@@ -19,6 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     import winreg
 
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--story", action="store_true", help="Run actual Extension simulation loop")
+    args = parser.parse_args()
     start = time.monotonic()
     directory = Path(tempfile.mkdtemp(prefix="smartflow-pairing-smoke-"))
     source = ROOT / "build/native/SmartFlowNextHost"
@@ -88,7 +92,7 @@ def main():
                 raise RuntimeError("Owned backend failed to start")
         node = next((ROOT / ".tools").glob("node-*/node.exe"))
         subprocess.run(
-            [str(node), "tools/pairing_smoke.mjs", host, str(port), token], cwd=ROOT, check=True, timeout=60
+            [str(node), "tools/story_smoke.mjs" if args.story else "tools/pairing_smoke.mjs", host, str(port), token], cwd=ROOT, check=True, timeout=60
         )
         assert (directory / "agent.dpapi").exists()
         result = {
@@ -97,9 +101,10 @@ def main():
             "revocation_verified": True,
             "isolated_profile_and_host": True,
             "provider_tested": False,
+            "story_simulation_verified": args.story,
             "seconds": round(time.monotonic() - start, 3),
         }
-        (ROOT / "build/pairing-smoke.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+        (ROOT / ("build/story-smoke.json" if args.story else "build/pairing-smoke.json")).write_text(json.dumps(result, indent=2), encoding="utf-8")
         print(json.dumps(result))
     finally:
         # Only the child process and unique registry key created by this smoke.

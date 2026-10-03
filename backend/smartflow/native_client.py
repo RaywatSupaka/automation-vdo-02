@@ -64,3 +64,19 @@ class NativeClient:
                 return "paired" if response.is_success else "unavailable"
         except (OSError, ValueError, Timeout, httpx.HTTPError):
             return "unavailable"
+
+    def work(self, command):
+        from smartflow.errors import ERRORS
+        from smartflow.story_contracts import WorkReply
+        try:
+            with FileLock(str(self.path) + ".lock", timeout=1):
+                token = protected_store.load(self.path).get("active", {}).get("token")
+                if not token:
+                    return {"ok": False, "code": "UNAUTHORIZED"}
+                response = self.request("POST", "/api/browser/work", token, command.model_dump(mode="json"))
+                if response.is_success:
+                    return {"ok": True, "data": WorkReply.model_validate(response.json()).model_dump(mode="json")}
+                code = response.json().get("error", {}).get("code")
+                return {"ok": False, "code": code if code in ERRORS else "INTERNAL_ERROR"}
+        except (OSError, ValueError, Timeout, httpx.HTTPError):
+            return {"ok": False, "code": "EXTENSION_DISCONNECTED"}

@@ -23,6 +23,7 @@ spec.loader.exec_module(runner)
         (["backend/smartflow/assets.py"], ["story-api", "auth"]),
         (["backend/smartflow/native_client.py"], ["pairing"]),
         (["tests/test_auth.py"], ["auth"]),
+        (["backend/smartflow/story_workflow.py"], ["story-workflow", "auth", "bridge-contract"]),
         (["frontend/src/status.ts"], ["ui", "typecheck"]),
         (["frontend/src/App.tsx"], ["ui", "build-ui", "e2e"]),
         (["browser_extension/protocol/index.ts"], ["extension-unit", "build-extension", "bridge-contract"]),

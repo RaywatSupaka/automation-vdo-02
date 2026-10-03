@@ -18,7 +18,7 @@ class Engine:
 
     def recover(self):
         with self.db.transaction(write=True) as session:
-            for job in session.scalars(select(Job).where(Job.status == "running")):
+            for job in session.scalars(select(Job).where(Job.status == "running", Job.scenario != "story_simulated")):
                 receipt = session.get(Receipt, job.id)
                 uncertain = receipt and receipt.state in {"dispatching", "unknown"}
                 job.status = "needs_review" if uncertain else "queued"
@@ -30,7 +30,7 @@ class Engine:
         with self.db.transaction(write=True) as session:
             job = session.scalar(
                 select(Job)
-                .where(Job.status.in_(["queued", "waiting"]), Job.next_run_at <= self.clock())
+                .where(Job.status.in_(["queued", "waiting"]), Job.next_run_at <= self.clock(), Job.scenario != "story_simulated")
                 .order_by(Job.created_at)
                 .limit(1)
             )

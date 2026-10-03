@@ -9,6 +9,16 @@ class ErrorSpec:
 
 
 ERRORS = {
+    "EXTENSION_STORAGE_FAILED": ErrorSpec("Extension storage failed", "inspect_extension_storage"),
+    "ARTIFACT_WRITE_FAILED": ErrorSpec("Cannot persist the collected artifact", "retry_local_save"),
+    "STORY_CAPABILITY_UNAVAILABLE": ErrorSpec("รอบนี้รองรับงานจำลองแบบคลิปเดียว", "select_single_simulation", 422),
+    "STORY_DRAFT_INVALID": ErrorSpec("ระบุหัวข้อและตรวจค่าของแบบร่างก่อนเริ่ม", "correct_draft", 422),
+    "STORY_RESULT_INVALID": ErrorSpec("ผลจำลองไม่ตรงกับคำขอของงานนี้", "inspect_existing_result", 422),
+    "EXTENSION_DISCONNECTED": ErrorSpec("กำลังรอ Extension ที่จับคู่แล้วเชื่อมต่อ", "connect_paired_extension"),
+    "BROWSER_CONNECTION_BUSY": ErrorSpec("มี browser session อื่นกำลังใช้การจับคู่นี้", "wait_for_previous_lease"),
+    "BROWSER_RETRY_EXHAUSTED": ErrorSpec("ครบจำนวนครั้งหรือเวลารอ Extension", "inspect_and_resume"),
+    "OPERATION_OWNERSHIP_MISMATCH": ErrorSpec("คำสั่งไม่ได้เป็นของ agent หรืองานนี้", "refresh_owned_operation", 403),
+    "OPERATION_LEASE_EXPIRED": ErrorSpec("สิทธิ์ทำงานรอบนี้หมดอายุหรือถูกแทนที่", "reclaim_for_inspection"),
     "DRAFT_ASSET_INVALID": ErrorSpec("ไฟล์ไม่ถูกต้องหรือไม่ได้เป็นของแบบร่างนี้", "select_valid_file", 422),
     "DRAFT_ASSET_MISSING": ErrorSpec("ไฟล์ที่บันทึกไว้หายหรือเสียหาย", "replace_missing_file"),
     "DRAFT_ASSET_QUOTA": ErrorSpec("พื้นที่ไฟล์ของแบบร่างเต็ม", "use_new_draft"),

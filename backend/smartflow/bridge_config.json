@@ -1,7 +1,7 @@
 {
   "protocol_version": 1,
-  "extension_version": "0.1.1",
-  "helper_version": "0.1.1",
+  "extension_version": "0.2.0",
+  "helper_version": "0.2.0",
   "host_name": "com.smartflow.next.dev",
   "extension_id": "fdohildaocnlmoaecommlohgpcdhknmb",
   "public_key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv22fiPt3e+yS/3i+SVa0gWGwgSInKVCa7KYNmcbbRs2eC8S/x1ioLZLOkuqUnOM+Mh/bi/QZ1y7FAE0OsH7q0pwEJJXXCkaQoivfXIi5BiAZg7qJfhjP88EG65JzwNUG7eFGG1Vk9kUnz8jBNQCMU4qxM+GKY1n+FC/5TTJd1QEurwDqaXMFymyc+UYFHNxauomuyBeenl5uyQPh571l6zgKii1zsp18WvUGNCIqG3/aBYA3Wl+5PuypwxoxgtgG675SV2fyGcnzhHbo+jnVia2Xtl2wYSvsdkCJ6LDxrOptjwrNLdpTn2IDAWOtWyiylTjCUIIAK/80wlBK4UQJ0wIDAQAB"

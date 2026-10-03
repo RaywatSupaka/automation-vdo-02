@@ -75,7 +75,9 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
     from smartflow.draft_contracts import DraftInput
     from smartflow.drafts import Drafts
 
-    draft = Drafts(client.app.state.db).save(DraftInput(), "seed-draft", "seed-trace")
+    draft = Drafts(client.app.state.db).save(
+        DraftInput(config={"topic": "simulation fixture"}), "seed-draft", "seed-trace"
+    )
     from smartflow.assets import Assets
     from smartflow.auth import AuthMode
     from smartflow.browser_bridge import COMPAT, Bridge, PairRequest
@@ -93,8 +95,19 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
     pair = Bridge(client.app.state.db, AuthMode.LOCAL_SESSION).create(
         PairRequest(extension_id=COMPAT["extension_id"]), "trace"
     )
+    from smartflow.story_contracts import StoryStart
+    from smartflow.story_workflow import StoryWorkflow
+
+    story = StoryWorkflow(client.app.state.db).create(
+        StoryStart(draft_id=draft["id"], expected_revision=1, mode="simulation"), "matrix-story", "trace"
+    )
     for route, operations in schema["paths"].items():
-        path = route.replace("{job_id}", job["id"]).replace("{action}", "cancel").replace("{table}", "jobs")
+        selected_job = story if "/stories/" in route else job
+        path = (
+            route.replace("{job_id}", selected_job["id"])
+            .replace("{action}", "cancel")
+            .replace("{table}", "jobs")
+        )
         path = (
             path.replace("{draft_id}", draft["id"])
             .replace("{asset_id}", asset["id"])
@@ -110,8 +123,13 @@ def test_every_api_route_enforces_role_and_token(auth_client, role, allowed):
                 payload = {"expected_revision": 1}
             if method == "post" and path == "/api/browser/pairings":
                 payload = {"extension_id": COMPAT["extension_id"]}
+            if method == "post" and path == "/api/stories":
+                payload = {"draft_id": draft["id"], "expected_revision": 1, "mode": "simulation"}
+                # Use the seeded command to exercise HTTP idempotency even after the draft PATCH.
             request_options = {"json": payload}
-            good_headers = {"Idempotency-Key": f"matrix-{method}-created"}
+            good_headers = {
+                "Idempotency-Key": "matrix-story" if path == "/api/stories" else f"matrix-{method}-created"
+            }
             if method == "post" and path.endswith("/assets"):
                 path += "?field=mainImage"
                 request_options = {"content": png}

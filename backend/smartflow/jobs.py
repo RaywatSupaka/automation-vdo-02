@@ -47,6 +47,7 @@ def record(session, job, name, now, code=None, **details):
             "status": job.status,
             "event_id": event.id,
             "command_trace_id": details.get("command_trace_id"),
+            **{key: details[key] for key in ("operation_id", "request_id", "revision_id", "lease_epoch") if key in details},
         }
     )
 
@@ -113,10 +114,14 @@ class Jobs:
             record(session, job, "job.created", now)
             return job_view(job)
 
+    def receipt(self, session, job):
+        from smartflow.story_workflow import operation_receipt
+        return operation_receipt(session, job)
+
     def list(self, limit=100, offset=0):
         with self.db.transaction() as session:
             return [
-                job_view(j, session.get(Receipt, j.id))
+                job_view(j, self.receipt(session, j))
                 for j in session.scalars(
                     select(Job).order_by(Job.created_at.desc(), Job.id.desc()).offset(offset).limit(limit)
                 )
@@ -127,7 +132,7 @@ class Jobs:
             job = session.get(Job, job_id)
             if not job:
                 raise AppError("JOB_NOT_FOUND")
-            return job_view(job, session.get(Receipt, job_id), private)
+            return job_view(job, self.receipt(session, job), private)
 
     def events(self, job_id, after=0, limit=200):
         self.get(job_id)

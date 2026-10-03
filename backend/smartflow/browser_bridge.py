@@ -89,7 +89,7 @@ class Bridge:
             "id": row.id,
             "extension_id": row.extension_id,
             "state": row.state,
-            "connected": row.state == "paired" and self.clock() - row.last_seen < 15,
+            "connected": row.state == "paired" and self.clock() - row.last_seen < 90,
             "last_seen": row.last_seen,
         }
 

@@ -1,4 +1,5 @@
 import threading
+import time
 
 from filelock import FileLock
 
@@ -13,7 +14,13 @@ def run_worker(db, settings, stop=None):
         engine = Engine(db, Simulator(db), settings.data_dir)
         engine.recover()
         emit(db.logger, "worker.started")
+        from smartflow.story_workflow import StoryWorkflow
+        stories = StoryWorkflow(db)
+        checked = 0.0
         while not stop.is_set():
+            if time.monotonic() - checked >= 1:
+                stories.maintain()
+                checked = time.monotonic()
             if not engine.tick():
                 stop.wait(0.25)
         emit(db.logger, "worker.stopped")

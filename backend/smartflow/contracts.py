@@ -67,7 +67,7 @@ class SafeJob(Contract):
 
 class JobResponse(SafeJob):
     title: str
-    scenario: Scenario
+    scenario: Scenario | Literal["story_simulated"]
 
 
 class StackFrame(Contract):
@@ -77,6 +77,10 @@ class StackFrame(Contract):
 
 
 class EventDetails(Contract):
+    operation_id: str | None = None
+    revision_id: str | None = None
+    request_id: str | None = None
+    lease_epoch: int | None = None
     attempt: int | None = None
     will_retry: bool | None = None
     observation: int | None = None
@@ -165,6 +169,9 @@ class EventRow(Contract):
 
 
 class LogResponse(Contract):
+    operation_id: str | None = None
+    revision_id: str | None = None
+    lease_epoch: int | None = None
     draft_id: str | None = None
     revision: int | None = None
     at: str

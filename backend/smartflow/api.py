@@ -295,6 +295,9 @@ def create_app(settings: Settings | None = None):
             command_trace_id=request.state.trace_id,
             stage=job["stage"],
         )
+        if jobs.get(job_id)["scenario"] == "story_simulated":
+            from smartflow.story_workflow import StoryWorkflow
+            return StoryWorkflow(db).command(job_id, action, request.state.trace_id)
         if action == "reconcile":
             engine.reconcile(job_id, command_trace_id=request.state.trace_id)
             return jobs.get(job_id)
@@ -380,6 +383,8 @@ def create_app(settings: Settings | None = None):
     from smartflow.bridge_routes import bridge_router
 
     app.include_router(bridge_router(bridge))
+    from smartflow.story_routes import story_router
+    app.include_router(story_router(db))
     root = web_root()
     if (root / "assets").exists():
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")

@@ -1,4 +1,6 @@
 // Owned temporary Chromium profile only; never attaches to the user's browser.
+import { isolatedExtension } from './extension_fixture.mjs';
+import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -7,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(path.join(root, 'frontend', 'package.json'));
 const { chromium } = require('playwright');
-const extension = path.join(root, 'browser_extension/.output/chrome-mv3');
+const extension = await isolatedExtension(root, 'com.smartflow.next.smoke_' + randomUUID().replaceAll('-', ''));
 const profile = await mkdtemp(path.join(tmpdir(), 'smartflow-next-extension-smoke-'));
 const context = await chromium.launchPersistentContext(profile, { channel: 'chromium', headless: true,
   args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`] });

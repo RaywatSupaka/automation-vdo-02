@@ -4,6 +4,7 @@ import subprocess
 from fnmatch import fnmatchcase
 
 PYTHON_SCOPES = {
+    "story-workflow": ["tests/test_story_workflow.py"],
     "story-api": ["tests/test_drafts.py", "tests/test_assets_pairing.py"],
     "pairing": ["tests/test_assets_pairing.py", "tests/test_native_host.py"],
     "migration": ["tests/test_migration_safety.py", "tests/test_contracts.py", "tests/test_offline.py"],
@@ -36,6 +37,8 @@ ALL_SCOPES = [
 ]
 RULES = [
     ("*.md", []),
+    ("backend/smartflow/story_*", ["story-workflow", "auth", "bridge-contract"]),
+    ("tests/test_story_workflow.py", ["story-workflow"]),
     ("tests/test_assets_pairing.py", ["pairing", "story-api"]),
     ("backend/smartflow/asset*", ["story-api", "auth"]),
     ("backend/smartflow/*bridge*", ["pairing", "auth", "extension-unit"]),

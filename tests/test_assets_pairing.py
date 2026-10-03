@@ -107,8 +107,8 @@ def test_pairing_nonce_idempotency_expiry_revoke_and_agent_scope(client):
     token = secrets.token_urlsafe(32)
     body = {
         "extension_id": COMPAT["extension_id"],
-        "extension_version": "0.1.1",
-        "helper_version": "0.1.1",
+        "extension_version": "0.2.0",
+        "helper_version": "0.2.0",
         "agent_token": token,
     }
     headers = {"Authorization": f"Bearer {code}"}
@@ -142,8 +142,8 @@ def test_expired_nonce_and_wrong_extension_fail_without_mutation(system):
     identity = bridge.authenticate(row["code"])
     body = PairExchange(
         extension_id="a" * 32,
-        extension_version="0.1.1",
-        helper_version="0.1.1",
+        extension_version="0.2.0",
+        helper_version="0.2.0",
         agent_token=secrets.token_urlsafe(32),
     )
     with pytest.raises(AppError, match="EXTENSION_ID_MISMATCH"):
@@ -180,7 +180,7 @@ def test_native_dpapi_and_lost_pair_ack_reuses_protected_pending_token(tmp_path,
         protocol_version=1,
         message_id=uuid4(),
         kind="pair",
-        extension_version="0.1.1",
+        extension_version="0.2.0",
         code=secrets.token_urlsafe(32),
     )
     assert client.execute(message) == "unavailable"

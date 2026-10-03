@@ -21,6 +21,7 @@ class Permission(StrEnum):
     BROWSER_MANAGE = "browser:manage"
     BROWSER_PAIR = "browser:pair"
     BROWSER_STATUS = "browser:status"
+    BROWSER_WORK = "browser:work"
 
 
 class Role(StrEnum):
@@ -39,8 +40,8 @@ class AuthMode(StrEnum):
 
 BASE = frozenset({Permission.SESSION_READ, Permission.SCHEMA_READ})
 ROLE_PERMISSIONS = {
-    Role.OWNER: frozenset(Permission) - {Permission.BROWSER_PAIR, Permission.BROWSER_STATUS},
-    Role.BROWSER_AGENT: frozenset({Permission.BROWSER_STATUS}),
+    Role.OWNER: frozenset(Permission) - {Permission.BROWSER_PAIR, Permission.BROWSER_STATUS, Permission.BROWSER_WORK},
+    Role.BROWSER_AGENT: frozenset({Permission.BROWSER_STATUS, Permission.BROWSER_WORK}),
     Role.BROWSER_PAIRING: frozenset({Permission.BROWSER_PAIR}),
     Role.OPERATOR: BASE
     | {

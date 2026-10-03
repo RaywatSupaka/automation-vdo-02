@@ -1,4 +1,4 @@
-"""Bounded native protocol for pairing/status only; never provider dispatch."""
+"""Bounded native protocol for pairing/status and leased simulation work; no real provider dispatch."""
 
 import argparse
 import json
@@ -12,18 +12,21 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from smartflow.story_contracts import AgentCommand
+
 MAX_MESSAGE_BYTES = 64 * 1024
 PROTOCOL_VERSION = 1
-HELPER_VERSION = "0.1.1"
+HELPER_VERSION = "0.2.0"
 
 
 class Hello(BaseModel):
     model_config = ConfigDict(extra="forbid")
     protocol_version: Literal[1]
     message_id: UUID
-    kind: Literal["hello", "pair"]
-    extension_version: Literal["0.1.1"]
+    kind: Literal["hello", "pair", "work"]
+    extension_version: Literal["0.2.0"]
     code: str | None = None
+    command: AgentCommand | None = None
 
 
 class ProtocolError(Exception):
@@ -74,10 +77,16 @@ def handle(payload, client=None):
             not message.code or not re.fullmatch(r"[A-Za-z0-9_-]{43}", message.code)
         ):
             raise ValueError("pairing code required")
-        if message.kind == "hello" and message.code is not None:
+        if message.kind != "pair" and message.code is not None:
             raise ValueError("unexpected pairing code")
+        if (message.kind == "work") != (message.command is not None):
+            raise ValueError("work command required only for work messages")
     except (ValidationError, ValueError, TypeError) as exc:
         raise ProtocolError("PROTOCOL_INVALID") from exc
+    if message.kind == "work":
+        return {"protocol_version": PROTOCOL_VERSION, "message_id": str(message.message_id),
+                "kind": "work.result", "helper_version": HELPER_VERSION,
+                **(client.work(message.command) if client else {"ok": False, "code": "UNAUTHORIZED"})}
     return {
         "protocol_version": PROTOCOL_VERSION,
         "message_id": str(message.message_id),

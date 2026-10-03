@@ -32,7 +32,7 @@ function Popup() {
         setState(result?.state in labels ? result.state : 'protocol_error'); if(result?.state === 'paired') setCode('');
       } catch { setState('disconnected'); } finally { busy.current = false; }
     }}>จับคู่</button>
-    <p className="note">รุ่นพัฒนา 0.1.1 · ยังไม่เปิดการสั่ง ChatGPT สร้างงาน</p>
+    <p className="note">รุ่นพัฒนา 0.2.0 · ยังไม่เปิดการสั่ง ChatGPT สร้างงาน</p>
   </main>;
 }
 createRoot(document.getElementById('root')!).render(<Popup/>);

@@ -15,7 +15,7 @@ def hello(**changes):
         "protocol_version": 1,
         "message_id": str(uuid4()),
         "kind": "hello",
-        "extension_version": "0.1.1",
+        "extension_version": "0.2.0",
         **changes,
     }
 
