@@ -403,6 +403,9 @@ def create_app(settings: Settings | None = None):
     from smartflow.story_routes import story_router
 
     app.include_router(story_router(db))
+    from smartflow.job_queue import queue_router
+
+    app.include_router(queue_router(db))
     root = web_root()
     if (root / "assets").exists():
         app.mount("/assets", StaticFiles(directory=root / "assets"), name="assets")

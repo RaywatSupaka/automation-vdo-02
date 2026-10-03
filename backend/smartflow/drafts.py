@@ -2,8 +2,10 @@
 
 import hashlib
 import json
+import os
+import shutil
 import time
-from uuid import uuid4
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from sqlalchemy import select
 
@@ -47,6 +49,97 @@ class Drafts:
         if row is None or row.owner_scope != self.scope:
             raise AppError("DRAFT_NOT_FOUND")
         return row
+
+    def successor(self, source_id, key, trace_id):
+        """Next draft after a job start: same settings, per-story content reset, setting files cloned.
+
+        Idempotent per key: IDs derive from the command, so a lost ACK replays the same draft.
+        Files are linked (or copied) before the write transaction; rows commit with the command.
+        """
+        from smartflow.asset_models import DraftAsset
+        from smartflow.assets import asset_path, metadata
+
+        command_id = digest([self.scope, "successor", key])
+        input_hash = digest(["successor", source_id])
+        with self.db.transaction() as session:
+            previous = session.get(DraftCommand, command_id)
+            if previous:
+                if previous.input_hash != input_hash:
+                    raise AppError("IDEMPOTENCY_CONFLICT")
+                return json.loads(previous.response)
+            source = self.owned(session, source_id)
+            config = json.loads(source.config)
+            carried = {}
+            for field, spec in REGISTRY.items():
+                if spec.get("perStory"):
+                    config[field] = spec["initial"]
+                elif spec["kind"] == "file":
+                    ready = []
+                    for asset_id in config[field]:
+                        row = session.get(DraftAsset, asset_id)
+                        if row and row.draft_id == source.id and not metadata(self.db, row)["missing"]:
+                            ready.append((row.id, row.name, row.size, row.sha256))
+                    carried[field] = ready
+        draft_id = str(uuid5(NAMESPACE_URL, "smartflow:draft:" + command_id))
+        clones = {}
+        for field, rows in carried.items():
+            clones[field] = []
+            for old_id, name, size, sha in rows:
+                new_id = str(uuid5(NAMESPACE_URL, f"smartflow:asset:{command_id}:{old_id}"))
+                target = asset_path(self.db, new_id)
+                if not target.is_file():
+                    temporary = target.with_suffix(".clone")
+                    temporary.unlink(missing_ok=True)
+                    try:
+                        os.link(asset_path(self.db, old_id), temporary)
+                    except OSError:
+                        shutil.copyfile(asset_path(self.db, old_id), temporary)
+                    os.replace(temporary, target)
+                clones[field].append((new_id, name, size, sha))
+            config[field] = [row[0] for row in clones[field]]
+        with self.db.transaction(write=True) as session:
+            previous = session.get(DraftCommand, command_id)
+            if previous:
+                return json.loads(previous.response)
+            now = self.clock()
+            row = StoryDraft(
+                id=draft_id,
+                owner_scope=self.scope,
+                revision=1,
+                schema_version=1,
+                active_step=0,
+                config=encode(config),
+                created_at=now,
+                updated_at=now,
+            )
+            session.add(row)
+            session.flush()
+            for field, rows in clones.items():
+                for new_id, name, size, sha in rows:
+                    session.add(
+                        DraftAsset(
+                            id=new_id,
+                            draft_id=draft_id,
+                            command_hash=digest(["clone", new_id]),
+                            field=field,
+                            name=name,
+                            size=size,
+                            sha256=sha,
+                            state="ready",
+                        )
+                    )
+            session.flush()
+            result = response(row)
+            session.add(
+                DraftCommand(id=command_id, draft_id=draft_id, input_hash=input_hash, response=encode(result))
+            )
+            session.add(
+                DraftEvent(
+                    draft_id=draft_id, revision=1, trace_id=trace_id, name="draft.successor_created", at=now
+                )
+            )
+        emit(self.db.logger, "draft.successor_created", draft_id=draft_id, revision=1, trace_id=trace_id)
+        return result
 
     def list(self, limit=100, offset=0):
         with self.db.transaction() as session:

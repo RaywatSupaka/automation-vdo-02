@@ -78,6 +78,15 @@ def draft_router(db):
     def create(data: DraftInput, request: Request, idempotency_key: Key):
         return drafts.save(data, idempotency_key, request.state.trace_id)
 
+    @router.post(
+        "/story-drafts/{draft_id}/successor",
+        status_code=201,
+        response_model=DraftResponse,
+        openapi_extra=policy(Permission.DRAFTS_WRITE),
+    )
+    def successor(draft_id: UUID, request: Request, idempotency_key: Key):
+        return drafts.successor(str(draft_id), idempotency_key, request.state.trace_id)
+
     @router.get(
         "/story-drafts", response_model=list[DraftSummary], openapi_extra=policy(Permission.DRAFTS_READ)
     )

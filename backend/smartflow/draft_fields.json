@@ -16,7 +16,8 @@
     "when": {
       "field": "creationMode",
       "equals": "single"
-    }
+    },
+    "perStory": true
   },
   "batchTopics": {
     "kind": "textarea",
@@ -27,12 +28,14 @@
       "field": "creationMode",
       "equals": "batch"
     },
-    "maxLines": 10
+    "maxLines": 10,
+    "perStory": true
   },
   "storyText": {
     "kind": "textarea",
     "maxLength": 10000,
-    "initial": ""
+    "initial": "",
+    "perStory": true
   },
   "audience": {
     "kind": "select",
@@ -50,7 +53,8 @@
     "maxLength": 128,
     "maxFiles": 1,
     "accept": ".png,.jpg,.jpeg,.webp",
-    "initial": []
+    "initial": [],
+    "perStory": true
   },
   "speaker": {
     "kind": "select",
@@ -151,7 +155,8 @@
   "notes": {
     "kind": "textarea",
     "maxLength": 1000,
-    "initial": ""
+    "initial": "",
+    "perStory": true
   },
   "imageProvider": {
     "kind": "select",
@@ -303,12 +308,14 @@
   "coverHeadline": {
     "kind": "text",
     "maxLength": 40,
-    "initial": ""
+    "initial": "",
+    "perStory": true
   },
   "coverEmphasis": {
     "kind": "text",
     "maxLength": 40,
-    "initial": ""
+    "initial": "",
+    "perStory": true
   },
   "coverTheme": {
     "kind": "select",
@@ -534,7 +541,8 @@
   "voiceScript": {
     "kind": "textarea",
     "maxLength": 10000,
-    "initial": ""
+    "initial": "",
+    "perStory": true
   },
   "keepVideoAudio": {
     "kind": "checkbox",
