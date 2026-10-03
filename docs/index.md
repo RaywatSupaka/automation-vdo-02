@@ -9,6 +9,7 @@
 | เลือกงานถัดไปและเกณฑ์จบงาน | [แผนโครงสร้างพื้นฐาน](planning/foundation.md) |
 | ขอบเขตและลำดับ feature เรื่องเล่า Short | [Story Shorts plan](planning/story-shorts.md) |
 | ทำระบบบันทึกแบบร่างและ Extension ควบคู่กัน | [Coordinated milestones](planning/story-extension-milestones.md) |
+| ทำ P4 ต่อ: ปุ่มเริ่มงานจำลอง สถานะ เวอร์ชัน และหลักฐาน | [P4 execution plan](planning/p4-integration.md) |
 | ออกแบบ autosave กู้คืนแบบร่าง และไฟล์แนบ | [Draft persistence](planning/draft-persistence.md) |
 | ใช้ API บันทึกแบบร่างที่ทำแล้ว | [Draft API](architecture/draft-api.md) |
 | จับคู่ Extension/helper และอ่านขอบเขตสิทธิ์ | [Extension foundation](architecture/extension-foundation.md) |
